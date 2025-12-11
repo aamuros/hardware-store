@@ -1,0 +1,166 @@
+// Prisma Schema for Hardware Store Ordering System
+// https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// Admin users for the dashboard
+model User {
+  id          Int       @id @default(autoincrement())
+  username    String    @unique
+  password    String
+  name        String
+  role        String    @default("staff") // admin, staff
+  isActive    Boolean   @default(true)
+  lastLogin   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Audit trail
+  orderStatusChanges OrderStatusHistory[]
+
+  @@map("users")
+}
+
+// Product categories
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String?
+  icon        String?   // Icon name for UI display
+  isDeleted   Boolean   @default(false) // Soft delete
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("categories")
+}
+
+// Products in the hardware store
+model Product {
+  id          Int         @id @default(autoincrement())
+  name        String
+  description String?
+  price       Float
+  unit        String      // e.g., "piece", "meter", "kg", "set"
+  sku         String?     @unique // Stock Keeping Unit
+  imageUrl    String?
+  isAvailable Boolean     @default(true)
+  isDeleted   Boolean     @default(false) // Soft delete
+  
+  categoryId  Int
+  category    Category    @relation(fields: [categoryId], references: [id])
+  
+  orderItems  OrderItem[]
+  
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([categoryId])
+  @@index([name])
+  @@index([isAvailable])
+  @@index([isDeleted])
+  @@map("products")
+}
+
+// Customer orders
+model Order {
+  id           Int         @id @default(autoincrement())
+  orderNumber  String      @unique
+  
+  // Customer information (no account required)
+  customerName String
+  phone        String
+  address      String
+  barangay     String
+  landmarks    String?
+  
+  // Order details
+  status       String      @default("pending")
+  // Statuses: pending, accepted, rejected, preparing, out_for_delivery, delivered, completed, cancelled
+  
+  totalAmount  Float
+  notes        String?     // Special instructions from customer
+  
+  items         OrderItem[]
+  smsLogs       SmsLog[]
+  statusHistory OrderStatusHistory[]
+  
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([status])
+  @@index([phone])
+  @@index([orderNumber])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+// Items within an order
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  
+  orderId   Int
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  
+  quantity  Int
+  unitPrice Float   // Price at time of order
+  subtotal  Float   // quantity * unitPrice
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+// SMS notification logs
+model SmsLog {
+  id        Int       @id @default(autoincrement())
+  
+  orderId   Int?
+  order     Order?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  
+  phone     String
+  message   String
+  status    String    @default("pending") // pending, sent, failed
+  sentAt    DateTime?
+  error     String?
+  response  String?   // API response
+  
+  createdAt DateTime  @default(now())
+
+  @@index([orderId])
+  @@index([status])
+  @@map("sms_logs")
+}
+
+// Order status change history for audit trail
+model OrderStatusHistory {
+  id          Int      @id @default(autoincrement())
+  
+  orderId     Int
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  fromStatus  String?  // null for initial status
+  toStatus    String
+  
+  changedById Int?
+  changedBy   User?    @relation(fields: [changedById], references: [id], onDelete: SetNull)
+  
+  notes       String?  // Optional notes for the status change
+  
+  createdAt   DateTime @default(now())
+
+  @@index([orderId])
+  @@index([changedById])
+  @@index([createdAt])
+  @@map("order_status_history")
+}

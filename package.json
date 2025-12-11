@@ -1,0 +1,35 @@
+{
+  "name": "hardware-website",
+  "version": "1.0.0",
+  "description": "A comprehensive web application for a local hardware store to accept and manage customer orders online with SMS notifications.",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run test:backend",
+    "test:backend": "cd backend && npm test",
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "lint:backend": "cd backend && npm run lint",
+    "lint:frontend": "cd frontend && npm run lint",
+    "format": "npm run format:backend && npm run format:frontend",
+    "format:backend": "cd backend && npm run format",
+    "format:frontend": "cd frontend && npm run format",
+    "prepare": "husky"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "lint-staged": {
+    "backend/**/*.js": [
+      "cd backend && npx eslint --fix",
+      "cd backend && npx prettier --write"
+    ],
+    "frontend/**/*.{js,jsx}": [
+      "cd frontend && npx eslint --fix",
+      "cd frontend && npx prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7"
+  }
+}

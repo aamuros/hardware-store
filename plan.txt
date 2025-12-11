@@ -1,0 +1,398 @@
+# Hardware Store Web-Based Ordering System
+## Comprehensive Project Plan
+
+---
+
+## PHASE 0: Project Foundation (Week 1)
+
+### 0.1 Requirement Refinement
+**Actions:**
+- [ ] Interview store owner to understand current workflow
+- [ ] Observe 1-2 days of actual operations
+- [ ] Document current order volume and patterns
+- [ ] List all product categories they carry
+- [ ] Identify peak ordering times
+- [ ] Clarify delivery area (which barangays/areas they serve)
+
+**Deliverables:**
+- Refined requirements document
+- User personas (store owner, staff, regular customer, new customer)
+- Current process flow diagram
+
+### 0.2 Technical Planning
+**Decisions Needed:**
+- [ ] Choose tech stack (recommendation: React + Node.js + PostgreSQL)
+- [ ] Select SMS provider (options: Semaphore, Movider, Vonage)
+- [ ] Plan hosting solution (recommendation: Render/Railway for backend, Vercel/Netlify for frontend)
+- [ ] Define development environment setup
+
+**Deliverables:**
+- Technical architecture document
+- Development environment setup guide
+- Cost estimate for SMS and hosting
+
+---
+
+## PHASE 1: Requirements & Design (Week 2-3)
+
+### 1.1 Functional Requirements Documentation
+
+#### Customer Portal Requirements
+- [ ] Browse products by category (Plumbing, Electrical, Tools, Paint, Hardware, Building Materials, etc.)
+- [ ] Search products by name or code
+- [ ] View product details (name, price, unit of measure, availability status)
+- [ ] Add items to cart with quantity selection
+- [ ] View and edit cart
+- [ ] Checkout with delivery information (name, phone, complete address with barangay, landmarks)
+- [ ] Receive order confirmation with order number
+- [ ] View order status (optional: order tracking page)
+
+#### Administrative Dashboard Requirements
+- [ ] Login authentication
+- [ ] View all orders with filters (pending, preparing, out for delivery, completed, cancelled)
+- [ ] View order details
+- [ ] Accept/reject orders
+- [ ] Update order status
+- [ ] Mark products as available/unavailable
+- [ ] Add/edit/delete products
+- [ ] Manage product categories
+- [ ] View basic sales reports
+
+#### Notification Requirements
+- [ ] Order received confirmation (to customer)
+- [ ] Order accepted/rejected (to customer)
+- [ ] Order being prepared (to customer)
+- [ ] Out for delivery (to customer with estimated time)
+- [ ] Delivered/completed (to customer)
+- [ ] New order alert (to store owner/staff)
+
+### 1.2 Database Design
+**Tables Needed:**
+```
+- users (admin accounts)
+- products (id, name, description, price, unit, category_id, image_url, is_available)
+- categories (id, name, description)
+- orders (id, customer_name, phone, address, barangay, landmarks, status, total_amount, notes, created_at)
+- order_items (order_id, product_id, quantity, unit_price, subtotal)
+- sms_logs (for tracking sent messages)
+```
+
+**Deliverables:**
+- Entity Relationship Diagram (ERD)
+- Database schema with data types and constraints
+- Sample data for testing
+
+### 1.3 UI/UX Design
+**Actions:**
+- [ ] Create wireframes for all pages
+- [ ] Design mobile-first layouts (priority!)
+- [ ] Plan user flows for common tasks
+- [ ] Design admin dashboard layout
+- [ ] Create style guide (colors, fonts, spacing)
+
+**Pages Needed:**
+- Customer: Home, Products, Product Detail, Cart, Checkout, Order Confirmation, Order Status
+- Admin: Login, Dashboard, Orders List, Order Detail, Products Management, Categories Management
+
+**Deliverables:**
+- Wireframes (low-fidelity)
+- UI mockups (high-fidelity) for key pages
+- Mobile and desktop layouts
+- User flow diagrams
+
+### 1.4 Data Validation Rules
+**Critical Rules to Define:**
+- [ ] Phone number format (11 digits, starts with 09)
+- [ ] Required address fields
+- [ ] Minimum order amount (if any)
+- [ ] Maximum quantity per product
+- [ ] Order cancellation policy timing
+- [ ] Product price and quantity validation
+
+---
+
+## PHASE 2: Development Setup (Week 3)
+
+### 2.1 Project Structure
+```
+/hardware-store-system
+  /frontend (React app)
+  /backend (Node.js/Express API)
+  /database (SQL migration files)
+  /docs (documentation)
+```
+
+### 2.2 Development Environment
+**Setup Checklist:**
+- [ ] Initialize Git repository
+- [ ] Set up frontend project (Create React App or Vite)
+- [ ] Set up backend project (Express.js)
+- [ ] Configure PostgreSQL database
+- [ ] Set up environment variables (.env files)
+- [ ] Configure ESLint and Prettier
+- [ ] Set up SMS provider account and test API
+
+### 2.3 Initial Configuration Files
+- [ ] Create .gitignore
+- [ ] Create README.md with setup instructions
+- [ ] Create package.json with all dependencies
+- [ ] Create database connection configuration
+- [ ] Create API route structure
+
+---
+
+## PHASE 3: Core Development (Week 4-7)
+
+### 3.1 Backend Development Priority Order
+
+**Sprint 1 (Week 4): Foundation**
+- [ ] Set up Express server
+- [ ] Create database schema and migrations
+- [ ] Implement database connection
+- [ ] Create seed data for testing
+- [ ] Set up API error handling middleware
+- [ ] Implement basic logging
+
+**Sprint 2 (Week 5): Product & Order APIs**
+- [ ] Products CRUD endpoints
+- [ ] Categories CRUD endpoints
+- [ ] Create order endpoint
+- [ ] Get orders endpoint with filters
+- [ ] Update order status endpoint
+- [ ] Get order by ID endpoint
+
+**Sprint 3 (Week 6): Authentication & SMS**
+- [ ] Admin authentication (login/logout)
+- [ ] JWT token management
+- [ ] Protected routes middleware
+- [ ] SMS integration setup
+- [ ] SMS sending functions for each order status
+- [ ] SMS error handling and retry logic
+
+**Sprint 4 (Week 7): Additional Features**
+- [ ] Product availability toggle endpoint
+- [ ] Order statistics endpoint
+- [ ] Search products endpoint
+- [ ] Image upload handling
+- [ ] Data validation middleware
+
+### 3.2 Frontend Development Priority Order
+
+**Sprint 1 (Week 4): Customer Portal Foundation**
+- [ ] Set up routing (React Router)
+- [ ] Create layout components (Header, Footer)
+- [ ] Products listing page
+- [ ] Product card component
+- [ ] Category filter component
+
+**Sprint 2 (Week 5): Shopping Experience**
+- [ ] Product detail page
+- [ ] Shopping cart functionality (use Context API or Redux)
+- [ ] Cart page with edit/delete
+- [ ] Checkout form
+- [ ] Form validation
+- [ ] Order confirmation page
+
+**Sprint 3 (Week 6): Admin Dashboard**
+- [ ] Admin login page
+- [ ] Dashboard layout
+- [ ] Orders list with status filters
+- [ ] Order detail view
+- [ ] Status update buttons
+- [ ] Product management (list, add, edit, delete)
+
+**Sprint 4 (Week 7): Polish & Mobile Optimization**
+- [ ] Responsive design refinement
+- [ ] Loading states and spinners
+- [ ] Error message displays
+- [ ] Success notifications
+- [ ] Order status tracking page (optional)
+- [ ] Search functionality
+
+---
+
+## PHASE 4: Testing (Week 8)
+
+### 4.1 Unit Testing
+- [ ] Test all API endpoints with Postman/Insomnia
+- [ ] Test database queries
+- [ ] Test SMS sending functions
+- [ ] Test authentication flows
+
+### 4.2 Integration Testing
+- [ ] Test complete customer order flow
+- [ ] Test admin order management flow
+- [ ] Test product management flow
+- [ ] Test SMS notifications triggering correctly
+
+### 4.3 User Acceptance Testing
+**Test Scenarios:**
+1. Customer browses products and places order
+2. Customer tries to order unavailable items
+3. Admin receives order notification
+4. Admin accepts and processes order
+5. Customer receives all SMS notifications
+6. Admin marks order as delivered
+7. Admin manages product inventory
+8. Multiple simultaneous orders
+
+**Test with Real Users:**
+- [ ] Get store owner to test admin panel
+- [ ] Get 3-5 real customers to test ordering
+- [ ] Document all issues found
+- [ ] Prioritize and fix critical bugs
+
+### 4.4 Error Testing
+**Simulate Failures:**
+- [ ] Internet connection loss during order
+- [ ] SMS provider API failure
+- [ ] Database connection loss
+- [ ] Invalid form submissions
+- [ ] Concurrent order updates
+- [ ] Large order volumes
+
+---
+
+## PHASE 5: Deployment (Week 9)
+
+### 5.1 Pre-Deployment Checklist
+- [ ] Environment variables configured for production
+- [ ] Database backup strategy in place
+- [ ] SSL certificate obtained
+- [ ] SMS credits loaded
+- [ ] Error monitoring set up (Sentry recommended)
+- [ ] Analytics set up (optional: Google Analytics)
+
+### 5.2 Deployment Steps
+- [ ] Deploy database (consider Supabase or Railway)
+- [ ] Deploy backend API (Railway, Render, or Heroku)
+- [ ] Deploy frontend (Vercel or Netlify)
+- [ ] Configure custom domain (if applicable)
+- [ ] Test production environment thoroughly
+
+### 5.3 Post-Deployment
+- [ ] Monitor error logs for first 24 hours
+- [ ] Monitor SMS delivery rates
+- [ ] Check database performance
+- [ ] Verify all SMS notifications working
+- [ ] Create admin user account for store owner
+
+---
+
+## PHASE 6: Training & Handover (Week 10)
+
+### 6.1 Documentation
+- [ ] User manual for customers (simple, with screenshots)
+- [ ] Admin manual for store owner
+- [ ] Technical documentation for maintenance
+- [ ] Troubleshooting guide
+- [ ] SMS credits management guide
+
+### 6.2 Training
+- [ ] Train store owner on admin panel (2-3 hours)
+- [ ] Train staff on order processing workflow
+- [ ] Create quick reference guide
+- [ ] Record training video (optional)
+
+### 6.3 Soft Launch
+- [ ] Announce to existing customers via Facebook
+- [ ] Start with limited operating hours online
+- [ ] Monitor closely for issues
+- [ ] Gather feedback
+- [ ] Make adjustments as needed
+
+---
+
+## Risk Mitigation Strategies
+
+### Technical Risks
+| Risk | Mitigation |
+|------|------------|
+| SMS provider downtime | Have backup SMS provider configured |
+| Database failure | Implement daily automated backups |
+| Server crashes | Use managed hosting with auto-restart |
+| High traffic | Implement simple rate limiting |
+| Security vulnerabilities | Regular dependency updates, input validation |
+
+### Business Risks
+| Risk | Mitigation |
+|------|------------|
+| Customers continue using old methods | Offer small discount for online orders initially |
+| Staff resistance | Involve them early in testing, show time savings |
+| Technical support burden | Create FAQ page, clear error messages |
+| SMS costs too high | Set daily SMS limit, optimize message content |
+
+---
+
+## Critical Success Factors
+
+### Must-Have for Launch
+1. ✅ Customers can place orders without calling
+2. ✅ Admin receives immediate notification of new orders
+3. ✅ Customers receive order status updates automatically
+4. ✅ System is mobile-friendly (this is critical in PH context)
+5. ✅ Orders are stored reliably in database
+6. ✅ Admin can mark products unavailable
+
+### Nice-to-Have (Future Enhancements)
+- Order history for repeat customers
+- Promo codes/discounts
+- Product recommendations
+- Sales analytics and reports
+- Delivery tracking with GPS
+- Multiple staff accounts with different permissions
+- Email notifications (in addition to SMS)
+- Customer accounts with saved addresses
+
+---
+
+## Weekly Check-In Questions
+
+Use these every week to stay on track:
+1. Did we complete planned tasks for this week?
+2. Are there any blockers preventing progress?
+3. Have requirements changed? Do we need to adjust scope?
+4. Is the store owner still engaged and providing feedback?
+5. Are we within budget for SMS testing and hosting?
+6. Do we need to adjust timeline?
+
+---
+
+## Budget Considerations
+
+### Development Costs
+- Time investment: ~160-200 hours (10 weeks × 16-20 hrs/week)
+- If paying developers: ₱50,000 - ₱150,000 depending on rates
+
+### Operational Costs (Monthly)
+- Hosting: ₱500 - ₱2,000 (Render, Railway, or similar)
+- Database: ₱0 - ₱1,000 (free tier initially)
+- SMS: ₱0.50 - ₱1.00 per message × estimated volume
+  - If 100 orders/month × 5 messages = 500 SMS = ₱250 - ₱500
+- Domain: ₱500 - ₱1,000/year
+- **Total: ~₱1,500 - ₱4,000/month**
+
+---
+
+## Next Immediate Steps (This Week)
+
+1. **Review and refine this plan** with your team
+2. **Schedule meeting with store owner** to validate requirements
+3. **Set up development environment** and project structure
+4. **Correct all terminology** in your proposal (menu → products, cart → still cart is okay)
+5. **Create detailed database schema** on paper/diagram tool
+6. **Choose your tech stack** and justify choices
+7. **Set up Git repository** and invite team members
+
+---
+
+## Notes & Reminders
+
+- **Mobile-first is critical** - most Filipino users browse on phones with limited data
+- **Keep SMS messages short** - costs add up, and users prefer brevity
+- **Use Filipino context** - support barangay-level addressing, landmarks
+- **Plan for slow internet** - optimize images, implement loading states
+- **Cash on delivery is standard** - don't overcomplicate with online payments yet
+- **Start simple, iterate** - better to launch with core features than delay for "perfect"
+
+**Remember:** The goal is to solve the immediate problem (scattered orders, manual tracking) not to build a comprehensive e-commerce platform. Stay focused on scope!

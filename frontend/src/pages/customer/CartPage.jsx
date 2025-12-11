@@ -1,0 +1,149 @@
+import { Link } from 'react-router-dom'
+import { TrashIcon, MinusIcon, PlusIcon } from '@heroicons/react/24/outline'
+import { useCart } from '../../context/CartContext'
+
+export default function CartPage() {
+  const { items, totalAmount, updateQuantity, removeFromCart, clearCart } = useCart()
+
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('en-PH', {
+      style: 'currency',
+      currency: 'PHP',
+    }).format(price)
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+        <div className="text-6xl mb-4">🛒</div>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Your Cart is Empty</h1>
+        <p className="text-gray-600 mb-8">Start adding products to your cart!</p>
+        <Link to="/products" className="btn-primary">
+          Browse Products
+        </Link>
+      </div>
+    )
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">Shopping Cart</h1>
+        <button
+          onClick={clearCart}
+          className="text-red-600 hover:text-red-700 text-sm font-medium"
+        >
+          Clear Cart
+        </button>
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-8">
+        {/* Cart Items */}
+        <div className="lg:col-span-2 space-y-4">
+          {items.map((item) => (
+            <div key={item.id} className="card p-4 flex gap-4">
+              {/* Image */}
+              <div className="w-20 h-20 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden">
+                {item.imageUrl ? (
+                  <img
+                    src={item.imageUrl}
+                    alt={item.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl">
+                    📦
+                  </div>
+                )}
+              </div>
+
+              {/* Details */}
+              <div className="flex-1 min-w-0">
+                <Link
+                  to={`/products/${item.id}`}
+                  className="font-medium text-gray-900 hover:text-primary-600 line-clamp-1"
+                >
+                  {item.name}
+                </Link>
+                <p className="text-sm text-gray-500">
+                  {formatPrice(item.price)} / {item.unit}
+                </p>
+                
+                {/* Quantity Controls */}
+                <div className="flex items-center gap-3 mt-2">
+                  <div className="flex items-center border border-gray-300 rounded-lg">
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      className="p-2 hover:bg-gray-100 transition-colors"
+                    >
+                      <MinusIcon className="h-4 w-4" />
+                    </button>
+                    <span className="px-3 text-sm font-medium">{item.quantity}</span>
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      className="p-2 hover:bg-gray-100 transition-colors"
+                    >
+                      <PlusIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => removeFromCart(item.id)}
+                    className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    <TrashIcon className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Subtotal */}
+              <div className="text-right">
+                <p className="font-bold text-primary-600">
+                  {formatPrice(item.price * item.quantity)}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Order Summary */}
+        <div className="lg:col-span-1">
+          <div className="card p-6 sticky top-24">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">Order Summary</h2>
+            
+            <div className="space-y-3 mb-6">
+              <div className="flex justify-between text-gray-600">
+                <span>Subtotal ({items.length} items)</span>
+                <span>{formatPrice(totalAmount)}</span>
+              </div>
+              <div className="flex justify-between text-gray-600">
+                <span>Delivery Fee</span>
+                <span className="text-green-600">To be calculated</span>
+              </div>
+              <div className="border-t pt-3 flex justify-between text-lg font-bold">
+                <span>Total</span>
+                <span className="text-primary-600">{formatPrice(totalAmount)}</span>
+              </div>
+            </div>
+
+            <Link to="/checkout" className="btn-primary w-full text-center block">
+              Proceed to Checkout
+            </Link>
+
+            <Link
+              to="/products"
+              className="block text-center mt-4 text-gray-600 hover:text-primary-600 text-sm"
+            >
+              ← Continue Shopping
+            </Link>
+
+            <div className="mt-6 p-4 bg-yellow-50 rounded-lg">
+              <p className="text-sm text-yellow-800">
+                💵 <strong>Cash on Delivery</strong> - Payment upon delivery
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

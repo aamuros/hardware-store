@@ -1,0 +1,7 @@
+export { default as AdminLoginPage } from './AdminLoginPage'
+export { default as DashboardPage } from './DashboardPage'
+export { default as OrdersPage } from './OrdersPage'
+export { default as OrderDetailPage } from './OrderDetailPage'
+export { default as ProductsManagementPage } from './ProductsManagementPage'
+export { default as CategoriesPage } from './CategoriesPage'
+export { default as ReportsPage } from './ReportsPage'
