@@ -105,17 +105,17 @@ const createOrder = async (req, res, next) => {
     
     // Send SMS notification to customer
     try {
-      await smsService.sendOrderConfirmation(phone, orderNumber, totalAmount);
+      await smsService.sendOrderConfirmation(phone, orderNumber, totalAmount, order.id);
     } catch (smsError) {
-      console.error('SMS sending failed:', smsError);
+      console.error('SMS sending failed:', smsError.message);
       // Don't fail the order creation if SMS fails
     }
     
     // Send notification to admin
     try {
-      await smsService.notifyAdminNewOrder(orderNumber, totalAmount);
+      await smsService.notifyAdminNewOrder(orderNumber, totalAmount, customerName);
     } catch (smsError) {
-      console.error('Admin SMS notification failed:', smsError);
+      console.error('Admin SMS notification failed:', smsError.message);
     }
     
     res.status(201).json({
@@ -399,9 +399,9 @@ const updateOrderStatus = async (req, res, next) => {
     
     // Send SMS notification based on status change
     try {
-      await smsService.sendStatusUpdate(order.phone, order.orderNumber, status, message);
+      await smsService.sendStatusUpdate(order.phone, order.orderNumber, status, message, order.id);
     } catch (smsError) {
-      console.error('SMS sending failed:', smsError);
+      console.error('SMS sending failed:', smsError.message);
     }
     
     res.json({

@@ -1,4 +1,5 @@
 const { body, param, validationResult } = require('express-validator');
+const { validatePhoneNumber, ALL_VALID_PREFIXES } = require('../services/smsService');
 
 // Middleware to check validation results
 const validate = (req, res, next) => {
@@ -13,6 +14,40 @@ const validate = (req, res, next) => {
   next();
 };
 
+/**
+ * Custom validator for Philippine phone numbers
+ * Supports all major networks: Globe, Smart, Sun, TNT, DITO, TM
+ */
+const isValidPhilippinePhone = (value) => {
+  const result = validatePhoneNumber(value);
+  if (!result.valid) {
+    throw new Error(result.error);
+  }
+  return true;
+};
+
+/**
+ * Sanitize phone number to standard format (09XXXXXXXXX)
+ */
+const sanitizePhoneNumber = (value) => {
+  if (!value) return value;
+  
+  // Remove all non-digit characters
+  let cleaned = value.toString().replace(/\D/g, '');
+  
+  // Handle +63 or 63 prefix
+  if (cleaned.startsWith('63') && cleaned.length === 12) {
+    cleaned = '0' + cleaned.slice(2);
+  }
+  
+  // Handle 9XXXXXXXXX (missing leading 0)
+  if (cleaned.startsWith('9') && cleaned.length === 10) {
+    cleaned = '0' + cleaned;
+  }
+  
+  return cleaned;
+};
+
 // Order validation rules
 const validateOrder = [
   body('customerName')
@@ -23,7 +58,9 @@ const validateOrder = [
   body('phone')
     .trim()
     .notEmpty().withMessage('Phone number is required')
-    .matches(/^(09|\+639)\d{9}$/).withMessage('Invalid Philippine phone number format (e.g., 09171234567)'),
+    .customSanitizer(sanitizePhoneNumber)
+    .custom(isValidPhilippinePhone)
+    .withMessage('Invalid Philippine mobile number. Must be 11 digits starting with 09 (e.g., 09171234567)'),
   
   body('address')
     .trim()

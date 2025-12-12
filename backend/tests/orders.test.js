@@ -4,12 +4,18 @@ const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 
-// Mock SMS service to prevent actual SMS sending during tests
-jest.mock('../src/services/smsService', () => ({
-  sendOrderConfirmation: jest.fn().mockResolvedValue(true),
-  notifyAdminNewOrder: jest.fn().mockResolvedValue(true),
-  sendStatusUpdate: jest.fn().mockResolvedValue(true),
-}));
+// Mock SMS service - preserve real validation functions
+jest.mock('../src/services/smsService', () => {
+  const actual = jest.requireActual('../src/services/smsService');
+  return {
+    ...actual,
+    sendOrderConfirmation: jest.fn().mockResolvedValue(true),
+    notifyAdminNewOrder: jest.fn().mockResolvedValue(true),
+    sendStatusUpdate: jest.fn().mockResolvedValue(true),
+    sendSMS: jest.fn().mockResolvedValue(true),
+    sendCustomSMS: jest.fn().mockResolvedValue(true),
+  };
+});
 
 describe('Orders API', () => {
   let testCategory;

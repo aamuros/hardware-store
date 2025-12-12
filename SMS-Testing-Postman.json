@@ -1,0 +1,288 @@
+{
+  "info": {
+    "name": "Hardware Store - SMS Testing Collection",
+    "description": "Test SMS integration with different phone numbers and scenarios",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Test Orders",
+      "item": [
+        {
+          "name": "Create Order - Globe",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Juan Dela Cruz\",\n  \"phone\": \"09171234567\",\n  \"address\": \"123 Rizal Street\",\n  \"barangay\": \"Makati\",\n  \"landmarks\": \"Near SM Makati\",\n  \"items\": [\n    {\n      \"productId\": 1,\n      \"quantity\": 2\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/orders",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3001",
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          },
+          "description": "Creates order and sends SMS to Globe network (09171234567)"
+        },
+        {
+          "name": "Create Order - Smart",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Maria Santos\",\n  \"phone\": \"09181234567\",\n  \"address\": \"456 Laurel Avenue\",\n  \"barangay\": \"Intramuros\",\n  \"landmarks\": \"Near Intramuros Wall\",\n  \"items\": [\n    {\n      \"productId\": 2,\n      \"quantity\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/orders",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3001",
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          },
+          "description": "Creates order and sends SMS to Smart network (09181234567)"
+        },
+        {
+          "name": "Create Order - DITO",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Roberto Flores\",\n  \"phone\": \"09911234567\",\n  \"address\": \"789 Kalaw Street\",\n  \"barangay\": \"Ermita\",\n  \"landmarks\": \"Near Ermita Church\",\n  \"items\": [\n    {\n      \"productId\": 3,\n      \"quantity\": 3\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/orders",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3001",
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          },
+          "description": "Creates order and sends SMS to DITO network (09911234567)"
+        },
+        {
+          "name": "Create Order - Alternative Format",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Ana Lopez\",\n  \"phone\": \"+639271234567\",\n  \"address\": \"321 Padre Burgos\",\n  \"barangay\": \"San Nicolas\",\n  \"landmarks\": \"Near Tutuban Market\",\n  \"items\": [\n    {\n      \"productId\": 1,\n      \"quantity\": 2\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/orders",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3001",
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          },
+          "description": "Tests phone number format conversion (+63 to 09)"
+        }
+      ]
+    },
+    {
+      "name": "Test Order Updates",
+      "item": [
+        {
+          "name": "Update Order Status - Accepted",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"accepted\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/orders/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3001",
+              "path": [
+                "api",
+                "orders",
+                "1"
+              ]
+            }
+          },
+          "description": "Updates order status and sends SMS notification"
+        },
+        {
+          "name": "Update Order Status - Out for Delivery",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"out_for_delivery\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/orders/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3001",
+              "path": [
+                "api",
+                "orders",
+                "1"
+              ]
+            }
+          },
+          "description": "Sends 'out for delivery' SMS notification"
+        },
+        {
+          "name": "Update Order Status - Delivered",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"delivered\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/orders/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3001",
+              "path": [
+                "api",
+                "orders",
+                "1"
+              ]
+            }
+          },
+          "description": "Sends 'delivered' SMS notification"
+        }
+      ]
+    },
+    {
+      "name": "Validation Tests",
+      "item": [
+        {
+          "name": "Invalid Phone - Starts with 08",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Test User\",\n  \"phone\": \"08171234567\",\n  \"address\": \"Test Address\",\n  \"barangay\": \"Test Barangay\",\n  \"landmarks\": \"Test Landmark\",\n  \"items\": [\n    {\n      \"productId\": 1,\n      \"quantity\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/orders",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3001",
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          },
+          "description": "Should return 400 error - invalid phone format"
+        },
+        {
+          "name": "Invalid Phone - Too Short",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Test User\",\n  \"phone\": \"09171234\",\n  \"address\": \"Test Address\",\n  \"barangay\": \"Test Barangay\",\n  \"landmarks\": \"Test Landmark\",\n  \"items\": [\n    {\n      \"productId\": 1,\n      \"quantity\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/api/orders",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3001",
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          },
+          "description": "Should return 400 error - phone too short"
+        }
+      ]
+    }
+  ]
+}
