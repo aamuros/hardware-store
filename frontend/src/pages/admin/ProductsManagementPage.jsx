@@ -194,8 +194,8 @@ export default function ProductsManagementPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Products</h1>
-          <p className="text-gray-600">Manage your product catalog</p>
+          <h1 className="text-2xl font-bold text-primary-900">Products</h1>
+          <p className="text-neutral-600">Manage your product catalog</p>
         </div>
         <button onClick={() => openModal()} className="btn btn-primary flex items-center gap-2">
           <PlusIcon className="h-5 w-5" />
@@ -204,7 +204,7 @@ export default function ProductsManagementPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow p-4">
+      <div className="bg-white rounded-2xl shadow-soft p-4">
         <div className="flex flex-col md:flex-row gap-4">
           <select
             value={categoryFilter}
@@ -220,7 +220,7 @@ export default function ProductsManagementPage() {
           </select>
 
           <div className="flex-1 relative">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
             <input
               type="text"
               value={searchQuery}
@@ -233,43 +233,43 @@ export default function ProductsManagementPage() {
       </div>
 
       {/* Products Grid */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-800"></div>
           </div>
         ) : products.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500">No products found</p>
-            <button onClick={() => openModal()} className="mt-4 text-primary-600 hover:text-primary-700">
+            <p className="text-neutral-500">No products found</p>
+            <button onClick={() => openModal()} className="mt-4 text-accent-600 hover:text-accent-700">
               Add your first product
             </button>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-neutral-200">
+              <thead className="bg-neutral-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                     Product
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                     Category
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                     Price
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white divide-y divide-neutral-200">
                 {products.map((product) => (
-                  <tr key={product.id} className="hover:bg-gray-50">
+                  <tr key={product.id} className="hover:bg-neutral-50">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
                         {product.imageUrl ? (
@@ -279,26 +279,26 @@ export default function ProductsManagementPage() {
                             className="w-12 h-12 object-cover rounded"
                           />
                         ) : (
-                          <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
-                            <PhotoIcon className="h-6 w-6 text-gray-400" />
+                          <div className="w-12 h-12 bg-neutral-200 rounded flex items-center justify-center">
+                            <PhotoIcon className="h-6 w-6 text-neutral-400" />
                           </div>
                         )}
                         <div>
-                          <p className="font-medium text-gray-900">{product.name}</p>
+                          <p className="font-medium text-primary-900">{product.name}</p>
                           {product.sku && (
-                            <p className="text-sm text-gray-500">SKU: {product.sku}</p>
+                            <p className="text-sm text-neutral-500">SKU: {product.sku}</p>
                           )}
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">
                       {product.category?.name || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="font-medium text-gray-900">
+                      <span className="font-medium text-primary-900">
                         ₱{product.price.toLocaleString()}
                       </span>
-                      <span className="text-gray-500">/{product.unit}</span>
+                      <span className="text-neutral-500">/{product.unit}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
@@ -315,14 +315,14 @@ export default function ProductsManagementPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       <button
                         onClick={() => openModal(product)}
-                        className="text-primary-600 hover:text-primary-900 mr-3"
+                        className="text-accent-600 hover:text-accent-700 mr-3"
                       >
                         <PencilIcon className="h-5 w-5" />
                       </button>
                       <button
                         onClick={() => handleDelete(product)}
                         disabled={deleting === product.id}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-red-600 hover:text-red-700"
                       >
                         <TrashIcon className="h-5 w-5" />
                       </button>
@@ -336,21 +336,21 @@ export default function ProductsManagementPage() {
 
         {/* Pagination */}
         {pagination.totalPages > 1 && (
-          <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200">
+          <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-neutral-200">
             <button
               onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}
               disabled={pagination.page === 1}
-              className="btn bg-gray-100 text-gray-700 disabled:opacity-50"
+              className="btn bg-neutral-100 text-neutral-700 disabled:opacity-50"
             >
               Previous
             </button>
-            <span className="text-sm text-gray-700">
+            <span className="text-sm text-neutral-700">
               Page {pagination.page} of {pagination.totalPages}
             </span>
             <button
               onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
               disabled={pagination.page === pagination.totalPages}
-              className="btn bg-gray-100 text-gray-700 disabled:opacity-50"
+              className="btn bg-neutral-100 text-neutral-700 disabled:opacity-50"
             >
               Next
             </button>
@@ -362,13 +362,13 @@ export default function ProductsManagementPage() {
       {showModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4 py-8">
-            <div className="fixed inset-0 bg-black opacity-30" onClick={closeModal} />
-            <div className="relative bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between px-6 py-4 border-b">
-                <h3 className="text-lg font-semibold text-gray-900">
+            <div className="fixed inset-0 bg-primary-900/30 backdrop-blur-sm" onClick={closeModal} />
+            <div className="relative bg-white rounded-2xl shadow-soft-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200">
+                <h3 className="text-lg font-semibold text-primary-900">
                   {editingProduct ? 'Edit Product' : 'Add New Product'}
                 </h3>
-                <button onClick={closeModal} className="text-gray-400 hover:text-gray-600">
+                <button onClick={closeModal} className="text-neutral-400 hover:text-neutral-600">
                   <XMarkIcon className="h-6 w-6" />
                 </button>
               </div>
@@ -376,7 +376,7 @@ export default function ProductsManagementPage() {
               <form onSubmit={handleSubmit} className="p-6 space-y-4">
                 {/* Image Upload */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-primary-700 mb-2">
                     Product Image
                   </label>
                   <div className="flex items-center gap-4">
@@ -387,11 +387,11 @@ export default function ProductsManagementPage() {
                         className="w-20 h-20 object-cover rounded"
                       />
                     ) : (
-                      <div className="w-20 h-20 bg-gray-200 rounded flex items-center justify-center">
-                        <PhotoIcon className="h-8 w-8 text-gray-400" />
+                      <div className="w-20 h-20 bg-neutral-200 rounded flex items-center justify-center">
+                        <PhotoIcon className="h-8 w-8 text-neutral-400" />
                       </div>
                     )}
-                    <label className="btn bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer">
+                    <label className="btn bg-neutral-100 text-neutral-700 hover:bg-neutral-200 cursor-pointer">
                       Choose Image
                       <input
                         type="file"
@@ -405,7 +405,7 @@ export default function ProductsManagementPage() {
 
                 {/* Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-primary-700 mb-1">
                     Product Name *
                   </label>
                   <input
@@ -420,7 +420,7 @@ export default function ProductsManagementPage() {
 
                 {/* Description */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-primary-700 mb-1">
                     Description
                   </label>
                   <textarea
@@ -435,7 +435,7 @@ export default function ProductsManagementPage() {
                 {/* Price and Unit */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-primary-700 mb-1">
                       Price (₱) *
                     </label>
                     <input
@@ -450,7 +450,7 @@ export default function ProductsManagementPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-primary-700 mb-1">
                       Unit *
                     </label>
                     <select
@@ -474,7 +474,7 @@ export default function ProductsManagementPage() {
                 {/* Category and SKU */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-primary-700 mb-1">
                       Category *
                     </label>
                     <select
@@ -493,7 +493,7 @@ export default function ProductsManagementPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-primary-700 mb-1">
                       SKU
                     </label>
                     <input
@@ -514,9 +514,9 @@ export default function ProductsManagementPage() {
                     id="isAvailable"
                     checked={formData.isAvailable}
                     onChange={handleInputChange}
-                    className="h-4 w-4 text-primary-600 rounded"
+                    className="h-4 w-4 text-accent-600 rounded"
                   />
-                  <label htmlFor="isAvailable" className="text-sm text-gray-700">
+                  <label htmlFor="isAvailable" className="text-sm text-neutral-700">
                     Available for ordering
                   </label>
                 </div>
@@ -526,7 +526,7 @@ export default function ProductsManagementPage() {
                   <button
                     type="button"
                     onClick={closeModal}
-                    className="btn bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    className="btn bg-neutral-200 text-neutral-700 hover:bg-neutral-300"
                   >
                     Cancel
                   </button>

@@ -32,19 +32,19 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full">
-        <div className="bg-white rounded-lg shadow-md p-8">
+    <div className="min-h-screen flex items-center justify-center bg-neutral-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full animate-fade-in">
+        <div className="bg-white rounded-2xl shadow-soft p-8">
           {/* Header */}
           <div className="text-center mb-8">
             <div className="text-4xl mb-3">🔧</div>
-            <h2 className="text-2xl font-bold text-gray-900">Admin Login</h2>
-            <p className="text-gray-600 mt-1">Hardware Store Dashboard</p>
+            <h2 className="text-2xl font-bold text-primary-900">Admin Login</h2>
+            <p className="text-neutral-600 mt-1">Hardware Store Dashboard</p>
           </div>
 
           {/* Error Message */}
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
               {error}
             </div>
           )}
@@ -52,7 +52,7 @@ export default function AdminLoginPage() {
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="username" className="block text-sm font-medium text-neutral-700 mb-1">
                 Username
               </label>
               <input
@@ -68,7 +68,7 @@ export default function AdminLoginPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-neutral-700 mb-1">
                 Password
               </label>
               <input
@@ -104,7 +104,7 @@ export default function AdminLoginPage() {
 
           {/* Back to store link */}
           <div className="mt-6 text-center">
-            <a href="/" className="text-sm text-primary-600 hover:text-primary-700">
+            <a href="/" className="text-sm text-accent-600 hover:text-accent-700 font-medium">
               ← Back to Store
             </a>
           </div>

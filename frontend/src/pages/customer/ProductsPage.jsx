@@ -105,15 +105,15 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Products</h1>
+        <h1 className="text-3xl font-bold text-primary-900 mb-4">Products</h1>
         
         {/* Search */}
         <form onSubmit={handleSearch} className="flex gap-2 mb-4">
           <div className="relative flex-1">
-            <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <MagnifyingGlassIcon className="h-5 w-5 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Search products..."
@@ -131,10 +131,10 @@ export default function ProductsPage() {
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => handleCategoryChange('')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
               !selectedCategory
-                ? 'bg-primary-500 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-primary-800 text-white shadow-sm'
+                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
             }`}
           >
             All Products
@@ -143,10 +143,10 @@ export default function ProductsPage() {
             <button
               key={category.id}
               onClick={() => handleCategoryChange(category.id.toString())}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                 selectedCategory === category.id.toString()
-                  ? 'bg-primary-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-primary-800 text-white shadow-sm'
+                  : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
               }`}
             >
               {category.icon} {category.name}
@@ -158,17 +158,17 @@ export default function ProductsPage() {
       {/* Products Grid */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-700"></div>
         </div>
       ) : products.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">No products found</p>
+          <p className="text-neutral-500 text-lg">No products found</p>
           <button
             onClick={() => {
               setSearchQuery('')
               handleCategoryChange('')
             }}
-            className="mt-4 text-primary-600 hover:text-primary-700"
+            className="mt-4 text-accent-600 hover:text-accent-700 font-medium"
           >
             Clear filters
           </button>
@@ -183,7 +183,7 @@ export default function ProductsPage() {
 
           {/* Pagination */}
           {pagination.totalPages > 1 && (
-            <div className="flex justify-center gap-2 mt-8">
+            <div className="flex justify-center gap-2 mt-10">
               <button
                 onClick={() => handlePageChange(pagination.page - 1)}
                 disabled={pagination.page === 1}
@@ -191,7 +191,7 @@ export default function ProductsPage() {
               >
                 Previous
               </button>
-              <span className="px-4 py-2 text-gray-600">
+              <span className="px-4 py-2 text-neutral-600">
                 Page {pagination.page} of {pagination.totalPages}
               </span>
               <button

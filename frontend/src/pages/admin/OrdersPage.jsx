@@ -110,16 +110,16 @@ export default function OrdersPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
-        <p className="text-gray-600">Manage and process customer orders</p>
+        <h1 className="text-2xl font-bold text-primary-900">Orders</h1>
+        <p className="text-neutral-600">Manage and process customer orders</p>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow p-4">
+      <div className="bg-white rounded-2xl shadow-soft p-4">
         <div className="flex flex-col md:flex-row gap-4">
           {/* Status Filter */}
           <div className="flex items-center gap-2">
-            <FunnelIcon className="h-5 w-5 text-gray-400" />
+            <FunnelIcon className="h-5 w-5 text-neutral-400" />
             <select
               value={statusFilter}
               onChange={(e) => handleStatusFilter(e.target.value)}
@@ -136,7 +136,7 @@ export default function OrdersPage() {
           {/* Search */}
           <form onSubmit={handleSearch} className="flex-1">
             <div className="relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
               <input
                 type="text"
                 name="search"
@@ -150,87 +150,87 @@ export default function OrdersPage() {
       </div>
 
       {/* Orders Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-800"></div>
           </div>
         ) : orders.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500">No orders found</p>
+            <p className="text-neutral-500">No orders found</p>
           </div>
         ) : (
           <>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-neutral-200">
+                <thead className="bg-neutral-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                       Order
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                       Customer
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                       Items
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                       Total
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                       Date
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white divide-y divide-neutral-200">
                   {orders.map((order) => (
-                    <tr key={order.id} className="hover:bg-gray-50">
+                    <tr key={order.id} className="hover:bg-neutral-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="font-medium text-gray-900">
+                        <span className="font-medium text-primary-900">
                           #{order.orderNumber}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-primary-900">
                             {order.customerName}
                           </div>
-                          <div className="text-sm text-gray-500">{order.phone}</div>
-                          <div className="text-xs text-gray-400 max-w-xs truncate">
+                          <div className="text-sm text-neutral-500">{order.phone}</div>
+                          <div className="text-xs text-neutral-400 max-w-xs truncate">
                             {order.barangay}
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">
                         {order._count?.items || order.items?.length || 0} items
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-medium text-gray-900">
+                        <span className="text-sm font-medium text-primary-900">
                           ₱{order.totalAmount.toLocaleString()}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            statusColors[order.status] || 'bg-gray-100 text-gray-800'
+                            statusColors[order.status] || 'bg-neutral-100 text-neutral-800'
                           }`}
                         >
                           {order.status.replace('_', ' ')}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">
                         {formatDate(order.createdAt)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <Link
                           to={`/admin/orders/${order.id}`}
-                          className="text-primary-600 hover:text-primary-900 font-medium text-sm"
+                          className="text-accent-600 hover:text-accent-700 font-medium text-sm"
                         >
                           View Details
                         </Link>
@@ -243,10 +243,10 @@ export default function OrdersPage() {
 
             {/* Pagination */}
             {pagination.totalPages > 1 && (
-              <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+              <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-neutral-200 sm:px-6">
                 <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-sm text-gray-700">
+                    <p className="text-sm text-neutral-700">
                       Showing page <span className="font-medium">{pagination.page}</span> of{' '}
                       <span className="font-medium">{pagination.totalPages}</span> ({pagination.total} orders)
                     </p>
@@ -256,14 +256,14 @@ export default function OrdersPage() {
                       <button
                         onClick={() => handlePageChange(currentPage - 1)}
                         disabled={currentPage === 1}
-                        className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-neutral-300 bg-white text-sm font-medium text-neutral-500 hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <ChevronLeftIcon className="h-5 w-5" />
                       </button>
                       <button
                         onClick={() => handlePageChange(currentPage + 1)}
                         disabled={currentPage === pagination.totalPages}
-                        className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-neutral-300 bg-white text-sm font-medium text-neutral-500 hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <ChevronRightIcon className="h-5 w-5" />
                       </button>

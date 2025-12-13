@@ -4,7 +4,7 @@ import React from 'react';
 // Base skeleton with pulse animation
 const Skeleton = ({ className = '', ...props }) => (
   <div
-    className={`animate-pulse bg-gray-200 rounded ${className}`}
+    className={`animate-pulse bg-neutral-200 rounded ${className}`}
     {...props}
   />
 );
@@ -71,7 +71,7 @@ export const TableSkeleton = ({ rows = 5, columns = 5 }) => (
   <div className="overflow-x-auto">
     <table className="min-w-full">
       <thead>
-        <tr className="bg-gray-50">
+        <tr className="bg-neutral-50">
           {Array.from({ length: columns }).map((_, i) => (
             <th key={i} className="px-4 py-3">
               <Skeleton className="h-4 w-20" />

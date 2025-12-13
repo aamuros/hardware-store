@@ -108,9 +108,9 @@ export default function CheckoutPage() {
 
   if (items.length === 0) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Your Cart is Empty</h1>
-        <p className="text-gray-600 mb-8">Add some products before checkout!</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center animate-fade-in">
+        <h1 className="text-2xl font-bold text-primary-900 mb-2">Your Cart is Empty</h1>
+        <p className="text-neutral-600 mb-8">Add some products before checkout!</p>
         <Link to="/products" className="btn-primary">
           Browse Products
         </Link>
@@ -119,14 +119,14 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+      <h1 className="text-3xl font-bold text-primary-900 mb-8">Checkout</h1>
 
       <form onSubmit={handleSubmit} className="grid lg:grid-cols-3 gap-8">
         {/* Delivery Information */}
         <div className="lg:col-span-2 space-y-6">
           <div className="card p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Delivery Information</h2>
+            <h2 className="text-lg font-bold text-primary-900 mb-4">Delivery Information</h2>
             
             <div className="grid md:grid-cols-2 gap-4">
               <div>
@@ -237,17 +237,17 @@ export default function CheckoutPage() {
 
           {/* Order Items */}
           <div className="card p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Order Items</h2>
+            <h2 className="text-lg font-bold text-primary-900 mb-4">Order Items</h2>
             <div className="space-y-3">
               {items.map((item) => (
-                <div key={item.id} className="flex justify-between items-center py-2 border-b last:border-0">
+                <div key={item.id} className="flex justify-between items-center py-2 border-b border-neutral-100 last:border-0">
                   <div>
-                    <p className="font-medium text-gray-900">{item.name}</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="font-medium text-primary-900">{item.name}</p>
+                    <p className="text-sm text-neutral-500">
                       {item.quantity} {item.unit} × {formatPrice(item.price)}
                     </p>
                   </div>
-                  <p className="font-bold text-gray-900">
+                  <p className="font-bold text-primary-800">
                     {formatPrice(item.price * item.quantity)}
                   </p>
                 </div>
@@ -259,20 +259,20 @@ export default function CheckoutPage() {
         {/* Order Summary */}
         <div className="lg:col-span-1">
           <div className="card p-6 sticky top-24">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Order Summary</h2>
+            <h2 className="text-lg font-bold text-primary-900 mb-4">Order Summary</h2>
             
             <div className="space-y-3 mb-6">
-              <div className="flex justify-between text-gray-600">
+              <div className="flex justify-between text-neutral-600">
                 <span>Subtotal</span>
                 <span>{formatPrice(totalAmount)}</span>
               </div>
-              <div className="flex justify-between text-gray-600">
+              <div className="flex justify-between text-neutral-600">
                 <span>Delivery Fee</span>
-                <span className="text-green-600">To be confirmed</span>
+                <span className="text-emerald-600">To be confirmed</span>
               </div>
-              <div className="border-t pt-3 flex justify-between text-lg font-bold">
+              <div className="border-t border-neutral-200 pt-3 flex justify-between text-lg font-bold">
                 <span>Total</span>
-                <span className="text-primary-600">{formatPrice(totalAmount)}</span>
+                <span className="text-primary-800">{formatPrice(totalAmount)}</span>
               </div>
             </div>
 
@@ -296,19 +296,19 @@ export default function CheckoutPage() {
 
             <Link
               to="/cart"
-              className="block text-center mt-4 text-gray-600 hover:text-primary-600 text-sm"
+              className="block text-center mt-4 text-neutral-600 hover:text-accent-600 text-sm transition-colors"
             >
               ← Back to Cart
             </Link>
 
-            <div className="mt-6 p-4 bg-yellow-50 rounded-lg">
-              <p className="text-sm text-yellow-800">
+            <div className="mt-6 p-4 bg-amber-50 rounded-xl border border-amber-100">
+              <p className="text-sm text-amber-800">
                 💵 <strong>Cash on Delivery</strong><br />
                 Pay when you receive your order
               </p>
             </div>
 
-            <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+            <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
               <p className="text-sm text-blue-800">
                 📱 <strong>SMS Updates</strong><br />
                 You'll receive order updates via SMS
@@ -323,47 +323,47 @@ export default function CheckoutPage() {
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
             <div 
-              className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
+              className="fixed inset-0 transition-opacity bg-primary-900/50 backdrop-blur-sm"
               onClick={() => setShowConfirmModal(false)}
             />
             
-            <div className="relative inline-block px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <div className="relative inline-block px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6 animate-scale-in">
               <div className="absolute top-0 right-0 pt-4 pr-4">
                 <button
                   onClick={() => setShowConfirmModal(false)}
-                  className="text-gray-400 hover:text-gray-500"
+                  className="text-neutral-400 hover:text-neutral-600 transition-colors"
                 >
                   <XMarkIcon className="w-6 h-6" />
                 </button>
               </div>
               
               <div className="sm:flex sm:items-start">
-                <div className="flex items-center justify-center flex-shrink-0 w-12 h-12 mx-auto bg-primary-100 rounded-full sm:mx-0 sm:h-10 sm:w-10">
+                <div className="flex items-center justify-center flex-shrink-0 w-12 h-12 mx-auto bg-accent-100 rounded-xl sm:mx-0 sm:h-10 sm:w-10">
                   <span className="text-xl">🛒</span>
                 </div>
                 <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
-                  <h3 className="text-lg font-medium leading-6 text-gray-900">
+                  <h3 className="text-lg font-semibold leading-6 text-primary-900">
                     Confirm Your Order
                   </h3>
                   <div className="mt-4">
-                    <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                      <p className="text-sm text-gray-600">
+                    <div className="bg-neutral-100 rounded-xl p-4 space-y-2">
+                      <p className="text-sm text-neutral-700">
                         <span className="font-medium">Name:</span> {formData.customerName}
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-neutral-700">
                         <span className="font-medium">Phone:</span> {formData.phone}
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-neutral-700">
                         <span className="font-medium">Address:</span> {formData.address}, {formData.barangay}
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-neutral-700">
                         <span className="font-medium">Items:</span> {items.length} item(s)
                       </p>
-                      <p className="text-lg font-bold text-primary-600 pt-2 border-t">
+                      <p className="text-lg font-bold text-primary-800 pt-2 border-t border-neutral-200">
                         Total: {formatPrice(totalAmount)}
                       </p>
                     </div>
-                    <p className="mt-3 text-sm text-gray-500">
+                    <p className="mt-3 text-sm text-neutral-500">
                       By confirming, you agree to our terms of service. Payment is Cash on Delivery.
                     </p>
                   </div>

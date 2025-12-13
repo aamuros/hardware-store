@@ -27,13 +27,13 @@ class ErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-          <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+        <div className="min-h-screen flex items-center justify-center bg-neutral-100 px-4">
+          <div className="max-w-md w-full bg-white rounded-2xl shadow-soft p-8 text-center">
             <div className="text-6xl mb-4">😕</div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl font-bold text-primary-900 mb-2">
               Something went wrong
             </h1>
-            <p className="text-gray-600 mb-6">
+            <p className="text-neutral-600 mb-6">
               We're sorry, but something unexpected happened. Please try again.
             </p>
             
@@ -47,7 +47,7 @@ class ErrorBoundary extends Component {
               <Link
                 to="/"
                 onClick={this.handleReset}
-                className="btn bg-gray-200 text-gray-700 hover:bg-gray-300 w-full block"
+                className="btn bg-neutral-200 text-neutral-700 hover:bg-neutral-300 w-full block"
               >
                 Go to Home
               </Link>
@@ -55,10 +55,10 @@ class ErrorBoundary extends Component {
 
             {import.meta.env.DEV && this.state.error && (
               <details className="mt-6 text-left">
-                <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
+                <summary className="cursor-pointer text-sm text-neutral-500 hover:text-neutral-700">
                   Technical Details
                 </summary>
-                <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-auto max-h-40">
+                <pre className="mt-2 p-3 bg-neutral-100 rounded text-xs overflow-auto max-h-40">
                   {this.state.error.toString()}
                   {this.state.errorInfo?.componentStack}
                 </pre>

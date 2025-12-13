@@ -23,7 +23,7 @@ export const FormInput = ({
       {label && (
         <label
           htmlFor={name}
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium text-primary-700"
         >
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
@@ -40,9 +40,9 @@ export const FormInput = ({
         placeholder={placeholder}
         className={`
           w-full px-3 py-2 border rounded-md shadow-sm
-          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-          disabled:bg-gray-100 disabled:cursor-not-allowed
-          ${hasError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'}
+          focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500
+          disabled:bg-neutral-100 disabled:cursor-not-allowed
+          ${hasError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-neutral-300'}
           ${inputClassName}
         `}
         aria-invalid={hasError}
@@ -87,7 +87,7 @@ export const FormTextarea = ({
       {label && (
         <label
           htmlFor={name}
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium text-primary-700"
         >
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
@@ -104,9 +104,9 @@ export const FormTextarea = ({
         rows={rows}
         className={`
           w-full px-3 py-2 border rounded-md shadow-sm
-          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-          disabled:bg-gray-100 disabled:cursor-not-allowed
-          ${hasError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'}
+          focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500
+          disabled:bg-neutral-100 disabled:cursor-not-allowed
+          ${hasError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-neutral-300'}
         `}
         aria-invalid={hasError}
         aria-describedby={hasError ? `${name}-error` : undefined}
@@ -150,7 +150,7 @@ export const FormSelect = ({
       {label && (
         <label
           htmlFor={name}
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium text-primary-700"
         >
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
@@ -165,9 +165,9 @@ export const FormSelect = ({
         disabled={disabled}
         className={`
           w-full px-3 py-2 border rounded-md shadow-sm
-          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-          disabled:bg-gray-100 disabled:cursor-not-allowed
-          ${hasError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'}
+          focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500
+          disabled:bg-neutral-100 disabled:cursor-not-allowed
+          ${hasError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-neutral-300'}
         `}
         aria-invalid={hasError}
         aria-describedby={hasError ? `${name}-error` : undefined}
@@ -215,13 +215,13 @@ export const FormCheckbox = ({
         checked={checked}
         onChange={onChange}
         disabled={disabled}
-        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:cursor-not-allowed"
+        className="h-4 w-4 text-accent-600 focus:ring-accent-500 border-neutral-300 rounded disabled:cursor-not-allowed"
         {...props}
       />
       {label && (
         <label
           htmlFor={name}
-          className="ml-2 block text-sm text-gray-700"
+          className="ml-2 block text-sm text-neutral-700"
         >
           {label}
         </label>
@@ -278,9 +278,9 @@ export const SubmitButton = ({
       type="submit"
       disabled={disabled || loading}
       className={`
-        px-4 py-2 bg-blue-600 text-white font-medium rounded-md
-        hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
-        disabled:bg-gray-400 disabled:cursor-not-allowed
+        px-4 py-2 bg-primary-800 text-white font-medium rounded-md
+        hover:bg-primary-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-500
+        disabled:bg-neutral-400 disabled:cursor-not-allowed
         transition-colors duration-200
         flex items-center justify-center gap-2
         ${className}

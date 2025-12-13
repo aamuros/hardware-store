@@ -120,8 +120,8 @@ export default function CategoriesPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Categories</h1>
-          <p className="text-gray-600">Organize your products into categories</p>
+          <h1 className="text-2xl font-bold text-primary-900">Categories</h1>
+          <p className="text-neutral-600">Organize your products into categories</p>
         </div>
         <button onClick={() => openModal()} className="btn btn-primary flex items-center gap-2">
           <PlusIcon className="h-5 w-5" />
@@ -132,25 +132,25 @@ export default function CategoriesPage() {
       {/* Categories Grid */}
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-800"></div>
         </div>
       ) : categories.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
-          <p className="text-gray-500 mb-4">No categories yet</p>
-          <button onClick={() => openModal()} className="text-primary-600 hover:text-primary-700">
+        <div className="bg-white rounded-2xl shadow-soft p-12 text-center">
+          <p className="text-neutral-500 mb-4">No categories yet</p>
+          <button onClick={() => openModal()} className="text-accent-600 hover:text-accent-700">
             Add your first category
           </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {categories.map((category) => (
-            <div key={category.id} className="bg-white rounded-lg shadow p-6">
+            <div key={category.id} className="bg-white rounded-2xl shadow-soft p-6 hover:shadow-soft-lg transition-all">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">{category.icon || '📦'}</span>
                   <div>
-                    <h3 className="font-semibold text-gray-900">{category.name}</h3>
-                    <p className="text-sm text-gray-500">
+                    <h3 className="font-semibold text-primary-900">{category.name}</h3>
+                    <p className="text-sm text-neutral-500">
                       {category._count?.products || 0} products
                     </p>
                   </div>
@@ -158,21 +158,21 @@ export default function CategoriesPage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => openModal(category)}
-                    className="text-gray-400 hover:text-primary-600"
+                    className="text-neutral-400 hover:text-accent-600"
                   >
                     <PencilIcon className="h-5 w-5" />
                   </button>
                   <button
                     onClick={() => handleDelete(category)}
                     disabled={deleting === category.id}
-                    className="text-gray-400 hover:text-red-600"
+                    className="text-neutral-400 hover:text-red-600"
                   >
                     <TrashIcon className="h-5 w-5" />
                   </button>
                 </div>
               </div>
               {category.description && (
-                <p className="mt-3 text-sm text-gray-600">{category.description}</p>
+                <p className="mt-3 text-sm text-neutral-600">{category.description}</p>
               )}
             </div>
           ))}
@@ -183,13 +183,13 @@ export default function CategoriesPage() {
       {showModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4">
-            <div className="fixed inset-0 bg-black opacity-30" onClick={closeModal} />
-            <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full">
-              <div className="flex items-center justify-between px-6 py-4 border-b">
-                <h3 className="text-lg font-semibold text-gray-900">
+            <div className="fixed inset-0 bg-primary-900/30 backdrop-blur-sm" onClick={closeModal} />
+            <div className="relative bg-white rounded-2xl shadow-soft-lg max-w-md w-full">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200">
+                <h3 className="text-lg font-semibold text-primary-900">
                   {editingCategory ? 'Edit Category' : 'Add New Category'}
                 </h3>
-                <button onClick={closeModal} className="text-gray-400 hover:text-gray-600">
+                <button onClick={closeModal} className="text-neutral-400 hover:text-neutral-600">
                   <XMarkIcon className="h-6 w-6" />
                 </button>
               </div>
@@ -197,7 +197,7 @@ export default function CategoriesPage() {
               <form onSubmit={handleSubmit} className="p-6 space-y-4">
                 {/* Icon Selector */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-primary-700 mb-2">
                     Icon
                   </label>
                   <div className="flex flex-wrap gap-2">
@@ -208,8 +208,8 @@ export default function CategoriesPage() {
                         onClick={() => setFormData((prev) => ({ ...prev, icon: icon.value }))}
                         className={`p-3 rounded-lg text-2xl ${
                           formData.icon === icon.value
-                            ? 'bg-primary-100 ring-2 ring-primary-500'
-                            : 'bg-gray-100 hover:bg-gray-200'
+                            ? 'bg-accent-100 ring-2 ring-accent-500'
+                            : 'bg-neutral-100 hover:bg-neutral-200'
                         }`}
                         title={icon.label}
                       >
@@ -221,7 +221,7 @@ export default function CategoriesPage() {
 
                 {/* Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-primary-700 mb-1">
                     Category Name *
                   </label>
                   <input
@@ -237,7 +237,7 @@ export default function CategoriesPage() {
 
                 {/* Description */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-primary-700 mb-1">
                     Description
                   </label>
                   <textarea
@@ -255,7 +255,7 @@ export default function CategoriesPage() {
                   <button
                     type="button"
                     onClick={closeModal}
-                    className="btn bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    className="btn bg-neutral-200 text-neutral-700 hover:bg-neutral-300"
                   >
                     Cancel
                   </button>

@@ -4,14 +4,14 @@ import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { orderApi } from '../../services/api'
 
 const STATUS_INFO = {
-  pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
-  accepted: { label: 'Accepted', color: 'bg-blue-100 text-blue-800', icon: '✅' },
-  rejected: { label: 'Rejected', color: 'bg-red-100 text-red-800', icon: '❌' },
-  preparing: { label: 'Preparing', color: 'bg-purple-100 text-purple-800', icon: '🔧' },
-  out_for_delivery: { label: 'Out for Delivery', color: 'bg-orange-100 text-orange-800', icon: '🚚' },
-  delivered: { label: 'Delivered', color: 'bg-green-100 text-green-800', icon: '📦' },
-  completed: { label: 'Completed', color: 'bg-green-100 text-green-800', icon: '✨' },
-  cancelled: { label: 'Cancelled', color: 'bg-gray-100 text-gray-800', icon: '🚫' },
+  pending: { label: 'Pending', color: 'bg-amber-50 text-amber-700 border border-amber-200', icon: '⏳' },
+  accepted: { label: 'Accepted', color: 'bg-blue-50 text-blue-700 border border-blue-200', icon: '✅' },
+  rejected: { label: 'Rejected', color: 'bg-red-50 text-red-700 border border-red-200', icon: '❌' },
+  preparing: { label: 'Preparing', color: 'bg-violet-50 text-violet-700 border border-violet-200', icon: '🔧' },
+  out_for_delivery: { label: 'Out for Delivery', color: 'bg-accent-50 text-accent-700 border border-accent-200', icon: '🚚' },
+  delivered: { label: 'Delivered', color: 'bg-emerald-50 text-emerald-700 border border-emerald-200', icon: '📦' },
+  completed: { label: 'Completed', color: 'bg-emerald-50 text-emerald-700 border border-emerald-200', icon: '✨' },
+  cancelled: { label: 'Cancelled', color: 'bg-neutral-100 text-neutral-700 border border-neutral-200', icon: '🚫' },
 }
 
 export default function TrackOrderPage() {
@@ -71,14 +71,14 @@ export default function TrackOrderPage() {
   const statusInfo = order ? STATUS_INFO[order.status] || STATUS_INFO.pending : null
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">Track Your Order</h1>
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+      <h1 className="text-3xl font-bold text-primary-900 mb-8 text-center">Track Your Order</h1>
 
       {/* Search Form */}
       <form onSubmit={handleTrack} className="mb-8">
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <MagnifyingGlassIcon className="h-5 w-5 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Enter your order number (e.g., HW-20241211-0001)"
@@ -100,29 +100,29 @@ export default function TrackOrderPage() {
           <div className="card p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-sm text-gray-500">Order Number</p>
-                <p className="text-xl font-bold text-gray-900">{order.orderNumber}</p>
+                <p className="text-sm text-neutral-500">Order Number</p>
+                <p className="text-xl font-bold text-primary-900">{order.orderNumber}</p>
               </div>
-              <span className={`px-4 py-2 rounded-full text-sm font-medium ${statusInfo.color}`}>
+              <span className={`px-4 py-2 rounded-xl text-sm font-medium ${statusInfo.color}`}>
                 {statusInfo.icon} {statusInfo.label}
               </span>
             </div>
 
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-gray-500">Order Date</p>
-                <p className="font-medium">{formatDate(order.createdAt)}</p>
+                <p className="text-neutral-500">Order Date</p>
+                <p className="font-medium text-primary-900">{formatDate(order.createdAt)}</p>
               </div>
               <div>
-                <p className="text-gray-500">Last Updated</p>
-                <p className="font-medium">{formatDate(order.updatedAt)}</p>
+                <p className="text-neutral-500">Last Updated</p>
+                <p className="font-medium text-primary-900">{formatDate(order.updatedAt)}</p>
               </div>
             </div>
           </div>
 
           {/* Status Timeline */}
           <div className="card p-6 mb-6">
-            <h2 className="font-bold text-gray-900 mb-4">Order Status</h2>
+            <h2 className="font-bold text-primary-900 mb-4">Order Status</h2>
             <div className="space-y-4">
               {['pending', 'accepted', 'preparing', 'out_for_delivery', 'completed'].map((status, index) => {
                 const info = STATUS_INFO[status]
@@ -133,12 +133,12 @@ export default function TrackOrderPage() {
                 
                 return (
                   <div key={status} className="flex items-center gap-4">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                      isActive ? 'bg-primary-500 text-white' : 'bg-gray-200 text-gray-400'
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm transition-all ${
+                      isActive ? 'bg-primary-800 text-white' : 'bg-neutral-200 text-neutral-400'
                     } ${isCurrent ? 'ring-4 ring-primary-100' : ''}`}>
                       {isActive ? info.icon : (index + 1)}
                     </div>
-                    <div className={isActive ? 'text-gray-900' : 'text-gray-400'}>
+                    <div className={isActive ? 'text-primary-900' : 'text-neutral-400'}>
                       <p className="font-medium">{info.label}</p>
                     </div>
                   </div>
@@ -149,23 +149,23 @@ export default function TrackOrderPage() {
 
           {/* Order Items */}
           <div className="card p-6">
-            <h2 className="font-bold text-gray-900 mb-4">Order Items</h2>
+            <h2 className="font-bold text-primary-900 mb-4">Order Items</h2>
             <div className="space-y-3">
               {order.items?.map((item, index) => (
-                <div key={index} className="flex justify-between items-center py-2 border-b last:border-0">
+                <div key={index} className="flex justify-between items-center py-2 border-b border-neutral-100 last:border-0">
                   <div>
-                    <p className="font-medium text-gray-900">{item.product?.name || 'Product'}</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="font-medium text-primary-900">{item.product?.name || 'Product'}</p>
+                    <p className="text-sm text-neutral-500">
                       {item.quantity} {item.product?.unit || 'unit'} × {formatPrice(item.unitPrice)}
                     </p>
                   </div>
-                  <p className="font-bold text-gray-900">{formatPrice(item.subtotal)}</p>
+                  <p className="font-bold text-primary-800">{formatPrice(item.subtotal)}</p>
                 </div>
               ))}
             </div>
-            <div className="mt-4 pt-4 border-t flex justify-between">
-              <span className="font-bold text-gray-900">Total</span>
-              <span className="text-xl font-bold text-primary-600">{formatPrice(order.totalAmount)}</span>
+            <div className="mt-4 pt-4 border-t border-neutral-200 flex justify-between">
+              <span className="font-bold text-primary-900">Total</span>
+              <span className="text-xl font-bold text-primary-800">{formatPrice(order.totalAmount)}</span>
             </div>
           </div>
         </div>
@@ -173,7 +173,7 @@ export default function TrackOrderPage() {
 
       {/* Help Text */}
       {!order && !loading && (
-        <div className="text-center text-gray-500 mt-8">
+        <div className="text-center text-neutral-500 mt-8">
           <p className="mb-2">Your order number was sent via SMS when you placed your order.</p>
           <p>Example format: HW-20241211-0001</p>
         </div>

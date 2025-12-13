@@ -97,7 +97,7 @@ export default function OrderDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-800"></div>
       </div>
     )
   }
@@ -114,7 +114,7 @@ export default function OrderDetailPage() {
   }
 
   const availableTransitions = STATUS_TRANSITIONS[order.status] || []
-  const statusInfo = ORDER_STATUSES[order.status] || { label: order.status, color: 'bg-gray-100 text-gray-800' }
+  const statusInfo = ORDER_STATUSES[order.status] || { label: order.status, color: 'bg-neutral-100 text-neutral-800' }
 
   return (
     <div className="space-y-6">
@@ -123,15 +123,15 @@ export default function OrderDetailPage() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate('/admin/orders')}
-            className="p-2 hover:bg-gray-100 rounded-lg"
+            className="p-2 hover:bg-neutral-100 rounded-lg"
           >
-            <ArrowLeftIcon className="h-5 w-5 text-gray-500" />
+            <ArrowLeftIcon className="h-5 w-5 text-neutral-500" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-primary-900">
               Order #{order.orderNumber}
             </h1>
-            <p className="text-gray-600">
+            <p className="text-neutral-600">
               Placed on {formatDate(order.createdAt)}
             </p>
           </div>
@@ -143,8 +143,8 @@ export default function OrderDetailPage() {
 
       {/* Status Update Actions */}
       {availableTransitions.length > 0 && (
-        <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">Update Order Status</h3>
+        <div className="bg-white rounded-2xl shadow-soft p-4">
+          <h3 className="text-sm font-medium text-primary-700 mb-3">Update Order Status</h3>
           <div className="flex flex-wrap gap-3">
             {availableTransitions.includes('accepted') && (
               <button
@@ -208,7 +208,7 @@ export default function OrderDetailPage() {
               <button
                 onClick={() => handleStatusUpdate('cancelled')}
                 disabled={updating}
-                className="btn bg-gray-600 text-white hover:bg-gray-700"
+                className="btn bg-neutral-600 text-white hover:bg-neutral-700"
               >
                 Cancel Order
               </button>
@@ -220,11 +220,11 @@ export default function OrderDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Order Items */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">Order Items</h2>
+          <div className="bg-white rounded-2xl shadow-soft">
+            <div className="px-6 py-4 border-b border-neutral-200">
+              <h2 className="text-lg font-semibold text-primary-900">Order Items</h2>
             </div>
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-neutral-200">
               {order.items.map((item) => (
                 <div key={item.id} className="px-6 py-4 flex items-center gap-4">
                   {item.product?.imageUrl && (
@@ -235,25 +235,25 @@ export default function OrderDetailPage() {
                     />
                   )}
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">
+                    <h4 className="font-medium text-primary-900">
                       {item.product?.name || 'Product'}
                     </h4>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-neutral-500">
                       {item.product?.unit || 'unit'} × {item.quantity}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium text-gray-900">
+                    <p className="font-medium text-primary-900">
                       ₱{item.subtotal.toLocaleString()}
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-neutral-500">
                       @ ₱{item.unitPrice.toLocaleString()}
                     </p>
                   </div>
                 </div>
               ))}
             </div>
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+            <div className="px-6 py-4 bg-neutral-50 border-t border-neutral-200 rounded-b-2xl">
               <div className="flex justify-between items-center text-lg font-bold">
                 <span>Total</span>
                 <span>₱{order.totalAmount.toLocaleString()}</span>
@@ -263,27 +263,27 @@ export default function OrderDetailPage() {
 
           {/* Notes */}
           {order.notes && (
-            <div className="bg-white rounded-lg shadow mt-6 p-6">
-              <h3 className="font-semibold text-gray-900 mb-2">Customer Notes</h3>
-              <p className="text-gray-600">{order.notes}</p>
+            <div className="bg-white rounded-2xl shadow-soft mt-6 p-6">
+              <h3 className="font-semibold text-primary-900 mb-2">Customer Notes</h3>
+              <p className="text-neutral-600">{order.notes}</p>
             </div>
           )}
         </div>
 
         {/* Customer Info */}
         <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">Customer Information</h3>
+          <div className="bg-white rounded-2xl shadow-soft p-6">
+            <h3 className="font-semibold text-primary-900 mb-4">Customer Information</h3>
             <div className="space-y-3">
               <div>
-                <p className="text-sm text-gray-500">Name</p>
-                <p className="font-medium text-gray-900">{order.customerName}</p>
+                <p className="text-sm text-neutral-500">Name</p>
+                <p className="font-medium text-primary-900">{order.customerName}</p>
               </div>
               <div className="flex items-start gap-2">
-                <PhoneIcon className="h-5 w-5 text-gray-400 mt-0.5" />
+                <PhoneIcon className="h-5 w-5 text-neutral-400 mt-0.5" />
                 <div>
-                  <p className="text-sm text-gray-500">Phone</p>
-                  <a href={`tel:${order.phone}`} className="font-medium text-primary-600">
+                  <p className="text-sm text-neutral-500">Phone</p>
+                  <a href={`tel:${order.phone}`} className="font-medium text-accent-600">
                     {order.phone}
                   </a>
                 </div>
@@ -291,16 +291,16 @@ export default function OrderDetailPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">Delivery Address</h3>
+          <div className="bg-white rounded-2xl shadow-soft p-6">
+            <h3 className="font-semibold text-primary-900 mb-4">Delivery Address</h3>
             <div className="space-y-3">
               <div className="flex items-start gap-2">
-                <MapPinIcon className="h-5 w-5 text-gray-400 mt-0.5" />
+                <MapPinIcon className="h-5 w-5 text-neutral-400 mt-0.5" />
                 <div>
-                  <p className="text-gray-900">{order.address}</p>
-                  <p className="text-gray-600">{order.barangay}</p>
+                  <p className="text-primary-900">{order.address}</p>
+                  <p className="text-neutral-600">{order.barangay}</p>
                   {order.landmarks && (
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-neutral-500 mt-1">
                       Landmarks: {order.landmarks}
                     </p>
                   )}
@@ -309,22 +309,22 @@ export default function OrderDetailPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">Order Timeline</h3>
+          <div className="bg-white rounded-2xl shadow-soft p-6">
+            <h3 className="font-semibold text-primary-900 mb-4">Order Timeline</h3>
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <ClockIcon className="h-5 w-5 text-gray-400" />
+                <ClockIcon className="h-5 w-5 text-neutral-400" />
                 <div>
-                  <p className="text-sm text-gray-500">Order Placed</p>
-                  <p className="text-gray-900">{formatDate(order.createdAt)}</p>
+                  <p className="text-sm text-neutral-500">Order Placed</p>
+                  <p className="text-primary-900">{formatDate(order.createdAt)}</p>
                 </div>
               </div>
               {order.updatedAt !== order.createdAt && (
                 <div className="flex items-center gap-2">
-                  <ClockIcon className="h-5 w-5 text-gray-400" />
+                  <ClockIcon className="h-5 w-5 text-neutral-400" />
                   <div>
-                    <p className="text-sm text-gray-500">Last Updated</p>
-                    <p className="text-gray-900">{formatDate(order.updatedAt)}</p>
+                    <p className="text-sm text-neutral-500">Last Updated</p>
+                    <p className="text-primary-900">{formatDate(order.updatedAt)}</p>
                   </div>
                 </div>
               )}
@@ -337,10 +337,10 @@ export default function OrderDetailPage() {
       {showRejectModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4">
-            <div className="fixed inset-0 bg-black opacity-30" onClick={() => setShowRejectModal(false)} />
-            <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Reject Order</h3>
-              <p className="text-gray-600 mb-4">
+            <div className="fixed inset-0 bg-primary-900/30 backdrop-blur-sm" onClick={() => setShowRejectModal(false)} />
+            <div className="relative bg-white rounded-2xl shadow-soft-lg max-w-md w-full p-6">
+              <h3 className="text-lg font-semibold text-primary-900 mb-4">Reject Order</h3>
+              <p className="text-neutral-600 mb-4">
                 Please provide a reason for rejecting this order. The customer will be notified via SMS.
               </p>
               <textarea
@@ -352,7 +352,7 @@ export default function OrderDetailPage() {
               <div className="flex justify-end gap-3 mt-4">
                 <button
                   onClick={() => setShowRejectModal(false)}
-                  className="btn bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  className="btn bg-neutral-200 text-neutral-700 hover:bg-neutral-300"
                 >
                   Cancel
                 </button>

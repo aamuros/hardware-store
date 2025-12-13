@@ -47,7 +47,7 @@ export default function ReportsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-800"></div>
       </div>
     )
   }
@@ -57,13 +57,13 @@ export default function ReportsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Reports & Analytics</h1>
-          <p className="text-gray-500">View sales and product performance data</p>
+          <h1 className="text-2xl font-bold text-primary-900">Reports & Analytics</h1>
+          <p className="text-neutral-500">View sales and product performance data</p>
         </div>
         
         {/* Date Range Filter */}
         <div className="flex items-center gap-2">
-          <CalendarDaysIcon className="h-5 w-5 text-gray-400" />
+          <CalendarDaysIcon className="h-5 w-5 text-neutral-400" />
           <select
             value={dateRange}
             onChange={(e) => setDateRange(e.target.value)}
@@ -82,8 +82,8 @@ export default function ReportsPage() {
         <div className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-neutral-500">Total Revenue</p>
+              <p className="text-2xl font-bold text-primary-900">
                 {formatCurrency(salesReport?.totalRevenue)}
               </p>
             </div>
@@ -96,8 +96,8 @@ export default function ReportsPage() {
         <div className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">Total Orders</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-neutral-500">Total Orders</p>
+              <p className="text-2xl font-bold text-primary-900">
                 {salesReport?.totalOrders || 0}
               </p>
             </div>
@@ -110,8 +110,8 @@ export default function ReportsPage() {
         <div className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">Completed Orders</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-neutral-500">Completed Orders</p>
+              <p className="text-2xl font-bold text-primary-900">
                 {salesReport?.completedOrders || 0}
               </p>
             </div>
@@ -124,8 +124,8 @@ export default function ReportsPage() {
         <div className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">Cancelled Orders</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-neutral-500">Cancelled Orders</p>
+              <p className="text-2xl font-bold text-primary-900">
                 {salesReport?.cancelledOrders || 0}
               </p>
             </div>
@@ -139,7 +139,7 @@ export default function ReportsPage() {
       {/* Orders by Status */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="card p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Orders by Status</h2>
+          <h2 className="text-lg font-semibold text-primary-900 mb-4">Orders by Status</h2>
           <div className="space-y-3">
             {salesReport?.ordersByStatus?.map((item) => (
               <div key={item.status} className="flex items-center justify-between">
@@ -148,32 +148,32 @@ export default function ReportsPage() {
                     {item.status || 'Unknown'}
                   </span>
                 </div>
-                <span className="font-medium text-gray-900">{item._count || 0}</span>
+                <span className="font-medium text-primary-900">{item._count || 0}</span>
               </div>
             ))}
             {(!salesReport?.ordersByStatus || salesReport.ordersByStatus.length === 0) && (
-              <p className="text-gray-500 text-center py-4">No order data available</p>
+              <p className="text-neutral-500 text-center py-4">No order data available</p>
             )}
           </div>
         </div>
 
         <div className="card p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Revenue Statistics</h2>
+          <h2 className="text-lg font-semibold text-primary-900 mb-4">Revenue Statistics</h2>
           <div className="space-y-4">
             <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-gray-600">Average Order Value</span>
-              <span className="font-medium text-gray-900">
+              <span className="text-neutral-600">Average Order Value</span>
+              <span className="font-medium text-primary-900">
                 {formatCurrency(salesReport?.averageOrderValue)}
               </span>
             </div>
             <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-gray-600">Completed Revenue</span>
+              <span className="text-neutral-600">Completed Revenue</span>
               <span className="font-medium text-green-600">
                 {formatCurrency(salesReport?.completedRevenue)}
               </span>
             </div>
             <div className="flex justify-between items-center py-2">
-              <span className="text-gray-600">Pending Revenue</span>
+              <span className="text-neutral-600">Pending Revenue</span>
               <span className="font-medium text-yellow-600">
                 {formatCurrency(salesReport?.pendingRevenue)}
               </span>
@@ -184,40 +184,40 @@ export default function ReportsPage() {
 
       {/* Top Products */}
       <div className="card p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        <h2 className="text-lg font-semibold text-primary-900 mb-4">
           <ChartBarIcon className="h-5 w-5 inline-block mr-2" />
           Top Selling Products
         </h2>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-neutral-200">
+            <thead className="bg-neutral-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                   Rank
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                   Product
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                   Category
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">
                   Units Sold
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">
                   Revenue
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-neutral-200">
               {productReport?.topProducts?.map((product, index) => (
-                <tr key={product.id} className="hover:bg-gray-50">
+                <tr key={product.id} className="hover:bg-neutral-50">
                   <td className="px-4 py-3 whitespace-nowrap">
                     <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
                       index === 0 ? 'bg-yellow-100 text-yellow-800' :
-                      index === 1 ? 'bg-gray-100 text-gray-800' :
+                      index === 1 ? 'bg-neutral-100 text-neutral-800' :
                       index === 2 ? 'bg-orange-100 text-orange-800' :
-                      'bg-gray-50 text-gray-600'
+                      'bg-neutral-50 text-neutral-600'
                     }`}>
                       {index + 1}
                     </span>
@@ -232,12 +232,12 @@ export default function ReportsPage() {
                         />
                       )}
                       <div>
-                        <p className="font-medium text-gray-900">{product.name}</p>
-                        <p className="text-sm text-gray-500">{product.sku || 'No SKU'}</p>
+                        <p className="font-medium text-primary-900">{product.name}</p>
+                        <p className="text-sm text-neutral-500">{product.sku || 'No SKU'}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-gray-500">
+                  <td className="px-4 py-3 whitespace-nowrap text-neutral-500">
                     {product.category?.name || 'Uncategorized'}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-right font-medium">
@@ -250,7 +250,7 @@ export default function ReportsPage() {
               ))}
               {(!productReport?.topProducts || productReport.topProducts.length === 0) && (
                 <tr>
-                  <td colSpan="5" className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan="5" className="px-4 py-8 text-center text-neutral-500">
                     No product data available for this period
                   </td>
                 </tr>
@@ -262,19 +262,19 @@ export default function ReportsPage() {
 
       {/* Category Performance */}
       <div className="card p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Category Performance</h2>
+        <h2 className="text-lg font-semibold text-primary-900 mb-4">Category Performance</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {productReport?.categoryStats?.map((category) => (
-            <div key={category.id} className="p-4 bg-gray-50 rounded-lg">
+            <div key={category.id} className="p-4 bg-neutral-50 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xl">{category.icon || '📦'}</span>
-                <h3 className="font-medium text-gray-900">{category.name}</h3>
+                <h3 className="font-medium text-primary-900">{category.name}</h3>
               </div>
               <div className="space-y-1 text-sm">
-                <p className="text-gray-600">
+                <p className="text-neutral-600">
                   Products: <span className="font-medium">{category.productCount || 0}</span>
                 </p>
-                <p className="text-gray-600">
+                <p className="text-neutral-600">
                   Units Sold: <span className="font-medium">{category.totalSold || 0}</span>
                 </p>
                 <p className="text-green-600 font-medium">
@@ -284,7 +284,7 @@ export default function ReportsPage() {
             </div>
           ))}
           {(!productReport?.categoryStats || productReport.categoryStats.length === 0) && (
-            <div className="col-span-full text-center text-gray-500 py-4">
+            <div className="col-span-full text-center text-neutral-500 py-4">
               No category data available
             </div>
           )}
