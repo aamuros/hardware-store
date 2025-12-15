@@ -50,7 +50,7 @@ export default function ProductsPage() {
         limit: 12,
         available: true,
       }
-      
+
       if (selectedCategory) {
         params.category = selectedCategory
       }
@@ -109,7 +109,7 @@ export default function ProductsPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-primary-900 mb-4">Products</h1>
-        
+
         {/* Search */}
         <form onSubmit={handleSearch} className="flex gap-2 mb-4">
           <div className="relative flex-1">
@@ -131,11 +131,10 @@ export default function ProductsPage() {
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => handleCategoryChange('')}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-              !selectedCategory
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${!selectedCategory
                 ? 'bg-primary-800 text-white shadow-sm'
                 : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-            }`}
+              }`}
           >
             All Products
           </button>
@@ -143,11 +142,10 @@ export default function ProductsPage() {
             <button
               key={category.id}
               onClick={() => handleCategoryChange(category.id.toString())}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                selectedCategory === category.id.toString()
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${selectedCategory === category.id.toString()
                   ? 'bg-primary-800 text-white shadow-sm'
                   : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-              }`}
+                }`}
             >
               {category.icon} {category.name}
             </button>
@@ -157,20 +155,34 @@ export default function ProductsPage() {
 
       {/* Products Grid */}
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-700"></div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+            <div key={i} className="bg-white rounded-2xl shadow-soft overflow-hidden animate-pulse">
+              <div className="h-48 bg-neutral-200"></div>
+              <div className="p-4 space-y-3">
+                <div className="h-4 bg-neutral-200 rounded w-3/4"></div>
+                <div className="h-4 bg-neutral-100 rounded w-1/2"></div>
+                <div className="flex justify-between items-center pt-2">
+                  <div className="h-6 bg-neutral-200 rounded w-20"></div>
+                  <div className="h-10 bg-neutral-200 rounded-xl w-24"></div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : products.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-neutral-500 text-lg">No products found</p>
+        <div className="text-center py-16">
+          <div className="text-6xl mb-4">🔍</div>
+          <h3 className="text-xl font-semibold text-primary-900 mb-2">No products found</h3>
+          <p className="text-neutral-500 mb-6">Try adjusting your search or filter to find what you're looking for.</p>
           <button
             onClick={() => {
               setSearchQuery('')
               handleCategoryChange('')
             }}
-            className="mt-4 text-accent-600 hover:text-accent-700 font-medium"
+            className="btn-primary"
           >
-            Clear filters
+            Clear All Filters
           </button>
         </div>
       ) : (

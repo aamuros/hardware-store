@@ -37,34 +37,34 @@ export default function CheckoutPage() {
 
   const validateForm = () => {
     const newErrors = {}
-    
+
     if (!formData.customerName.trim()) {
       newErrors.customerName = 'Name is required'
     }
-    
+
     if (!formData.phone.trim()) {
       newErrors.phone = 'Phone number is required'
     } else if (!/^(09|\+639)\d{9}$/.test(formData.phone.replace(/\s/g, ''))) {
       newErrors.phone = 'Invalid phone format (e.g., 09171234567)'
     }
-    
+
     if (!formData.address.trim()) {
       newErrors.address = 'Address is required'
     } else if (formData.address.trim().length < 10) {
       newErrors.address = 'Please provide a complete address'
     }
-    
+
     if (!formData.barangay.trim()) {
       newErrors.barangay = 'Barangay is required'
     }
-    
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+
     if (!validateForm()) {
       toast.error('Please fill in all required fields correctly')
       return
@@ -127,7 +127,7 @@ export default function CheckoutPage() {
         <div className="lg:col-span-2 space-y-6">
           <div className="card p-6">
             <h2 className="text-lg font-bold text-primary-900 mb-4">Delivery Information</h2>
-            
+
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="customerName" className="label">
@@ -260,7 +260,7 @@ export default function CheckoutPage() {
         <div className="lg:col-span-1">
           <div className="card p-6 sticky top-24">
             <h2 className="text-lg font-bold text-primary-900 mb-4">Order Summary</h2>
-            
+
             <div className="space-y-3 mb-6">
               <div className="flex justify-between text-neutral-600">
                 <span>Subtotal</span>
@@ -322,21 +322,22 @@ export default function CheckoutPage() {
       {showConfirmModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
-            <div 
+            <div
               className="fixed inset-0 transition-opacity bg-primary-900/50 backdrop-blur-sm"
               onClick={() => setShowConfirmModal(false)}
             />
-            
+
             <div className="relative inline-block px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6 animate-scale-in">
               <div className="absolute top-0 right-0 pt-4 pr-4">
                 <button
                   onClick={() => setShowConfirmModal(false)}
                   className="text-neutral-400 hover:text-neutral-600 transition-colors"
+                  aria-label="Close confirmation modal"
                 >
                   <XMarkIcon className="w-6 h-6" />
                 </button>
               </div>
-              
+
               <div className="sm:flex sm:items-start">
                 <div className="flex items-center justify-center flex-shrink-0 w-12 h-12 mx-auto bg-accent-100 rounded-xl sm:mx-0 sm:h-10 sm:w-10">
                   <span className="text-xl">🛒</span>
@@ -369,7 +370,7 @@ export default function CheckoutPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse gap-3">
                 <button
                   type="button"

@@ -68,20 +68,21 @@ export default function CartPage() {
                 <p className="text-sm text-neutral-500">
                   {formatPrice(item.price)} / {item.unit}
                 </p>
-                
+
                 {/* Quantity Controls */}
                 <div className="flex items-center gap-3 mt-2">
                   <div className="flex items-center border border-neutral-200 rounded-xl overflow-hidden">
                     <button
                       onClick={() => updateQuantity(item.id, item.quantity - 1)}
                       className="p-2 hover:bg-neutral-100 transition-colors"
+                      aria-label={`Decrease quantity of ${item.name}`}
                     >
-                      <MinusIcon className="h-4 w-4" />
-                    </button>
+                      <MinusIcon className="h-4 w-4" />                    </button>
                     <span className="px-3 text-sm font-medium">{item.quantity}</span>
                     <button
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
                       className="p-2 hover:bg-neutral-100 transition-colors"
+                      aria-label={`Increase quantity of ${item.name}`}
                     >
                       <PlusIcon className="h-4 w-4" />
                     </button>
@@ -89,6 +90,7 @@ export default function CartPage() {
                   <button
                     onClick={() => removeFromCart(item.id)}
                     className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                    aria-label={`Remove ${item.name} from cart`}
                   >
                     <TrashIcon className="h-5 w-5" />
                   </button>
@@ -109,7 +111,7 @@ export default function CartPage() {
         <div className="lg:col-span-1">
           <div className="card p-6 sticky top-24">
             <h2 className="text-lg font-bold text-primary-900 mb-4">Order Summary</h2>
-            
+
             <div className="space-y-3 mb-6">
               <div className="flex justify-between text-neutral-600">
                 <span>Subtotal ({items.length} items)</span>
