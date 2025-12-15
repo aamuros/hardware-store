@@ -7,9 +7,20 @@ export default function ProductCard({ product }) {
   const { addToCart, getItemQuantity } = useCart()
   const quantity = getItemQuantity(product.id)
 
+  // Check if product is in stock (stockQuantity > 0 and isAvailable)
+  const isInStock = product.isAvailable && (product.stockQuantity ?? 0) > 0
+  const isLowStock = isInStock && (product.stockQuantity ?? 0) <= (product.lowStockThreshold ?? 10)
+
   const handleAddToCart = (e) => {
     e.preventDefault()
     e.stopPropagation()
+
+    // Prevent adding if no stock available
+    if (!isInStock) {
+      toast.error('This product is out of stock')
+      return
+    }
+
     addToCart(product, 1)
     toast.success(`${product.name} added to cart!`)
   }
@@ -36,15 +47,24 @@ export default function ProductCard({ product }) {
             <CubeIcon className="h-16 w-16" />
           </div>
         )}
-        
-        {!product.isAvailable && (
+
+        {/* Out of Stock overlay */}
+        {!isInStock && (
           <div className="absolute inset-0 bg-primary-900/60 backdrop-blur-sm flex items-center justify-center">
             <span className="bg-white text-primary-800 px-3 py-1 rounded-lg text-sm font-medium">
               Out of Stock
             </span>
           </div>
         )}
-        
+
+        {/* Low Stock badge */}
+        {isLowStock && (
+          <div className="absolute top-3 left-3 bg-amber-500 text-white px-2 py-0.5 rounded text-xs font-medium">
+            Only {product.stockQuantity} left
+          </div>
+        )}
+
+        {/* Cart quantity badge */}
         {quantity > 0 && (
           <div className="absolute top-3 right-3 bg-accent-500 text-white rounded-lg h-6 w-6 flex items-center justify-center text-xs font-bold shadow-sm">
             {quantity}
@@ -65,8 +85,8 @@ export default function ProductCard({ product }) {
             </span>
             <span className="text-xs text-neutral-500 ml-1">/ {product.unit}</span>
           </div>
-          
-          {product.isAvailable && (
+
+          {isInStock && (
             <button
               onClick={handleAddToCart}
               className="p-2.5 bg-primary-800 text-white rounded-xl hover:bg-primary-900 transition-all duration-200 hover:shadow-md"

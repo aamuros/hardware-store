@@ -16,7 +16,7 @@ export default function ProductsManagementPage() {
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1 })
   const [categoryFilter, setCategoryFilter] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
-  
+
   // Modal state
   const [showModal, setShowModal] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
@@ -27,6 +27,8 @@ export default function ProductsManagementPage() {
     unit: 'piece',
     categoryId: '',
     sku: '',
+    stockQuantity: '0',
+    lowStockThreshold: '10',
     isAvailable: true,
   })
   const [imageFile, setImageFile] = useState(null)
@@ -81,6 +83,8 @@ export default function ProductsManagementPage() {
         unit: product.unit,
         categoryId: product.categoryId?.toString() || '',
         sku: product.sku || '',
+        stockQuantity: (product.stockQuantity || 0).toString(),
+        lowStockThreshold: (product.lowStockThreshold || 10).toString(),
         isAvailable: product.isAvailable,
       })
       setImagePreview(product.imageUrl)
@@ -93,6 +97,8 @@ export default function ProductsManagementPage() {
         unit: 'piece',
         categoryId: categories[0]?.id?.toString() || '',
         sku: '',
+        stockQuantity: '0',
+        lowStockThreshold: '10',
         isAvailable: true,
       })
       setImagePreview(null)
@@ -140,6 +146,8 @@ export default function ProductsManagementPage() {
       form.append('unit', formData.unit)
       form.append('categoryId', parseInt(formData.categoryId))
       form.append('sku', formData.sku)
+      form.append('stockQuantity', parseInt(formData.stockQuantity) || 0)
+      form.append('lowStockThreshold', parseInt(formData.lowStockThreshold) || 10)
       form.append('isAvailable', formData.isAvailable)
       if (imageFile) {
         form.append('image', imageFile)
@@ -260,6 +268,9 @@ export default function ProductsManagementPage() {
                     Price
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                    Stock
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                     Status
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">
@@ -301,13 +312,24 @@ export default function ProductsManagementPage() {
                       <span className="text-neutral-500">/{product.unit}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <span className={`font-medium ${product.stockQuantity <= product.lowStockThreshold ? 'text-red-600' : 'text-primary-900'}`}>
+                          {product.stockQuantity || 0}
+                        </span>
+                        {product.stockQuantity <= product.lowStockThreshold && (
+                          <span className="px-1.5 py-0.5 text-xs font-medium bg-red-100 text-red-700 rounded">
+                            Low
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => toggleAvailability(product)}
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          product.isAvailable
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${product.isAvailable
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                          }`}
                       >
                         {product.isAvailable ? 'Available' : 'Unavailable'}
                       </button>
@@ -502,6 +524,38 @@ export default function ProductsManagementPage() {
                       value={formData.sku}
                       onChange={handleInputChange}
                       className="input w-full"
+                    />
+                  </div>
+                </div>
+
+                {/* Stock Quantity and Low Stock Threshold */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-primary-700 mb-1">
+                      Stock Quantity *
+                    </label>
+                    <input
+                      type="number"
+                      name="stockQuantity"
+                      value={formData.stockQuantity}
+                      onChange={handleInputChange}
+                      required
+                      min="0"
+                      className="input w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-primary-700 mb-1">
+                      Low Stock Alert
+                    </label>
+                    <input
+                      type="number"
+                      name="lowStockThreshold"
+                      value={formData.lowStockThreshold}
+                      onChange={handleInputChange}
+                      min="0"
+                      className="input w-full"
+                      placeholder="Alert when stock ≤ this"
                     />
                   </div>
                 </div>

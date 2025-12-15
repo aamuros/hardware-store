@@ -31,10 +31,10 @@ api.interceptors.response.use(
       // Token expired or invalid
       localStorage.removeItem('admin-token')
       localStorage.removeItem('admin-user')
-      
+
       // Redirect to login if on admin page
-      if (window.location.pathname.startsWith('/admin') && 
-          window.location.pathname !== '/admin/login') {
+      if (window.location.pathname.startsWith('/admin') &&
+        window.location.pathname !== '/admin/login') {
         window.location.href = '/admin/login'
       }
     }
@@ -65,31 +65,36 @@ export const orderApi = {
 export const adminApi = {
   login: (credentials) => api.post('/admin/login', credentials),
   getDashboard: () => api.get('/admin/dashboard'),
-  
+
   // Orders
   getOrders: (params) => api.get('/admin/orders', { params }),
   getOrder: (id) => api.get(`/admin/orders/${id}`),
-  updateOrderStatus: (id, status, message) => 
+  updateOrderStatus: (id, status, message) =>
     api.patch(`/admin/orders/${id}/status`, { status, message }),
-  
+
   // Products
-  createProduct: (formData) => 
+  createProduct: (formData) =>
     api.post('/admin/products', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
-  updateProduct: (id, formData) => 
+  updateProduct: (id, formData) =>
     api.patch(`/admin/products/${id}`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
   deleteProduct: (id) => api.delete(`/admin/products/${id}`),
-  toggleAvailability: (id, isAvailable) => 
+  toggleAvailability: (id, isAvailable) =>
     api.patch(`/admin/products/${id}/availability`, { isAvailable }),
-  
+
   // Categories
   createCategory: (data) => api.post('/admin/categories', data),
   updateCategory: (id, data) => api.patch(`/admin/categories/${id}`, data),
   deleteCategory: (id) => api.delete(`/admin/categories/${id}`),
-  
+
+  // Inventory/Stock
+  updateStock: (id, stockData) =>
+    api.patch(`/admin/products/${id}/stock`, stockData),
+  getLowStockProducts: () => api.get('/admin/inventory/low-stock'),
+
   // Reports
   getSalesReport: (params) => api.get('/admin/reports/sales', { params }),
   getProductReport: () => api.get('/admin/reports/products'),

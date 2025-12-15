@@ -20,7 +20,7 @@ const ORDER_STATUS = {
 const createOrder = async (req, res, next) => {
   try {
     const { customerName, phone, address, barangay, landmarks, notes, items } = req.body;
-    
+
     // Validate items
     if (!items || items.length === 0) {
       return res.status(400).json({
@@ -28,16 +28,16 @@ const createOrder = async (req, res, next) => {
         message: 'Order must have at least one item',
       });
     }
-    
+
     // Get product details and calculate totals
     const productIds = items.map(item => item.productId);
     const products = await prisma.product.findMany({
       where: { id: { in: productIds } },
     });
-    
-    // Validate all products exist and are available
+
+    // Validate all products exist, are available, and have sufficient stock
     const productMap = new Map(products.map(p => [p.id, p]));
-    
+
     for (const item of items) {
       const product = productMap.get(item.productId);
       if (!product) {
@@ -52,8 +52,18 @@ const createOrder = async (req, res, next) => {
           message: `${product.name} is currently unavailable`,
         });
       }
+      // Check stock availability
+      if (product.stockQuantity < item.quantity) {
+        return res.status(400).json({
+          success: false,
+          message: `Insufficient stock for ${product.name}. Available: ${product.stockQuantity}, Requested: ${item.quantity}`,
+          code: 'INSUFFICIENT_STOCK',
+          productId: product.id,
+          availableStock: product.stockQuantity,
+        });
+      }
     }
-    
+
     // Calculate order items with prices
     const orderItems = items.map(item => {
       const product = productMap.get(item.productId);
@@ -64,45 +74,62 @@ const createOrder = async (req, res, next) => {
         subtotal: product.price * item.quantity,
       };
     });
-    
+
     const totalAmount = orderItems.reduce((sum, item) => sum + item.subtotal, 0);
-    
+
     // Generate order number
     const orderNumber = generateOrderNumber();
-    
-    // Create order with items
-    const order = await prisma.order.create({
-      data: {
-        orderNumber,
-        customerName,
-        phone,
-        address,
-        barangay,
-        landmarks,
-        notes,
-        totalAmount,
-        status: ORDER_STATUS.PENDING,
-        items: {
-          create: orderItems,
-        },
-        // Create initial status history entry
-        statusHistory: {
-          create: {
-            fromStatus: null,
-            toStatus: ORDER_STATUS.PENDING,
-            notes: 'Order placed by customer',
+
+    // Create order and deduct stock in a transaction
+    const order = await prisma.$transaction(async (tx) => {
+      // Deduct stock for each item
+      for (const item of items) {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: {
+            stockQuantity: {
+              decrement: item.quantity,
+            },
+          },
+        });
+      }
+
+      // Create the order
+      const newOrder = await tx.order.create({
+        data: {
+          orderNumber,
+          customerName,
+          phone,
+          address,
+          barangay,
+          landmarks,
+          notes,
+          totalAmount,
+          status: ORDER_STATUS.PENDING,
+          items: {
+            create: orderItems,
+          },
+          // Create initial status history entry
+          statusHistory: {
+            create: {
+              fromStatus: null,
+              toStatus: ORDER_STATUS.PENDING,
+              notes: 'Order placed by customer',
+            },
           },
         },
-      },
-      include: {
-        items: {
-          include: {
-            product: true,
+        include: {
+          items: {
+            include: {
+              product: true,
+            },
           },
         },
-      },
+      });
+
+      return newOrder;
     });
-    
+
     // Send SMS notification to customer
     try {
       await smsService.sendOrderConfirmation(phone, orderNumber, totalAmount, order.id);
@@ -110,14 +137,14 @@ const createOrder = async (req, res, next) => {
       console.error('SMS sending failed:', smsError.message);
       // Don't fail the order creation if SMS fails
     }
-    
+
     // Send notification to admin
     try {
       await smsService.notifyAdminNewOrder(orderNumber, totalAmount, customerName);
     } catch (smsError) {
       console.error('Admin SMS notification failed:', smsError.message);
     }
-    
+
     res.status(201).json({
       success: true,
       message: 'Order placed successfully',
@@ -138,14 +165,14 @@ const getOrderById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const parsedId = parseInt(id);
-    
+
     if (isNaN(parsedId)) {
       return res.status(400).json({
         success: false,
         message: 'Invalid order ID format',
       });
     }
-    
+
     const order = await prisma.order.findUnique({
       where: { id: parsedId },
       include: {
@@ -163,14 +190,14 @@ const getOrderById = async (req, res, next) => {
         },
       },
     });
-    
+
     if (!order) {
       return res.status(404).json({
         success: false,
         message: 'Order not found',
       });
     }
-    
+
     res.json({
       success: true,
       data: order,
@@ -184,7 +211,7 @@ const getOrderById = async (req, res, next) => {
 const trackOrder = async (req, res, next) => {
   try {
     const { orderNumber } = req.params;
-    
+
     const order = await prisma.order.findUnique({
       where: { orderNumber },
       select: {
@@ -205,14 +232,14 @@ const trackOrder = async (req, res, next) => {
         },
       },
     });
-    
+
     if (!order) {
       return res.status(404).json({
         success: false,
         message: 'Order not found. Please check your order number.',
       });
     }
-    
+
     res.json({
       success: true,
       data: order,
@@ -226,13 +253,13 @@ const trackOrder = async (req, res, next) => {
 const getAllOrders = async (req, res, next) => {
   try {
     const { status, page = 1, limit = 20, startDate, endDate, search } = req.query;
-    
+
     const where = {};
-    
+
     if (status) {
       where.status = status;
     }
-    
+
     if (search) {
       where.OR = [
         { orderNumber: { contains: search } },
@@ -240,7 +267,7 @@ const getAllOrders = async (req, res, next) => {
         { phone: { contains: search } },
       ];
     }
-    
+
     if (startDate || endDate) {
       where.createdAt = {};
       if (startDate) {
@@ -250,9 +277,9 @@ const getAllOrders = async (req, res, next) => {
         where.createdAt.lte = new Date(endDate);
       }
     }
-    
+
     const skip = (parseInt(page) - 1) * parseInt(limit);
-    
+
     const [orders, total] = await Promise.all([
       prisma.order.findMany({
         where,
@@ -276,7 +303,7 @@ const getAllOrders = async (req, res, next) => {
       }),
       prisma.order.count({ where }),
     ]);
-    
+
     res.json({
       success: true,
       data: orders,
@@ -296,7 +323,7 @@ const getAllOrders = async (req, res, next) => {
 const getOrderDetails = async (req, res, next) => {
   try {
     const { id } = req.params;
-    
+
     const order = await prisma.order.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -316,14 +343,14 @@ const getOrderDetails = async (req, res, next) => {
         },
       },
     });
-    
+
     if (!order) {
       return res.status(404).json({
         success: false,
         message: 'Order not found',
       });
     }
-    
+
     res.json({
       success: true,
       data: order,
@@ -338,7 +365,7 @@ const updateOrderStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { status, message } = req.body;
-    
+
     // Validate status
     if (!Object.values(ORDER_STATUS).includes(status)) {
       return res.status(400).json({
@@ -347,22 +374,47 @@ const updateOrderStatus = async (req, res, next) => {
         validStatuses: Object.values(ORDER_STATUS),
       });
     }
-    
+
     const order = await prisma.order.findUnique({
       where: { id: parseInt(id) },
     });
-    
+
     if (!order) {
       return res.status(404).json({
         success: false,
         message: 'Order not found',
       });
     }
-    
+
     const previousStatus = order.status;
-    
+
     // Update order status and create history entry in a transaction
     const updatedOrder = await prisma.$transaction(async (tx) => {
+      // Restore stock if order is being cancelled or rejected (and wasn't already)
+      const isRestoreStock =
+        (status === ORDER_STATUS.CANCELLED || status === ORDER_STATUS.REJECTED) &&
+        previousStatus !== ORDER_STATUS.CANCELLED &&
+        previousStatus !== ORDER_STATUS.REJECTED;
+
+      if (isRestoreStock) {
+        // Get order items to restore stock
+        const orderItems = await tx.orderItem.findMany({
+          where: { orderId: parseInt(id) },
+        });
+
+        // Restore stock for each item
+        for (const item of orderItems) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: {
+              stockQuantity: {
+                increment: item.quantity,
+              },
+            },
+          });
+        }
+      }
+
       // Update the order
       const updated = await tx.order.update({
         where: { id: parseInt(id) },
@@ -379,7 +431,7 @@ const updateOrderStatus = async (req, res, next) => {
           },
         },
       });
-      
+
       // Create status history entry
       await tx.orderStatusHistory.create({
         data: {
@@ -390,20 +442,20 @@ const updateOrderStatus = async (req, res, next) => {
           notes: message || null,
         },
       });
-      
+
       return updated;
     });
-    
+
     // Log the status change
     logOrderStatus(order.orderNumber, previousStatus, status, req.user?.id);
-    
+
     // Send SMS notification based on status change
     try {
       await smsService.sendStatusUpdate(order.phone, order.orderNumber, status, message, order.id);
     } catch (smsError) {
       console.error('SMS sending failed:', smsError.message);
     }
-    
+
     res.json({
       success: true,
       message: `Order status updated to ${status}`,

@@ -101,7 +101,7 @@ export default function ProductDetailPage() {
           </div>
 
           <h1 className="text-3xl font-bold text-primary-900 mb-2">{product.name}</h1>
-          
+
           {product.sku && (
             <p className="text-sm text-neutral-500 mb-4">SKU: {product.sku}</p>
           )}
@@ -119,20 +119,39 @@ export default function ProductDetailPage() {
 
           {/* Availability */}
           <div className="mb-6">
-            {product.isAvailable ? (
-              <span className="inline-flex items-center text-emerald-600">
-                <span className="h-2 w-2 bg-emerald-500 rounded-full mr-2"></span>
-                In Stock
-              </span>
-            ) : (
-              <span className="inline-flex items-center text-red-600">
-                <span className="h-2 w-2 bg-red-500 rounded-full mr-2"></span>
-                Out of Stock
-              </span>
-            )}
+            {(() => {
+              const stockQty = product.stockQuantity ?? 0
+              const isInStock = product.isAvailable && stockQty > 0
+              const isLowStock = isInStock && stockQty <= (product.lowStockThreshold ?? 10)
+
+              if (!isInStock) {
+                return (
+                  <span className="inline-flex items-center text-red-600">
+                    <span className="h-2 w-2 bg-red-500 rounded-full mr-2"></span>
+                    Out of Stock
+                  </span>
+                )
+              }
+
+              if (isLowStock) {
+                return (
+                  <span className="inline-flex items-center text-amber-600">
+                    <span className="h-2 w-2 bg-amber-500 rounded-full mr-2"></span>
+                    Only {stockQty} left in stock
+                  </span>
+                )
+              }
+
+              return (
+                <span className="inline-flex items-center text-emerald-600">
+                  <span className="h-2 w-2 bg-emerald-500 rounded-full mr-2"></span>
+                  In Stock ({stockQty} available)
+                </span>
+              )
+            })()}
           </div>
 
-          {product.isAvailable && (
+          {product.isAvailable && (product.stockQuantity ?? 0) > 0 && (
             <>
               {/* Quantity Selector */}
               <div className="mb-6">
@@ -142,20 +161,26 @@ export default function ProductDetailPage() {
                     <button
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
                       className="p-3 hover:bg-neutral-100 transition-colors"
+                      aria-label="Decrease quantity"
                     >
                       <MinusIcon className="h-4 w-4" />
                     </button>
                     <input
                       type="number"
                       min="1"
-                      max="999"
+                      max={product.stockQuantity}
                       value={quantity}
-                      onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                      onChange={(e) => {
+                        const val = Math.max(1, parseInt(e.target.value) || 1)
+                        setQuantity(Math.min(val, product.stockQuantity))
+                      }}
                       className="w-16 text-center border-0 focus:ring-0"
                     />
                     <button
-                      onClick={() => setQuantity(quantity + 1)}
+                      onClick={() => setQuantity(Math.min(quantity + 1, product.stockQuantity))}
                       className="p-3 hover:bg-neutral-100 transition-colors"
+                      disabled={quantity >= product.stockQuantity}
+                      aria-label="Increase quantity"
                     >
                       <PlusIcon className="h-4 w-4" />
                     </button>
@@ -164,6 +189,9 @@ export default function ProductDetailPage() {
                     = {formatPrice(product.price * quantity)}
                   </span>
                 </div>
+                {quantity >= product.stockQuantity && (
+                  <p className="text-xs text-amber-600 mt-1">Maximum available quantity selected</p>
+                )}
               </div>
 
               {/* Add to Cart Button */}

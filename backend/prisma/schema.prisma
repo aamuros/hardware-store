@@ -44,15 +44,17 @@ model Category {
 
 // Products in the hardware store
 model Product {
-  id          Int         @id @default(autoincrement())
-  name        String
-  description String?
-  price       Float
-  unit        String      // e.g., "piece", "meter", "kg", "set"
-  sku         String?     @unique // Stock Keeping Unit
-  imageUrl    String?
-  isAvailable Boolean     @default(true)
-  isDeleted   Boolean     @default(false) // Soft delete
+  id                Int         @id @default(autoincrement())
+  name              String
+  description       String?
+  price             Float
+  unit              String      // e.g., "piece", "meter", "kg", "set"
+  sku               String?     @unique // Stock Keeping Unit
+  imageUrl          String?
+  stockQuantity     Int         @default(0)
+  lowStockThreshold Int         @default(10)
+  isAvailable       Boolean     @default(true)
+  isDeleted         Boolean     @default(false) // Soft delete
   
   categoryId  Int
   category    Category    @relation(fields: [categoryId], references: [id])

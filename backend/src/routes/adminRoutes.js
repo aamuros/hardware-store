@@ -30,6 +30,10 @@ router.post('/products', upload.single('image'), validateProduct, productControl
 router.patch('/products/:id', upload.single('image'), productController.updateProduct);
 router.delete('/products/:id', productController.deleteProduct);
 router.patch('/products/:id/availability', productController.toggleAvailability);
+router.patch('/products/:id/stock', productController.updateStock);
+
+// Inventory management
+router.get('/inventory/low-stock', productController.getLowStockProducts);
 
 // Category management
 router.get('/categories', categoryController.getAllCategories);

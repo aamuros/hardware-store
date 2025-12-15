@@ -6,19 +6,19 @@ const { getOrSet, CACHE_KEYS, CACHE_TTL, invalidateProducts } = require('../util
 const getAllProducts = async (req, res, next) => {
   try {
     const { category, available, page = 1, limit = 20 } = req.query;
-    
+
     const where = { isDeleted: false };
-    
+
     if (category) {
       where.categoryId = parseInt(category);
     }
-    
+
     if (available !== undefined) {
       where.isAvailable = available === 'true';
     }
-    
+
     const skip = (parseInt(page) - 1) * parseInt(limit);
-    
+
     const [products, total] = await Promise.all([
       prisma.product.findMany({
         where,
@@ -38,7 +38,7 @@ const getAllProducts = async (req, res, next) => {
       }),
       prisma.product.count({ where }),
     ]);
-    
+
     res.json({
       success: true,
       data: products,
@@ -58,16 +58,16 @@ const getAllProducts = async (req, res, next) => {
 const searchProducts = async (req, res, next) => {
   try {
     const { q, page = 1, limit = 20 } = req.query;
-    
+
     if (!q || q.trim().length < 2) {
       return res.status(400).json({
         success: false,
         message: 'Search query must be at least 2 characters',
       });
     }
-    
+
     const skip = (parseInt(page) - 1) * parseInt(limit);
-    
+
     const [products, total] = await Promise.all([
       prisma.product.findMany({
         where: {
@@ -102,7 +102,7 @@ const searchProducts = async (req, res, next) => {
         },
       }),
     ]);
-    
+
     res.json({
       success: true,
       data: products,
@@ -123,14 +123,14 @@ const getProductById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const parsedId = parseInt(id);
-    
+
     if (isNaN(parsedId)) {
       return res.status(400).json({
         success: false,
         message: 'Invalid product ID format',
       });
     }
-    
+
     const product = await getOrSet(
       CACHE_KEYS.PRODUCT(parsedId),
       async () => {
@@ -143,14 +143,14 @@ const getProductById = async (req, res, next) => {
       },
       CACHE_TTL.PRODUCT_DETAIL
     );
-    
+
     if (!product) {
       return res.status(404).json({
         success: false,
         message: 'Product not found',
       });
     }
-    
+
     res.json({
       success: true,
       data: product,
@@ -165,9 +165,9 @@ const getProductsByCategory = async (req, res, next) => {
   try {
     const { categoryId } = req.params;
     const { page = 1, limit = 20 } = req.query;
-    
+
     const skip = (parseInt(page) - 1) * parseInt(limit);
-    
+
     const [products, total] = await Promise.all([
       prisma.product.findMany({
         where: {
@@ -197,7 +197,7 @@ const getProductsByCategory = async (req, res, next) => {
         },
       }),
     ]);
-    
+
     res.json({
       success: true,
       data: products,
@@ -216,9 +216,9 @@ const getProductsByCategory = async (req, res, next) => {
 // POST /api/admin/products
 const createProduct = async (req, res, next) => {
   try {
-    const { name, description, price, unit, categoryId, sku } = req.body;
+    const { name, description, price, unit, categoryId, sku, stockQuantity, lowStockThreshold } = req.body;
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
-    
+
     const product = await prisma.product.create({
       data: {
         name,
@@ -228,16 +228,18 @@ const createProduct = async (req, res, next) => {
         categoryId: parseInt(categoryId),
         sku,
         imageUrl,
+        stockQuantity: parseInt(stockQuantity) || 0,
+        lowStockThreshold: parseInt(lowStockThreshold) || 10,
         isAvailable: true,
       },
       include: {
         category: true,
       },
     });
-    
+
     // Invalidate product cache
     invalidateProducts();
-    
+
     res.status(201).json({
       success: true,
       message: 'Product created successfully',
@@ -253,30 +255,30 @@ const updateProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
     const parsedId = parseInt(id);
-    
+
     if (isNaN(parsedId)) {
       return res.status(400).json({
         success: false,
         message: 'Invalid product ID format',
       });
     }
-    
+
     // Check if product exists
     const existingProduct = await prisma.product.findUnique({
       where: { id: parsedId },
     });
-    
+
     if (!existingProduct || existingProduct.isDeleted) {
       return res.status(404).json({
         success: false,
         message: 'Product not found',
       });
     }
-    
-    const { name, description, price, unit, categoryId, sku, isAvailable } = req.body;
-    
+
+    const { name, description, price, unit, categoryId, sku, isAvailable, stockQuantity, lowStockThreshold } = req.body;
+
     const updateData = {};
-    
+
     if (name) updateData.name = name;
     if (description !== undefined) updateData.description = description;
     if (price) updateData.price = parseFloat(price);
@@ -284,8 +286,10 @@ const updateProduct = async (req, res, next) => {
     if (categoryId) updateData.categoryId = parseInt(categoryId);
     if (sku) updateData.sku = sku;
     if (isAvailable !== undefined) updateData.isAvailable = isAvailable === 'true' || isAvailable === true;
+    if (stockQuantity !== undefined) updateData.stockQuantity = parseInt(stockQuantity);
+    if (lowStockThreshold !== undefined) updateData.lowStockThreshold = parseInt(lowStockThreshold);
     if (req.file) updateData.imageUrl = `/uploads/${req.file.filename}`;
-    
+
     const product = await prisma.product.update({
       where: { id: parsedId },
       data: updateData,
@@ -293,10 +297,10 @@ const updateProduct = async (req, res, next) => {
         category: true,
       },
     });
-    
+
     // Invalidate product cache
     invalidateProducts();
-    
+
     res.json({
       success: true,
       message: 'Product updated successfully',
@@ -312,35 +316,35 @@ const deleteProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
     const parsedId = parseInt(id);
-    
+
     if (isNaN(parsedId)) {
       return res.status(400).json({
         success: false,
         message: 'Invalid product ID format',
       });
     }
-    
+
     // Check if product exists
     const existingProduct = await prisma.product.findUnique({
       where: { id: parsedId },
     });
-    
+
     if (!existingProduct || existingProduct.isDeleted) {
       return res.status(404).json({
         success: false,
         message: 'Product not found',
       });
     }
-    
+
     // Soft delete
     await prisma.product.update({
       where: { id: parsedId },
       data: { isDeleted: true, isAvailable: false },
     });
-    
+
     // Invalidate product cache
     invalidateProducts();
-    
+
     res.json({
       success: true,
       message: 'Product deleted successfully',
@@ -355,28 +359,112 @@ const toggleAvailability = async (req, res, next) => {
   try {
     const { id } = req.params;
     const parsedId = parseInt(id);
-    
+
     if (isNaN(parsedId)) {
       return res.status(400).json({
         success: false,
         message: 'Invalid product ID format',
       });
     }
-    
+
     const { isAvailable } = req.body;
-    
+
     const product = await prisma.product.update({
       where: { id: parsedId },
       data: { isAvailable },
     });
-    
+
     // Invalidate product cache
     invalidateProducts();
-    
+
     res.json({
       success: true,
       message: `Product marked as ${isAvailable ? 'available' : 'unavailable'}`,
       data: product,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// PATCH /api/admin/products/:id/stock
+const updateStock = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const parsedId = parseInt(id);
+
+    if (isNaN(parsedId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid product ID format',
+      });
+    }
+
+    const { stockQuantity, lowStockThreshold } = req.body;
+
+    const updateData = {};
+    if (stockQuantity !== undefined) {
+      updateData.stockQuantity = parseInt(stockQuantity);
+    }
+    if (lowStockThreshold !== undefined) {
+      updateData.lowStockThreshold = parseInt(lowStockThreshold);
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No stock data provided',
+      });
+    }
+
+    const product = await prisma.product.update({
+      where: { id: parsedId },
+      data: updateData,
+    });
+
+    // Invalidate product cache
+    invalidateProducts();
+
+    res.json({
+      success: true,
+      message: 'Stock updated successfully',
+      data: product,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET /api/admin/inventory/low-stock
+const getLowStockProducts = async (req, res, next) => {
+  try {
+    const products = await prisma.product.findMany({
+      where: {
+        isDeleted: false,
+        isAvailable: true,
+        // Find products where stock is at or below threshold
+        // Using raw query comparison since Prisma doesn't support field-to-field comparison directly
+      },
+      include: {
+        category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        stockQuantity: 'asc',
+      },
+    });
+
+    // Filter products where stockQuantity <= lowStockThreshold
+    const lowStockProducts = products.filter(p => p.stockQuantity <= p.lowStockThreshold);
+
+    res.json({
+      success: true,
+      data: lowStockProducts,
+      count: lowStockProducts.length,
     });
   } catch (error) {
     next(error);
@@ -392,4 +480,6 @@ module.exports = {
   updateProduct,
   deleteProduct,
   toggleAvailability,
+  updateStock,
+  getLowStockProducts,
 };
