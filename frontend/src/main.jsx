@@ -14,22 +14,30 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <CartProvider>
           <App />
           <Toaster 
-            position="top-right"
+            position="bottom-center"
+            containerStyle={{
+              bottom: 80,
+            }}
             toastOptions={{
-              duration: 3000,
+              duration: 2000,
               style: {
-                background: '#363636',
+                background: '#1e293b',
                 color: '#fff',
+                padding: '12px 16px',
+                borderRadius: '12px',
+                fontSize: '14px',
+                maxWidth: '280px',
+                boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
               },
               success: {
-                duration: 3000,
+                duration: 1500,
                 iconTheme: {
                   primary: '#10B981',
                   secondary: '#fff',
                 },
               },
               error: {
-                duration: 4000,
+                duration: 3000,
                 iconTheme: {
                   primary: '#EF4444',
                   secondary: '#fff',
