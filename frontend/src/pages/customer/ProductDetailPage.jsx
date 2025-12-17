@@ -69,11 +69,16 @@ export default function ProductDetailPage() {
       toast('Please log in to save items', { icon: '🔐' })
       return
     }
+
+    // Check current state BEFORE toggling
+    const wasInWishlist = isInWishlist(product.id)
+
     setWishlistLoading(true)
     const result = await toggleWishlist(product.id)
     setWishlistLoading(false)
     if (result.success) {
-      toast.success(isInWishlist(product.id) ? 'Removed from wishlist' : 'Added to wishlist')
+      // Show message based on what the action was (opposite of previous state)
+      toast.success(wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist')
     } else {
       toast.error(result.message)
     }

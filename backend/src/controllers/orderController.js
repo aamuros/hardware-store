@@ -452,23 +452,44 @@ const updateOrderStatus = async (req, res, next) => {
           where: { orderId: parseInt(id, 10) },
         });
 
-        // Restore stock for each item (only if product still exists and isn't deleted)
+        // Restore stock for each item (to variant if applicable, otherwise to product)
         for (const item of orderItems) {
-          const product = await tx.product.findUnique({
-            where: { id: item.productId },
-            select: { isDeleted: true },
-          });
-
-          // Only restore stock if product exists and isn't soft-deleted
-          if (product && !product.isDeleted) {
-            await tx.product.update({
-              where: { id: item.productId },
-              data: {
-                stockQuantity: {
-                  increment: item.quantity,
-                },
-              },
+          if (item.variantId) {
+            // Restore stock to variant
+            const variant = await tx.productVariant.findUnique({
+              where: { id: item.variantId },
+              select: { isDeleted: true },
             });
+
+            // Only restore stock if variant exists and isn't soft-deleted
+            if (variant && !variant.isDeleted) {
+              await tx.productVariant.update({
+                where: { id: item.variantId },
+                data: {
+                  stockQuantity: {
+                    increment: item.quantity,
+                  },
+                },
+              });
+            }
+          } else {
+            // Restore stock to product
+            const product = await tx.product.findUnique({
+              where: { id: item.productId },
+              select: { isDeleted: true },
+            });
+
+            // Only restore stock if product exists and isn't soft-deleted
+            if (product && !product.isDeleted) {
+              await tx.product.update({
+                where: { id: item.productId },
+                data: {
+                  stockQuantity: {
+                    increment: item.quantity,
+                  },
+                },
+              });
+            }
           }
         }
       }

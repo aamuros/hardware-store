@@ -185,16 +185,19 @@ const setDefaultAddress = async (req, res, next) => {
             });
         }
 
-        // Unset all defaults
-        await prisma.savedAddress.updateMany({
-            where: { customerId: req.customer.id },
-            data: { isDefault: false },
-        });
+        // Use transaction to prevent race conditions
+        const updatedAddress = await prisma.$transaction(async (tx) => {
+            // Unset all defaults
+            await tx.savedAddress.updateMany({
+                where: { customerId: req.customer.id },
+                data: { isDefault: false },
+            });
 
-        // Set this as default
-        const updatedAddress = await prisma.savedAddress.update({
-            where: { id: parseInt(id, 10) },
-            data: { isDefault: true },
+            // Set this as default
+            return tx.savedAddress.update({
+                where: { id: parseInt(id, 10) },
+                data: { isDefault: true },
+            });
         });
 
         res.json({

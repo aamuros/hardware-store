@@ -447,58 +447,34 @@ const updateStock = async (req, res, next) => {
 // GET /api/admin/inventory/low-stock
 const getLowStockProducts = async (req, res, next) => {
   try {
-    // Use raw SQL to compare stockQuantity with lowStockThreshold at database level
-    // This is more efficient than fetching all products and filtering in memory
-    const lowStockProducts = await prisma.$queryRaw`
-      SELECT 
-        p.id,
-        p.name,
-        p.description,
-        p.price,
-        p.unit,
-        p.sku,
-        p.imageUrl,
-        p.stockQuantity,
-        p.lowStockThreshold,
-        p.isAvailable,
-        p.categoryId,
-        p.createdAt,
-        p.updatedAt,
-        c.id as "category_id",
-        c.name as "category_name"
-      FROM products p
-      LEFT JOIN categories c ON p.categoryId = c.id
-      WHERE p.isDeleted = 0
-        AND p.isAvailable = 1
-        AND p.stockQuantity <= p.lowStockThreshold
-      ORDER BY p.stockQuantity ASC
-    `;
+    // Use Prisma query API for database portability (works with both SQLite and PostgreSQL)
+    const allAvailableProducts = await prisma.product.findMany({
+      where: {
+        isDeleted: false,
+        isAvailable: true,
+      },
+      include: {
+        category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        stockQuantity: 'asc',
+      },
+    });
 
-    // Transform the raw result to match the expected structure
-    const formattedProducts = lowStockProducts.map(p => ({
-      id: p.id,
-      name: p.name,
-      description: p.description,
-      price: p.price,
-      unit: p.unit,
-      sku: p.sku,
-      imageUrl: p.imageUrl,
-      stockQuantity: p.stockQuantity,
-      lowStockThreshold: p.lowStockThreshold,
-      isAvailable: Boolean(p.isAvailable),
-      categoryId: p.categoryId,
-      createdAt: p.createdAt,
-      updatedAt: p.updatedAt,
-      category: p.category_id ? {
-        id: p.category_id,
-        name: p.category_name,
-      } : null,
-    }));
+    // Filter products where stockQuantity <= lowStockThreshold
+    const lowStockProducts = allAvailableProducts.filter(
+      p => p.stockQuantity <= p.lowStockThreshold
+    );
 
     res.json({
       success: true,
-      data: formattedProducts,
-      count: formattedProducts.length,
+      data: lowStockProducts,
+      count: lowStockProducts.length,
     });
   } catch (error) {
     next(error);

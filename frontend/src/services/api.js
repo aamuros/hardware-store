@@ -39,14 +39,29 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('admin-token')
-      localStorage.removeItem('admin-user')
+      // Token expired or invalid - clear based on route
+      const requestUrl = error.config?.url || ''
 
-      // Redirect to login if on admin page
-      if (window.location.pathname.startsWith('/admin') &&
-        window.location.pathname !== '/admin/login') {
-        window.location.href = '/admin/login'
+      if (requestUrl.startsWith('/customers')) {
+        // Clear customer tokens for customer routes
+        localStorage.removeItem('customer-token')
+        localStorage.removeItem('customer-user')
+
+        // Redirect to customer login if on customer-protected page
+        const protectedPaths = ['/account', '/wishlist', '/orders']
+        if (protectedPaths.some(path => window.location.pathname.startsWith(path))) {
+          window.location.href = '/login'
+        }
+      } else if (requestUrl.startsWith('/admin')) {
+        // Clear admin tokens for admin routes
+        localStorage.removeItem('admin-token')
+        localStorage.removeItem('admin-user')
+
+        // Redirect to login if on admin page
+        if (window.location.pathname.startsWith('/admin') &&
+          window.location.pathname !== '/admin/login') {
+          window.location.href = '/admin/login'
+        }
       }
     }
     return Promise.reject(error)
