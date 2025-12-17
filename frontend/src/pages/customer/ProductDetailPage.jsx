@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { MinusIcon, PlusIcon, ShoppingCartIcon } from '@heroicons/react/24/outline'
+import { MinusIcon, PlusIcon, ShoppingCartIcon, HeartIcon } from '@heroicons/react/24/outline'
+import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid'
 import { productApi } from '../../services/api'
 import { useCart } from '../../context/CartContext'
+import { useCustomerAuth } from '../../context/CustomerAuthContext'
 import toast from 'react-hot-toast'
 
 export default function ProductDetailPage() {
@@ -10,13 +12,33 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [quantity, setQuantity] = useState(1)
+  const [selectedVariant, setSelectedVariant] = useState(null)
   const { addToCart, getItemQuantity } = useCart()
+  const { isAuthenticated, isInWishlist, toggleWishlist } = useCustomerAuth()
+  const [wishlistLoading, setWishlistLoading] = useState(false)
 
-  const cartQuantity = product ? getItemQuantity(product.id) : 0
+  // Get cart quantity considering variant
+  const cartQuantity = product
+    ? getItemQuantity(product.id, selectedVariant?.id || null)
+    : 0
+
+  // Get effective price and stock based on selected variant
+  const effectivePrice = selectedVariant?.price ?? product?.price ?? 0
+  const effectiveStock = selectedVariant?.stockQuantity ?? product?.stockQuantity ?? 0
+  const isInStock = product?.isAvailable && effectiveStock > 0
 
   useEffect(() => {
     fetchProduct()
   }, [id])
+
+  // Auto-select first variant if product has variants
+  useEffect(() => {
+    if (product?.hasVariants && product?.variants?.length > 0) {
+      setSelectedVariant(product.variants[0])
+    } else {
+      setSelectedVariant(null)
+    }
+  }, [product])
 
   const fetchProduct = async () => {
     try {
@@ -30,9 +52,29 @@ export default function ProductDetailPage() {
   }
 
   const handleAddToCart = () => {
-    addToCart(product, quantity)
-    toast.success(`${quantity} ${product.unit}(s) of ${product.name} added to cart!`)
+    if (product.hasVariants && !selectedVariant) {
+      toast.error('Please select an option')
+      return
+    }
+    addToCart(product, quantity, selectedVariant)
+    const variantInfo = selectedVariant ? ` (${selectedVariant.name})` : ''
+    toast.success(`${quantity} ${product.unit}(s) of ${product.name}${variantInfo} added to cart!`)
     setQuantity(1)
+  }
+
+  const handleWishlistToggle = async () => {
+    if (!isAuthenticated()) {
+      toast('Please log in to save items', { icon: '🔐' })
+      return
+    }
+    setWishlistLoading(true)
+    const result = await toggleWishlist(product.id)
+    setWishlistLoading(false)
+    if (result.success) {
+      toast.success(isInWishlist(product.id) ? 'Removed from wishlist' : 'Added to wishlist')
+    } else {
+      toast.error(result.message)
+    }
   }
 
   const formatPrice = (price) => {
@@ -102,13 +144,65 @@ export default function ProductDetailPage() {
 
           <h1 className="text-3xl font-bold text-primary-900 mb-2">{product.name}</h1>
 
-          {product.sku && (
+          {/* Wishlist Button */}
+          <button
+            onClick={handleWishlistToggle}
+            disabled={wishlistLoading}
+            className={`flex items-center gap-2 mb-4 px-4 py-2 rounded-lg transition-all ${isInWishlist(product.id)
+              ? 'bg-pink-50 text-pink-600 hover:bg-pink-100'
+              : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+              }`}
+          >
+            {isInWishlist(product.id) ? (
+              <HeartSolidIcon className="h-5 w-5" />
+            ) : (
+              <HeartIcon className="h-5 w-5" />
+            )}
+            <span className="text-sm font-medium">
+              {isInWishlist(product.id) ? 'Saved to Wishlist' : 'Add to Wishlist'}
+            </span>
+          </button>
+
+          {product.sku && !product.hasVariants && (
             <p className="text-sm text-neutral-500 mb-4">SKU: {product.sku}</p>
+          )}
+          {selectedVariant?.sku && (
+            <p className="text-sm text-neutral-500 mb-4">SKU: {selectedVariant.sku}</p>
+          )}
+
+          {/* Variant Selector */}
+          {product.hasVariants && product.variants?.length > 0 && (
+            <div className="mb-6">
+              <label className="label">Options</label>
+              <div className="flex flex-wrap gap-2">
+                {product.variants.filter(v => v.isAvailable && !v.isDeleted).map((variant) => (
+                  <button
+                    key={variant.id}
+                    onClick={() => setSelectedVariant(variant)}
+                    className={`px-4 py-2.5 rounded-xl border-2 transition-all font-medium ${selectedVariant?.id === variant.id
+                      ? 'border-primary-600 bg-primary-50 text-primary-700'
+                      : 'border-neutral-200 hover:border-primary-300 text-neutral-700'
+                      } ${variant.stockQuantity <= 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={variant.stockQuantity <= 0}
+                  >
+                    <span>{variant.name}</span>
+                    {variant.price !== product.price && (
+                      <span className="ml-2 text-sm text-primary-600">
+                        {formatPrice(variant.price)}
+                      </span>
+                    )}
+                    {variant.stockQuantity <= 0 && (
+                      <span className="ml-2 text-xs text-red-500">(Out of stock)</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
 
           <div className="flex items-baseline gap-2 mb-6">
             <span className="text-3xl font-bold text-primary-800">
-              {formatPrice(product.price)}
+              {formatPrice(effectivePrice)}
             </span>
             <span className="text-neutral-500">per {product.unit}</span>
           </div>
@@ -120,8 +214,7 @@ export default function ProductDetailPage() {
           {/* Availability */}
           <div className="mb-6">
             {(() => {
-              const stockQty = product.stockQuantity ?? 0
-              const isInStock = product.isAvailable && stockQty > 0
+              const stockQty = effectiveStock
               const isLowStock = isInStock && stockQty <= (product.lowStockThreshold ?? 10)
 
               if (!isInStock) {
@@ -151,7 +244,7 @@ export default function ProductDetailPage() {
             })()}
           </div>
 
-          {product.isAvailable && (product.stockQuantity ?? 0) > 0 && (
+          {isInStock && (
             <>
               {/* Quantity Selector */}
               <div className="mb-6">
@@ -168,28 +261,28 @@ export default function ProductDetailPage() {
                     <input
                       type="number"
                       min="1"
-                      max={product.stockQuantity}
+                      max={effectiveStock}
                       value={quantity}
                       onChange={(e) => {
                         const val = Math.max(1, parseInt(e.target.value) || 1)
-                        setQuantity(Math.min(val, product.stockQuantity))
+                        setQuantity(Math.min(val, effectiveStock))
                       }}
                       className="w-16 text-center border-0 focus:ring-0"
                     />
                     <button
-                      onClick={() => setQuantity(Math.min(quantity + 1, product.stockQuantity))}
+                      onClick={() => setQuantity(Math.min(quantity + 1, effectiveStock))}
                       className="p-3 hover:bg-neutral-100 transition-colors"
-                      disabled={quantity >= product.stockQuantity}
+                      disabled={quantity >= effectiveStock}
                       aria-label="Increase quantity"
                     >
                       <PlusIcon className="h-4 w-4" />
                     </button>
                   </div>
                   <span className="text-neutral-600">
-                    = {formatPrice(product.price * quantity)}
+                    = {formatPrice(effectivePrice * quantity)}
                   </span>
                 </div>
-                {quantity >= product.stockQuantity && (
+                {quantity >= effectiveStock && (
                   <p className="text-xs text-amber-600 mt-1">Maximum available quantity selected</p>
                 )}
               </div>

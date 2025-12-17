@@ -12,9 +12,20 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('admin-token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+    // Check for customer token first (for customer routes)
+    const customerToken = localStorage.getItem('customer-token')
+    const adminToken = localStorage.getItem('admin-token')
+
+    // Use customer token for customer routes, admin token for admin routes
+    if (config.url?.startsWith('/customers') && customerToken) {
+      config.headers.Authorization = `Bearer ${customerToken}`
+    } else if (config.url?.startsWith('/admin') && adminToken) {
+      config.headers.Authorization = `Bearer ${adminToken}`
+    } else if (customerToken) {
+      // For other routes (like orders), prefer customer token if available
+      config.headers.Authorization = `Bearer ${customerToken}`
+    } else if (adminToken) {
+      config.headers.Authorization = `Bearer ${adminToken}`
     }
     return config
   },
@@ -50,6 +61,7 @@ export const productApi = {
   getById: (id) => api.get(`/products/${id}`),
   search: (query) => api.get('/products/search', { params: { q: query } }),
   getByCategory: (categoryId) => api.get(`/products/category/${categoryId}`),
+  getVariants: (productId) => api.get(`/products/${productId}/variants`),
 }
 
 export const categoryApi = {
@@ -96,7 +108,43 @@ export const adminApi = {
     api.patch(`/admin/products/${id}/stock`, stockData),
   getLowStockProducts: () => api.get('/admin/inventory/low-stock'),
 
+  // Product Variants
+  createVariant: (productId, data) => api.post(`/admin/products/${productId}/variants`, data),
+  updateVariant: (id, data) => api.patch(`/admin/variants/${id}`, data),
+  deleteVariant: (id) => api.delete(`/admin/variants/${id}`),
+  updateVariantStock: (id, stockQuantity) => api.patch(`/admin/variants/${id}/stock`, { stockQuantity }),
+
   // Reports
   getSalesReport: (params) => api.get('/admin/reports/sales', { params }),
   getProductReport: () => api.get('/admin/reports/products'),
+}
+
+// Customer API (account features)
+export const customerApi = {
+  // Authentication
+  register: (data) => api.post('/customers/register', data),
+  login: (data) => api.post('/customers/login', data),
+
+  // Profile
+  getProfile: () => api.get('/customers/profile'),
+  updateProfile: (data) => api.patch('/customers/profile', data),
+  changePassword: (data) => api.patch('/customers/change-password', data),
+
+  // Addresses
+  getAddresses: () => api.get('/customers/addresses'),
+  createAddress: (data) => api.post('/customers/addresses', data),
+  updateAddress: (id, data) => api.patch(`/customers/addresses/${id}`, data),
+  deleteAddress: (id) => api.delete(`/customers/addresses/${id}`),
+  setDefaultAddress: (id) => api.patch(`/customers/addresses/${id}/default`),
+
+  // Wishlist
+  getWishlist: () => api.get('/customers/wishlist'),
+  getWishlistIds: () => api.get('/customers/wishlist/ids'),
+  addToWishlist: (productId) => api.post('/customers/wishlist', { productId }),
+  removeFromWishlist: (productId) => api.delete(`/customers/wishlist/${productId}`),
+  checkWishlist: (productId) => api.get(`/customers/wishlist/check/${productId}`),
+
+  // Order history
+  getOrders: (params) => api.get('/customers/orders', { params }),
+  getOrder: (orderNumber) => api.get(`/customers/orders/${orderNumber}`),
 }

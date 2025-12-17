@@ -28,6 +28,26 @@ model User {
   @@map("users")
 }
 
+// Customer accounts (separate from admin users)
+model Customer {
+  id            Int       @id @default(autoincrement())
+  email         String    @unique
+  password      String
+  name          String
+  phone         String?
+  isActive      Boolean   @default(true)
+  lastLogin     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  orders           Order[]
+  savedAddresses   SavedAddress[]
+  wishlistItems    WishlistItem[]
+
+  @@map("customers")
+}
+
 // Product categories
 model Category {
   id          Int       @id @default(autoincrement())
@@ -55,11 +75,14 @@ model Product {
   lowStockThreshold Int         @default(10)
   isAvailable       Boolean     @default(true)
   isDeleted         Boolean     @default(false) // Soft delete
+  hasVariants       Boolean     @default(false) // Whether product uses variants
   
   categoryId  Int
   category    Category    @relation(fields: [categoryId], references: [id])
   
-  orderItems  OrderItem[]
+  variants       ProductVariant[]
+  orderItems     OrderItem[]
+  wishlistItems  WishlistItem[]
   
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -71,12 +94,42 @@ model Product {
   @@map("products")
 }
 
+// Product variants (e.g., size, color combinations)
+model ProductVariant {
+  id              Int       @id @default(autoincrement())
+  productId       Int
+  product         Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  name            String    // e.g., "Red - Large", "500ml", "2x4 - 8ft"
+  sku             String?   @unique
+  price           Float     // Can override product price
+  stockQuantity   Int       @default(0)
+  
+  // Variant attributes stored as JSON for flexibility
+  attributes      String?   // JSON: {"color": "Red", "size": "Large"}
+  
+  isAvailable     Boolean   @default(true)
+  isDeleted       Boolean   @default(false)
+  
+  orderItems      OrderItem[]
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([productId])
+  @@map("product_variants")
+}
+
 // Customer orders
 model Order {
   id           Int         @id @default(autoincrement())
   orderNumber  String      @unique
   
-  // Customer information (no account required)
+  // Optional customer link (null for anonymous orders)
+  customerId   Int?
+  customer     Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  
+  // Customer information (still required for delivery)
   customerName String
   phone        String
   address      String
@@ -101,6 +154,7 @@ model Order {
   @@index([phone])
   @@index([orderNumber])
   @@index([createdAt])
+  @@index([customerId])
   @@map("orders")
 }
 
@@ -114,12 +168,17 @@ model OrderItem {
   productId Int
   product   Product @relation(fields: [productId], references: [id])
   
+  variantId   Int?
+  variant     ProductVariant? @relation(fields: [variantId], references: [id])
+  variantName String?  // Store variant name at time of order
+  
   quantity  Int
   unitPrice Float   // Price at time of order
   subtotal  Float   // quantity * unitPrice
 
   @@index([orderId])
   @@index([productId])
+  @@index([variantId])
   @@map("order_items")
 }
 
@@ -165,4 +224,40 @@ model OrderStatusHistory {
   @@index([changedById])
   @@index([createdAt])
   @@map("order_status_history")
+}
+
+// Saved delivery addresses
+model SavedAddress {
+  id          Int       @id @default(autoincrement())
+  customerId  Int
+  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  label       String    // e.g., "Home", "Office"
+  address     String
+  barangay    String
+  landmarks   String?
+  isDefault   Boolean   @default(false)
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([customerId])
+  @@map("saved_addresses")
+}
+
+// Wishlist/Favorites
+model WishlistItem {
+  id          Int       @id @default(autoincrement())
+  customerId  Int
+  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  productId   Int
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  addedAt     DateTime  @default(now())
+
+  @@unique([customerId, productId])
+  @@index([customerId])
+  @@index([productId])
+  @@map("wishlist_items")
 }

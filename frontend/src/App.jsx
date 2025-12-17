@@ -15,6 +15,14 @@ import OrderConfirmationPage from './pages/customer/OrderConfirmationPage'
 import TrackOrderPage from './pages/customer/TrackOrderPage'
 import NotFoundPage from './pages/customer/NotFoundPage'
 
+// Customer Account Pages
+import CustomerLoginPage from './pages/customer/CustomerLoginPage'
+import CustomerRegisterPage from './pages/customer/CustomerRegisterPage'
+import AccountPage from './pages/customer/AccountPage'
+import OrderHistoryPage from './pages/customer/OrderHistoryPage'
+import SavedAddressesPage from './pages/customer/SavedAddressesPage'
+import WishlistPage from './pages/customer/WishlistPage'
+
 // Admin Pages
 import AdminLoginPage from './pages/admin/AdminLoginPage'
 import DashboardPage from './pages/admin/DashboardPage'
@@ -26,6 +34,7 @@ import ReportsPage from './pages/admin/ReportsPage'
 
 // Auth
 import ProtectedRoute from './components/ProtectedRoute'
+import ProtectedCustomerRoute from './components/ProtectedCustomerRoute'
 
 function App() {
   return (
@@ -40,6 +49,16 @@ function App() {
           <Route path="checkout" element={<CheckoutPage />} />
           <Route path="order-confirmation/:orderNumber" element={<OrderConfirmationPage />} />
           <Route path="track-order" element={<TrackOrderPage />} />
+
+          {/* Customer Auth Routes */}
+          <Route path="login" element={<CustomerLoginPage />} />
+          <Route path="register" element={<CustomerRegisterPage />} />
+
+          {/* Customer Account Routes (Protected) */}
+          <Route path="account" element={<ProtectedCustomerRoute><AccountPage /></ProtectedCustomerRoute>} />
+          <Route path="account/orders" element={<ProtectedCustomerRoute><OrderHistoryPage /></ProtectedCustomerRoute>} />
+          <Route path="account/addresses" element={<ProtectedCustomerRoute><SavedAddressesPage /></ProtectedCustomerRoute>} />
+          <Route path="account/wishlist" element={<ProtectedCustomerRoute><WishlistPage /></ProtectedCustomerRoute>} />
         </Route>
 
         {/* Admin Routes */}

@@ -87,6 +87,9 @@ export default function CheckoutPage() {
       const cartItems = items.map(item => ({
         productId: item.id,
         quantity: item.quantity,
+        variantId: item.variantId || null,
+        variantName: item.variantName || null,
+        unitPrice: item.price,
       }))
 
       const validationResponse = await orderApi.validateCart(cartItems)
@@ -267,19 +270,25 @@ export default function CheckoutPage() {
           <div className="card p-6">
             <h2 className="text-lg font-bold text-primary-900 mb-4">Order Items</h2>
             <div className="space-y-3">
-              {items.map((item) => (
-                <div key={item.id} className="flex justify-between items-center py-2 border-b border-neutral-100 last:border-0">
-                  <div>
-                    <p className="font-medium text-primary-900">{item.name}</p>
-                    <p className="text-sm text-neutral-500">
-                      {item.quantity} {item.unit} × {formatPrice(item.price)}
+              {items.map((item) => {
+                const itemKey = item.variantId ? `${item.id}-${item.variantId}` : `${item.id}`
+                return (
+                  <div key={itemKey} className="flex justify-between items-center py-2 border-b border-neutral-100 last:border-0">
+                    <div>
+                      <p className="font-medium text-primary-900">{item.name}</p>
+                      {item.variantName && (
+                        <p className="text-xs text-primary-600 font-medium">{item.variantName}</p>
+                      )}
+                      <p className="text-sm text-neutral-500">
+                        {item.quantity} {item.unit} × {formatPrice(item.price)}
+                      </p>
+                    </div>
+                    <p className="font-bold text-primary-800">
+                      {formatPrice(item.price * item.quantity)}
                     </p>
                   </div>
-                  <p className="font-bold text-primary-800">
-                    {formatPrice(item.price * item.quantity)}
-                  </p>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         </div>

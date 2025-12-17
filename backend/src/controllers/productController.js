@@ -137,6 +137,10 @@ const getProductById = async (req, res, next) => {
           where: { id: parsedId, isDeleted: false },
           include: {
             category: true,
+            variants: {
+              where: { isDeleted: false },
+              orderBy: { name: 'asc' },
+            },
           },
         });
       },

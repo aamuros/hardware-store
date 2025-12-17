@@ -40,71 +40,81 @@ export default function CartPage() {
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Cart Items */}
         <div className="lg:col-span-2 space-y-4">
-          {items.map((item) => (
-            <div key={item.id} className="card p-4 flex gap-4">
-              {/* Image */}
-              <div className="w-20 h-20 bg-neutral-100 rounded-xl flex-shrink-0 overflow-hidden">
-                {item.imageUrl ? (
-                  <img
-                    src={item.imageUrl}
-                    alt={item.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-neutral-400 text-2xl">
-                    📦
-                  </div>
-                )}
-              </div>
+          {items.map((item) => {
+            // Use composite key for items with variants
+            const itemKey = item.variantId ? `${item.id}-${item.variantId}` : `${item.id}`
+            return (
+              <div key={itemKey} className="card p-4 flex gap-4">
+                {/* Image */}
+                <div className="w-20 h-20 bg-neutral-100 rounded-xl flex-shrink-0 overflow-hidden">
+                  {item.imageUrl ? (
+                    <img
+                      src={item.imageUrl}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-neutral-400 text-2xl">
+                      📦
+                    </div>
+                  )}
+                </div>
 
-              {/* Details */}
-              <div className="flex-1 min-w-0">
-                <Link
-                  to={`/products/${item.id}`}
-                  className="font-medium text-primary-900 hover:text-accent-600 line-clamp-1 transition-colors"
-                >
-                  {item.name}
-                </Link>
-                <p className="text-sm text-neutral-500">
-                  {formatPrice(item.price)} / {item.unit}
-                </p>
+                {/* Details */}
+                <div className="flex-1 min-w-0">
+                  <Link
+                    to={`/products/${item.id}`}
+                    className="font-medium text-primary-900 hover:text-accent-600 line-clamp-1 transition-colors"
+                  >
+                    {item.name}
+                  </Link>
+                  {item.variantName && (
+                    <p className="text-sm text-primary-600 font-medium">
+                      {item.variantName}
+                    </p>
+                  )}
+                  <p className="text-sm text-neutral-500">
+                    {formatPrice(item.price)} / {item.unit}
+                  </p>
 
-                {/* Quantity Controls */}
-                <div className="flex items-center gap-3 mt-2">
-                  <div className="flex items-center border border-neutral-200 rounded-xl overflow-hidden">
+                  {/* Quantity Controls */}
+                  <div className="flex items-center gap-3 mt-2">
+                    <div className="flex items-center border border-neutral-200 rounded-xl overflow-hidden">
+                      <button
+                        onClick={() => updateQuantity(item.id, item.quantity - 1, item.variantId)}
+                        className="p-2 hover:bg-neutral-100 transition-colors"
+                        aria-label={`Decrease quantity of ${item.name}`}
+                      >
+                        <MinusIcon className="h-4 w-4" />                    </button>
+                      <span className="px-3 text-sm font-medium">{item.quantity}</span>
+                      <button
+                        onClick={() => updateQuantity(item.id, item.quantity + 1, item.variantId)}
+                        className="p-2 hover:bg-neutral-100 transition-colors"
+                        aria-label={`Increase quantity of ${item.name}`}
+                      >
+                        <PlusIcon className="h-4 w-4" />
+                      </button>
+                    </div>
                     <button
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="p-2 hover:bg-neutral-100 transition-colors"
-                      aria-label={`Decrease quantity of ${item.name}`}
+                      onClick={() => removeFromCart(item.id, item.variantId)}
+                      className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                      aria-label={`Remove ${item.name} from cart`}
                     >
-                      <MinusIcon className="h-4 w-4" />                    </button>
-                    <span className="px-3 text-sm font-medium">{item.quantity}</span>
-                    <button
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="p-2 hover:bg-neutral-100 transition-colors"
-                      aria-label={`Increase quantity of ${item.name}`}
-                    >
-                      <PlusIcon className="h-4 w-4" />
+                      <TrashIcon className="h-5 w-5" />
                     </button>
                   </div>
-                  <button
-                    onClick={() => removeFromCart(item.id)}
-                    className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
-                    aria-label={`Remove ${item.name} from cart`}
-                  >
-                    <TrashIcon className="h-5 w-5" />
-                  </button>
+                </div>
+
+                {/* Subtotal */}
+                <div className="text-right">
+                  <p className="font-bold text-primary-800">
+                    {formatPrice(item.price * item.quantity)}
+                  </p>
                 </div>
               </div>
-
-              {/* Subtotal */}
-              <div className="text-right">
-                <p className="font-bold text-primary-800">
-                  {formatPrice(item.price * item.quantity)}
-                </p>
-              </div>
-            </div>
-          ))}
+            )
+          })
+          }
         </div>
 
         {/* Order Summary */}

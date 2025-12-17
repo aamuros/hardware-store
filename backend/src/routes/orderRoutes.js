@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const orderController = require('../controllers/orderController');
 const { validateOrder } = require('../middleware/validators');
+const { authenticateCustomer } = require('../middleware/auth');
 const prisma = require('../utils/prismaClient');
 
 // POST /api/orders/validate-cart - Validate cart items before checkout
@@ -98,7 +99,8 @@ router.post('/validate-cart', async (req, res, next) => {
 });
 
 // POST /api/orders - Create a new order
-router.post('/', validateOrder, orderController.createOrder);
+// Uses authenticateCustomer to optionally link order to logged-in customer
+router.post('/', authenticateCustomer, validateOrder, orderController.createOrder);
 
 // GET /api/orders/:id - Get order by ID (for customer to track)
 router.get('/:id', orderController.getOrderById);

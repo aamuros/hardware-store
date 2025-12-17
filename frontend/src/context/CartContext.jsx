@@ -29,8 +29,18 @@ const cartReducer = (state, action) => {
 
   switch (action.type) {
     case 'ADD_ITEM': {
+      // Use composite key: productId + variantId for unique identification
+      const itemKey = action.payload.variantId
+        ? `${action.payload.id}-${action.payload.variantId}`
+        : `${action.payload.id}`
+
       const existingIndex = state.items.findIndex(
-        item => item.id === action.payload.id
+        item => {
+          const existingKey = item.variantId
+            ? `${item.id}-${item.variantId}`
+            : `${item.id}`
+          return existingKey === itemKey
+        }
       )
 
       let updatedItems
@@ -56,7 +66,17 @@ const cartReducer = (state, action) => {
     }
 
     case 'REMOVE_ITEM': {
-      const updatedItems = state.items.filter(item => item.id !== action.payload)
+      // action.payload can be either productId (number) or composite key (string)
+      const removeKey = action.payload.variantId
+        ? `${action.payload.id}-${action.payload.variantId}`
+        : `${action.payload.id}`
+
+      const updatedItems = state.items.filter(item => {
+        const itemKey = item.variantId
+          ? `${item.id}-${item.variantId}`
+          : `${item.id}`
+        return itemKey !== removeKey
+      })
       newState = {
         ...state,
         items: updatedItems,
@@ -66,12 +86,19 @@ const cartReducer = (state, action) => {
     }
 
     case 'UPDATE_QUANTITY': {
+      const updateKey = action.payload.variantId
+        ? `${action.payload.id}-${action.payload.variantId}`
+        : `${action.payload.id}`
+
       const newQuantity = Math.min(Math.max(1, action.payload.quantity), MAX_QUANTITY)
-      const updatedItems = state.items.map(item =>
-        item.id === action.payload.id
+      const updatedItems = state.items.map(item => {
+        const itemKey = item.variantId
+          ? `${item.id}-${item.variantId}`
+          : `${item.id}`
+        return itemKey === updateKey
           ? { ...item, quantity: newQuantity }
           : item
-      )
+      })
       newState = {
         ...state,
         items: updatedItems,
@@ -118,31 +145,33 @@ export function CartProvider({ children }) {
   }, [])
 
   // Actions
-  const addToCart = (product, quantity = 1) => {
+  const addToCart = (product, quantity = 1, variant = null) => {
     dispatch({
       type: 'ADD_ITEM',
       payload: {
         id: product.id,
         name: product.name,
-        price: product.price,
+        price: variant ? variant.price : product.price,
         unit: product.unit,
         imageUrl: product.imageUrl,
         quantity,
+        variantId: variant?.id || null,
+        variantName: variant?.name || null,
       },
     })
   }
 
-  const removeFromCart = (productId) => {
-    dispatch({ type: 'REMOVE_ITEM', payload: productId })
+  const removeFromCart = (productId, variantId = null) => {
+    dispatch({ type: 'REMOVE_ITEM', payload: { id: productId, variantId } })
   }
 
-  const updateQuantity = (productId, quantity) => {
+  const updateQuantity = (productId, quantity, variantId = null) => {
     if (quantity < 1) {
-      removeFromCart(productId)
+      removeFromCart(productId, variantId)
     } else {
       dispatch({
         type: 'UPDATE_QUANTITY',
-        payload: { id: productId, quantity },
+        payload: { id: productId, quantity, variantId },
       })
     }
   }
@@ -151,8 +180,14 @@ export function CartProvider({ children }) {
     dispatch({ type: 'CLEAR_CART' })
   }
 
-  const getItemQuantity = (productId) => {
-    const item = state.items.find(item => item.id === productId)
+  const getItemQuantity = (productId, variantId = null) => {
+    const searchKey = variantId ? `${productId}-${variantId}` : `${productId}`
+    const item = state.items.find(item => {
+      const itemKey = item.variantId
+        ? `${item.id}-${item.variantId}`
+        : `${item.id}`
+      return itemKey === searchKey
+    })
     return item ? item.quantity : 0
   }
 

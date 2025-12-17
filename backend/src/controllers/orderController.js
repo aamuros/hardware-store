@@ -18,7 +18,40 @@ const ORDER_STATUS = {
 // POST /api/orders
 const createOrder = async (req, res, next) => {
   try {
-    const { customerName, phone, address, barangay, landmarks, notes, items } = req.body;
+    const { customerName, phone, address, barangay, landmarks, notes, items, savedAddressId } = req.body;
+
+    // Get customer info if logged in (set by authenticateCustomer middleware)
+    const customerId = req.customer?.id || null;
+
+    // If savedAddressId is provided, fetch address from database
+    let deliveryInfo = { customerName, phone, address, barangay, landmarks };
+
+    if (savedAddressId && customerId) {
+      const savedAddress = await prisma.savedAddress.findFirst({
+        where: {
+          id: parseInt(savedAddressId, 10),
+          customerId: customerId,
+        },
+      });
+
+      if (savedAddress) {
+        deliveryInfo.address = savedAddress.address;
+        deliveryInfo.barangay = savedAddress.barangay;
+        deliveryInfo.landmarks = savedAddress.landmarks;
+      }
+    }
+
+    // If logged in and customer name not provided, get from customer profile
+    if (customerId && !deliveryInfo.customerName) {
+      const customer = await prisma.customer.findUnique({
+        where: { id: customerId },
+        select: { name: true, phone: true },
+      });
+      if (customer) {
+        deliveryInfo.customerName = customer.name;
+        deliveryInfo.phone = deliveryInfo.phone || customer.phone;
+      }
+    }
 
     // Validate items
     if (!items || items.length === 0) {
@@ -66,11 +99,15 @@ const createOrder = async (req, res, next) => {
     // Calculate order items with prices
     const orderItems = items.map(item => {
       const product = productMap.get(item.productId);
+      // Use variant price if provided, otherwise product price
+      const unitPrice = item.unitPrice || product.price;
       return {
         productId: item.productId,
+        variantId: item.variantId || null,
+        variantName: item.variantName || null,
         quantity: item.quantity,
-        unitPrice: product.price,
-        subtotal: product.price * item.quantity,
+        unitPrice: unitPrice,
+        subtotal: unitPrice * item.quantity,
       };
     });
 
@@ -81,27 +118,41 @@ const createOrder = async (req, res, next) => {
 
     // Create order and deduct stock in a transaction
     const order = await prisma.$transaction(async (tx) => {
-      // Deduct stock for each item
+      // Deduct stock for each item (from variant or product)
       for (const item of items) {
-        await tx.product.update({
-          where: { id: item.productId },
-          data: {
-            stockQuantity: {
-              decrement: item.quantity,
+        if (item.variantId) {
+          // Deduct from variant stock
+          await tx.productVariant.update({
+            where: { id: item.variantId },
+            data: {
+              stockQuantity: {
+                decrement: item.quantity,
+              },
             },
-          },
-        });
+          });
+        } else {
+          // Deduct from product stock
+          await tx.product.update({
+            where: { id: item.productId },
+            data: {
+              stockQuantity: {
+                decrement: item.quantity,
+              },
+            },
+          });
+        }
       }
 
       // Create the order
       const newOrder = await tx.order.create({
         data: {
           orderNumber,
-          customerName,
-          phone,
-          address,
-          barangay,
-          landmarks,
+          customerId, // Link to customer if logged in
+          customerName: deliveryInfo.customerName,
+          phone: deliveryInfo.phone,
+          address: deliveryInfo.address,
+          barangay: deliveryInfo.barangay,
+          landmarks: deliveryInfo.landmarks,
           notes,
           totalAmount,
           status: ORDER_STATUS.PENDING,
@@ -113,7 +164,7 @@ const createOrder = async (req, res, next) => {
             create: {
               fromStatus: null,
               toStatus: ORDER_STATUS.PENDING,
-              notes: 'Order placed by customer',
+              notes: customerId ? 'Order placed by registered customer' : 'Order placed by guest customer',
             },
           },
         },
