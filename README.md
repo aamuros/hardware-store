@@ -189,7 +189,62 @@ npm test
 
 ## 📦 Deployment
 
-See [docs/technical/deployment.md](docs/technical/deployment.md) for detailed deployment instructions.
+### Prerequisites
+- GitHub repository with your code
+- Railway, Render, or similar account for backend
+- Vercel or Netlify account for frontend
+- PostgreSQL database (Supabase, Railway, or Neon)
+
+### Backend Deployment (Railway)
+
+1. **Create a Railway project**
+   - Connect your GitHub repository
+   - Select the `backend` folder as root directory
+
+2. **Add PostgreSQL database**
+   - Add a PostgreSQL plugin from Railway
+   - Copy the `DATABASE_URL` connection string
+
+3. **Set environment variables**
+   ```
+   NODE_ENV=production
+   DATABASE_URL=<your-postgresql-url>
+   JWT_SECRET=<generate-with-openssl-rand-base64-64>
+   FRONTEND_URL=<your-vercel-frontend-url>
+   SMS_ENABLED=true
+   SEMAPHORE_API_KEY=<your-api-key>
+   ```
+
+4. **Deploy**
+   - Railway will automatically run `npm install` (triggers Prisma generate via postinstall)
+   - Run `npm run db:deploy` in Railway shell for migrations
+   - Start command: `npm start`
+
+### Frontend Deployment (Vercel)
+
+1. **Import project to Vercel**
+   - Connect your GitHub repository
+   - Set root directory to `frontend`
+
+2. **Set environment variables**
+   ```
+   VITE_API_URL=<your-railway-backend-url>/api
+   VITE_STORE_NAME=Your Store Name
+   VITE_STORE_PHONE=09XXXXXXXXX
+   ```
+
+3. **Deploy**
+   - Build command: `npm run build`
+   - Output directory: `dist`
+
+### Database Migration
+
+For production database migrations:
+```bash
+# In backend folder
+npx prisma migrate deploy
+```
+
 
 ## 👥 Contributing
 
