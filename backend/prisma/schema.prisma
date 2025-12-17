@@ -70,19 +70,22 @@ model Product {
   price             Float
   unit              String      // e.g., "piece", "meter", "kg", "set"
   sku               String?     @unique // Stock Keeping Unit
-  imageUrl          String?
+  imageUrl          String?     // Primary/thumbnail image
   stockQuantity     Int         @default(0)
   lowStockThreshold Int         @default(10)
   isAvailable       Boolean     @default(true)
   isDeleted         Boolean     @default(false) // Soft delete
   hasVariants       Boolean     @default(false) // Whether product uses variants
+  hasBulkPricing    Boolean     @default(false) // Whether product has bulk pricing
   
   categoryId  Int
   category    Category    @relation(fields: [categoryId], references: [id])
   
-  variants       ProductVariant[]
-  orderItems     OrderItem[]
-  wishlistItems  WishlistItem[]
+  variants          ProductVariant[]
+  images            ProductImage[]
+  bulkPricingTiers  BulkPricingTier[]
+  orderItems        OrderItem[]
+  wishlistItems     WishlistItem[]
   
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -92,6 +95,39 @@ model Product {
   @@index([isAvailable])
   @@index([isDeleted])
   @@map("products")
+}
+
+// Product images gallery
+model ProductImage {
+  id          Int       @id @default(autoincrement())
+  productId   Int
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  imageUrl    String
+  altText     String?
+  sortOrder   Int       @default(0)
+  isPrimary   Boolean   @default(false)
+  
+  createdAt   DateTime  @default(now())
+
+  @@index([productId])
+  @@map("product_images")
+}
+
+// Bulk pricing tiers for volume discounts
+model BulkPricingTier {
+  id            Int       @id @default(autoincrement())
+  productId     Int
+  product       Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  minQuantity   Int       // Minimum quantity for this tier
+  discountType  String    // "percentage" or "fixed"
+  discountValue Float     // e.g., 10 for 10% or 50 for ₱50 off per unit
+  
+  createdAt     DateTime  @default(now())
+
+  @@index([productId])
+  @@map("bulk_pricing_tiers")
 }
 
 // Product variants (e.g., size, color combinations)

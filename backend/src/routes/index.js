@@ -8,6 +8,8 @@ const orderRoutes = require('./orderRoutes');
 const adminRoutes = require('./adminRoutes');
 const customerRoutes = require('./customerRoutes');
 const variantRoutes = require('./variantRoutes');
+const imageRoutes = require('./imageRoutes');
+const bulkPricingRoutes = require('./bulkPricingRoutes');
 
 // Public routes
 router.use('/products', productRoutes);
@@ -16,6 +18,12 @@ router.use('/orders', orderRoutes);
 
 // Variant routes (public GET, admin POST/PATCH/DELETE)
 router.use('/', variantRoutes);
+
+// Image routes (public GET, admin POST/PATCH/DELETE)
+router.use('/', imageRoutes);
+
+// Bulk pricing routes (public GET, admin POST/PATCH/DELETE)
+router.use('/', bulkPricingRoutes);
 
 // Admin routes (protected)
 router.use('/admin', adminRoutes);

@@ -46,6 +46,7 @@ describe('Order Status Management', () => {
         name: 'Order Status Test Product',
         price: 150,
         unit: 'piece',
+        stockQuantity: 100,
         isAvailable: true,
         categoryId: testCategory.id,
       },
@@ -61,7 +62,7 @@ describe('Order Status Management', () => {
         barangay: 'Test Barangay',
         items: [{ productId: testProduct.id, quantity: 2 }],
       });
-    
+
     testOrder = await prisma.order.findFirst({
       where: { customerName: 'Status Test Customer' },
       orderBy: { createdAt: 'desc' },
@@ -201,7 +202,7 @@ describe('Order Status Management', () => {
           barangay: 'Cancel Barangay',
           items: [{ productId: testProduct.id, quantity: 1 }],
         });
-      
+
       orderToCancel = await prisma.order.findFirst({
         where: { customerName: 'Status Test Cancel Customer' },
         orderBy: { createdAt: 'desc' },

@@ -42,6 +42,7 @@ describe('Orders API', () => {
         price: 100.00,
         unit: 'piece',
         sku: 'TEST-ORD-001',
+        stockQuantity: 100,
         isAvailable: true,
         categoryId: testCategory.id,
       },

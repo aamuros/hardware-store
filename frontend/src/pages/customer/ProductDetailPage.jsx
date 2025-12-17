@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { MinusIcon, PlusIcon, ShoppingCartIcon, HeartIcon } from '@heroicons/react/24/outline'
+import { MinusIcon, PlusIcon, ShoppingCartIcon, HeartIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid'
 import { productApi } from '../../services/api'
 import { useCart } from '../../context/CartContext'
@@ -13,6 +13,8 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true)
   const [quantity, setQuantity] = useState(1)
   const [selectedVariant, setSelectedVariant] = useState(null)
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const [showLightbox, setShowLightbox] = useState(false)
   const { addToCart, getItemQuantity } = useCart()
   const { isAuthenticated, isInWishlist, toggleWishlist } = useCustomerAuth()
   const [wishlistLoading, setWishlistLoading] = useState(false)
@@ -117,19 +119,65 @@ export default function ProductDetailPage() {
       </nav>
 
       <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-        {/* Product Image */}
-        <div className="aspect-square bg-neutral-100 rounded-2xl overflow-hidden shadow-soft">
-          {product.imageUrl ? (
-            <img
-              src={product.imageUrl}
-              alt={product.name}
-              className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-neutral-300">
-              <svg className="h-32 w-32" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
+        {/* Product Image Gallery */}
+        <div className="space-y-4">
+          {/* Main Image */}
+          <div
+            className="aspect-square bg-neutral-100 rounded-2xl overflow-hidden shadow-soft cursor-zoom-in relative group"
+            onClick={() => setShowLightbox(true)}
+          >
+            {(() => {
+              const images = product.images || []
+              const currentImage = images.length > 0
+                ? images[selectedImageIndex]?.imageUrl
+                : product.imageUrl
+
+              if (currentImage) {
+                return (
+                  <>
+                    <img
+                      src={currentImage}
+                      alt={images[selectedImageIndex]?.altText || product.name}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                      <span className="opacity-0 group-hover:opacity-100 text-white bg-black/50 px-3 py-1.5 rounded-lg text-sm font-medium transition-opacity">
+                        Click to zoom
+                      </span>
+                    </div>
+                  </>
+                )
+              }
+
+              return (
+                <div className="w-full h-full flex items-center justify-center text-neutral-300">
+                  <svg className="h-32 w-32" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                </div>
+              )
+            })()}
+          </div>
+
+          {/* Thumbnail Navigation */}
+          {product.images && product.images.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {product.images.map((image, index) => (
+                <button
+                  key={image.id}
+                  onClick={() => setSelectedImageIndex(index)}
+                  className={`flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${selectedImageIndex === index
+                    ? 'border-primary-600 ring-2 ring-primary-200'
+                    : 'border-neutral-200 hover:border-primary-300'
+                    }`}
+                >
+                  <img
+                    src={image.imageUrl}
+                    alt={image.altText || `${product.name} - Image ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
             </div>
           )}
         </div>
@@ -209,6 +257,46 @@ export default function ProductDetailPage() {
 
           {product.description && (
             <p className="text-neutral-600 mb-6 leading-relaxed">{product.description}</p>
+          )}
+
+          {/* Bulk Pricing Table */}
+          {product.hasBulkPricing && product.bulkPricingTiers?.length > 0 && (
+            <div className="mb-6 p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+              <h3 className="text-sm font-semibold text-emerald-800 mb-3 flex items-center gap-2">
+                💰 Volume Discounts Available
+              </h3>
+              <div className="overflow-hidden rounded-lg border border-emerald-200">
+                <table className="w-full text-sm">
+                  <thead className="bg-emerald-100">
+                    <tr>
+                      <th className="px-3 py-2 text-left text-emerald-800 font-medium">Quantity</th>
+                      <th className="px-3 py-2 text-left text-emerald-800 font-medium">Discount</th>
+                      <th className="px-3 py-2 text-right text-emerald-800 font-medium">Unit Price</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white">
+                    {product.bulkPricingTiers.map((tier) => {
+                      const discountedPrice = tier.discountType === 'percentage'
+                        ? effectivePrice * (1 - tier.discountValue / 100)
+                        : effectivePrice - tier.discountValue
+                      return (
+                        <tr key={tier.id} className="border-t border-emerald-100">
+                          <td className="px-3 py-2 text-neutral-700">{tier.minQuantity}+ {product.unit}s</td>
+                          <td className="px-3 py-2 text-emerald-600 font-medium">
+                            {tier.discountType === 'percentage'
+                              ? `${tier.discountValue}% off`
+                              : `${formatPrice(tier.discountValue)} off`}
+                          </td>
+                          <td className="px-3 py-2 text-right font-medium text-primary-700">
+                            {formatPrice(Math.max(0, discountedPrice))}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           )}
 
           {/* Availability */}
@@ -313,6 +401,75 @@ export default function ProductDetailPage() {
           </Link>
         </div>
       </div>
+
+      {/* Lightbox Modal */}
+      {showLightbox && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
+          onClick={() => setShowLightbox(false)}
+        >
+          {/* Close Button */}
+          <button
+            onClick={() => setShowLightbox(false)}
+            className="absolute top-4 right-4 text-white hover:text-neutral-300 transition-colors z-10"
+            aria-label="Close lightbox"
+          >
+            <XMarkIcon className="h-8 w-8" />
+          </button>
+
+          {/* Navigation Arrows (if multiple images) */}
+          {product.images && product.images.length > 1 && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setSelectedImageIndex(prev =>
+                    prev === 0 ? product.images.length - 1 : prev - 1
+                  )
+                }}
+                className="absolute left-4 text-white hover:text-neutral-300 transition-colors p-2 bg-black/30 rounded-full"
+                aria-label="Previous image"
+              >
+                <ChevronLeftIcon className="h-8 w-8" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setSelectedImageIndex(prev =>
+                    prev === product.images.length - 1 ? 0 : prev + 1
+                  )
+                }}
+                className="absolute right-4 text-white hover:text-neutral-300 transition-colors p-2 bg-black/30 rounded-full"
+                aria-label="Next image"
+              >
+                <ChevronRightIcon className="h-8 w-8" />
+              </button>
+            </>
+          )}
+
+          {/* Main Image */}
+          <div
+            className="max-w-4xl max-h-[80vh] p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={
+                product.images?.length > 0
+                  ? product.images[selectedImageIndex]?.imageUrl
+                  : product.imageUrl
+              }
+              alt={product.images?.[selectedImageIndex]?.altText || product.name}
+              className="max-w-full max-h-[80vh] object-contain rounded-lg"
+            />
+            {/* Image Counter */}
+            {product.images?.length > 1 && (
+              <p className="text-center text-white/70 mt-4 text-sm">
+                {selectedImageIndex + 1} / {product.images.length}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

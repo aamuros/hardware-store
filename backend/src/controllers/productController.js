@@ -141,6 +141,12 @@ const getProductById = async (req, res, next) => {
               where: { isDeleted: false },
               orderBy: { name: 'asc' },
             },
+            images: {
+              orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }],
+            },
+            bulkPricingTiers: {
+              orderBy: { minQuantity: 'asc' },
+            },
           },
         });
       },

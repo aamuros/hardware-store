@@ -62,6 +62,10 @@ export const productApi = {
   search: (query) => api.get('/products/search', { params: { q: query } }),
   getByCategory: (categoryId) => api.get(`/products/category/${categoryId}`),
   getVariants: (productId) => api.get(`/products/${productId}/variants`),
+  getImages: (productId) => api.get(`/products/${productId}/images`),
+  getBulkPricing: (productId) => api.get(`/products/${productId}/bulk-pricing`),
+  calculateBulkPrice: (productId, quantity) =>
+    api.get(`/products/${productId}/calculate-price`, { params: { quantity } }),
 }
 
 export const categoryApi = {
