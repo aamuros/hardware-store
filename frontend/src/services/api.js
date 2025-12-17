@@ -60,6 +60,7 @@ export const categoryApi = {
 export const orderApi = {
   create: (orderData) => api.post('/orders', orderData),
   track: (orderNumber) => api.get(`/orders/track/${orderNumber}`),
+  validateCart: (items) => api.post('/orders/validate-cart', { items }),
 }
 
 export const adminApi = {

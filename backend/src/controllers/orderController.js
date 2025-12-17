@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../utils/prismaClient');
 const smsService = require('../services/smsService');
 const { generateOrderNumber } = require('../utils/helpers');
 const { logOrderStatus } = require('../utils/logger');
@@ -278,7 +277,7 @@ const getAllOrders = async (req, res, next) => {
       }
     }
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
 
     const [orders, total] = await Promise.all([
       prisma.order.findMany({
@@ -296,7 +295,7 @@ const getAllOrders = async (req, res, next) => {
           },
         },
         skip,
-        take: parseInt(limit),
+        take: parseInt(limit, 10),
         orderBy: {
           createdAt: 'desc',
         },
@@ -308,10 +307,10 @@ const getAllOrders = async (req, res, next) => {
       success: true,
       data: orders,
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: parseInt(page, 10),
+        limit: parseInt(limit, 10),
         total,
-        totalPages: Math.ceil(total / parseInt(limit)),
+        totalPages: Math.ceil(total / parseInt(limit, 10)),
       },
     });
   } catch (error) {
@@ -325,7 +324,7 @@ const getOrderDetails = async (req, res, next) => {
     const { id } = req.params;
 
     const order = await prisma.order.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: parseInt(id, 10) },
       include: {
         items: {
           include: {
@@ -376,7 +375,7 @@ const updateOrderStatus = async (req, res, next) => {
     }
 
     const order = await prisma.order.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: parseInt(id, 10) },
     });
 
     if (!order) {
@@ -399,25 +398,33 @@ const updateOrderStatus = async (req, res, next) => {
       if (isRestoreStock) {
         // Get order items to restore stock
         const orderItems = await tx.orderItem.findMany({
-          where: { orderId: parseInt(id) },
+          where: { orderId: parseInt(id, 10) },
         });
 
-        // Restore stock for each item
+        // Restore stock for each item (only if product still exists and isn't deleted)
         for (const item of orderItems) {
-          await tx.product.update({
+          const product = await tx.product.findUnique({
             where: { id: item.productId },
-            data: {
-              stockQuantity: {
-                increment: item.quantity,
-              },
-            },
+            select: { isDeleted: true },
           });
+
+          // Only restore stock if product exists and isn't soft-deleted
+          if (product && !product.isDeleted) {
+            await tx.product.update({
+              where: { id: item.productId },
+              data: {
+                stockQuantity: {
+                  increment: item.quantity,
+                },
+              },
+            });
+          }
         }
       }
 
       // Update the order
       const updated = await tx.order.update({
-        where: { id: parseInt(id) },
+        where: { id: parseInt(id, 10) },
         data: { status },
         include: {
           items: {
@@ -435,7 +442,7 @@ const updateOrderStatus = async (req, res, next) => {
       // Create status history entry
       await tx.orderStatusHistory.create({
         data: {
-          orderId: parseInt(id),
+          orderId: parseInt(id, 10),
           fromStatus: previousStatus,
           toStatus: status,
           changedById: req.user?.id || null,

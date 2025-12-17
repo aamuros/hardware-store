@@ -1,8 +1,6 @@
 const axios = require('axios');
 const config = require('../config');
-const { PrismaClient } = require('@prisma/client');
-
-const prisma = new PrismaClient();
+const prisma = require('../utils/prismaClient');
 
 // ============================================================================
 // PHILIPPINE TELCO PREFIXES (All Major Networks - Updated 2024)
@@ -16,7 +14,7 @@ const PH_TELCO_PREFIXES = {
     '0966', '0967', '0975', '0976', '0977', '0978', '0979', '0994', '0995',
     '0996', '0997'
   ],
-  
+
   // Smart Communications (includes TNT and Sun)
   SMART: [
     '0907', '0908', '0909', '0910', '0911', '0912', '0913', '0914',
@@ -26,7 +24,7 @@ const PH_TELCO_PREFIXES = {
     '0951', '0961', '0963', '0968', '0969', '0970', '0971', '0973', '0974',
     '0981', '0989', '0992', '0998', '0999'
   ],
-  
+
   // DITO Telecommunity (newest network)
   DITO: ['0991', '0993'],
 };
@@ -50,20 +48,20 @@ const ALL_VALID_PREFIXES = [
  */
 const formatPhoneNumber = (phone) => {
   if (!phone) return null;
-  
+
   // Remove all non-digit characters
   let cleaned = phone.toString().replace(/\D/g, '');
-  
+
   // Handle +63 or 63 prefix (international format)
   if (cleaned.startsWith('63') && cleaned.length === 12) {
     cleaned = '0' + cleaned.slice(2);
   }
-  
+
   // Handle 9XXXXXXXXX (missing leading 0)
   if (cleaned.startsWith('9') && cleaned.length === 10) {
     cleaned = '0' + cleaned;
   }
-  
+
   return cleaned;
 };
 
@@ -74,7 +72,7 @@ const formatPhoneNumber = (phone) => {
 const formatInternational = (phone) => {
   const formatted = formatPhoneNumber(phone);
   if (!formatted || formatted.length !== 11) return null;
-  
+
   // Return without + prefix (some providers add it themselves)
   return '63' + formatted.slice(1);
 };
@@ -85,34 +83,34 @@ const formatInternational = (phone) => {
  */
 const validatePhoneNumber = (phone) => {
   const formatted = formatPhoneNumber(phone);
-  
+
   if (!formatted) {
     return { valid: false, error: 'Phone number is required' };
   }
-  
+
   if (formatted.length !== 11) {
-    return { 
-      valid: false, 
-      error: `Phone number must be 11 digits (e.g., 09171234567). Got ${formatted.length} digits.` 
+    return {
+      valid: false,
+      error: `Phone number must be 11 digits (e.g., 09171234567). Got ${formatted.length} digits.`
     };
   }
-  
+
   if (!formatted.startsWith('09')) {
     return { valid: false, error: 'Phone number must start with 09' };
   }
-  
+
   // Check if prefix is valid (first 4 digits)
   const prefix = formatted.substring(0, 4);
   if (!ALL_VALID_PREFIXES.includes(prefix)) {
     // Still allow it but flag as unknown network
-    return { 
-      valid: true, 
-      formatted, 
+    return {
+      valid: true,
+      formatted,
       telco: 'UNKNOWN',
       warning: `Unrecognized network prefix: ${prefix}. SMS may still be delivered.`
     };
   }
-  
+
   // Identify telco
   let telco = 'UNKNOWN';
   for (const [network, prefixes] of Object.entries(PH_TELCO_PREFIXES)) {
@@ -121,7 +119,7 @@ const validatePhoneNumber = (phone) => {
       break;
     }
   }
-  
+
   return { valid: true, formatted, telco };
 };
 
@@ -139,25 +137,25 @@ const getTelco = (phone) => {
 const SMS_TEMPLATES = {
   ORDER_CONFIRMATION: (orderNumber, amount, storeName) =>
     `[${storeName}] Order ${orderNumber} received! Total: P${amount.toFixed(2)}. We'll notify you when accepted. Salamat po!`,
-  
+
   ORDER_ACCEPTED: (orderNumber, storeName) =>
     `[${storeName}] Good news! Order ${orderNumber} ACCEPTED & being prepared. We'll update you when out for delivery.`,
-  
+
   ORDER_REJECTED: (orderNumber, reason, storePhone) =>
     `Order ${orderNumber} cannot be processed${reason ? `: ${reason}` : ''}. Contact ${storePhone} for help. Sorry for inconvenience.`,
-  
+
   ORDER_PREPARING: (orderNumber, storeName) =>
     `[${storeName}] Order ${orderNumber} is being prepared! We'll notify you when out for delivery.`,
-  
+
   ORDER_OUT_FOR_DELIVERY: (orderNumber, estimate) =>
     `Your order ${orderNumber} is ON THE WAY!${estimate ? ` ETA: ${estimate}.` : ''} Please prepare payment. Thank you!`,
-  
+
   ORDER_DELIVERED: (orderNumber, storeName) =>
     `Order ${orderNumber} DELIVERED! Thank you for shopping with ${storeName}. We appreciate your business!`,
-  
+
   ORDER_CANCELLED: (orderNumber, reason, storePhone) =>
     `Order ${orderNumber} cancelled${reason ? `: ${reason}` : ''}. Questions? Contact ${storePhone}.`,
-  
+
   ADMIN_NEW_ORDER: (orderNumber, amount, customerName) =>
     `NEW ORDER! ${orderNumber} - P${amount.toFixed(2)} from ${customerName}. Check dashboard now.`,
 };
@@ -172,7 +170,7 @@ const SMS_TEMPLATES = {
  */
 const sendViaSemaphore = async (phone, message) => {
   const internationalPhone = formatInternational(phone);
-  
+
   const response = await axios.post(
     'https://api.semaphore.co/api/v4/messages',
     {
@@ -186,14 +184,14 @@ const sendViaSemaphore = async (phone, message) => {
       headers: { 'Content-Type': 'application/json' },
     }
   );
-  
+
   // Semaphore returns array of message results
   const result = response.data?.[0] || response.data;
-  
+
   if (result?.status === 'failed' || result?.error) {
     throw new Error(result.error || 'Semaphore sending failed');
   }
-  
+
   return {
     provider: 'semaphore',
     success: true,
@@ -208,7 +206,7 @@ const sendViaSemaphore = async (phone, message) => {
  */
 const sendViaMovider = async (phone, message) => {
   const internationalPhone = '+' + formatInternational(phone);
-  
+
   const response = await axios.post(
     'https://api.movider.co/v1/sms',
     {
@@ -222,7 +220,7 @@ const sendViaMovider = async (phone, message) => {
       headers: { 'Content-Type': 'application/json' },
     }
   );
-  
+
   return {
     provider: 'movider',
     success: true,
@@ -237,7 +235,7 @@ const sendViaMovider = async (phone, message) => {
  */
 const sendViaVonage = async (phone, message) => {
   const internationalPhone = formatInternational(phone);
-  
+
   const response = await axios.post(
     'https://rest.nexmo.com/sms/json',
     {
@@ -252,12 +250,12 @@ const sendViaVonage = async (phone, message) => {
       headers: { 'Content-Type': 'application/json' },
     }
   );
-  
+
   const msgResult = response.data?.messages?.[0];
   if (msgResult?.status !== '0') {
     throw new Error(`Vonage error: ${msgResult?.['error-text'] || 'Unknown error'}`);
   }
-  
+
   return {
     provider: 'vonage',
     success: true,
@@ -298,7 +296,7 @@ const isProviderConfigured = (providerName) => {
  */
 const sendSMS = async (phone, message, orderId = null, options = {}) => {
   const { skipValidation = false, retryCount = 0 } = options;
-  
+
   // Validate phone number
   if (!skipValidation) {
     const validation = validatePhoneNumber(phone);
@@ -309,10 +307,10 @@ const sendSMS = async (phone, message, orderId = null, options = {}) => {
       console.warn(`⚠️ ${validation.warning}`);
     }
   }
-  
+
   const formattedPhone = formatPhoneNumber(phone);
   const telco = getTelco(phone);
-  
+
   // Create SMS log entry
   const smsLog = await prisma.smsLog.create({
     data: {
@@ -322,7 +320,7 @@ const sendSMS = async (phone, message, orderId = null, options = {}) => {
       status: 'pending',
     },
   });
-  
+
   // Development mode - simulate SMS
   if (config.nodeEnv === 'development' && !config.sms.enabled) {
     console.log('\n📱 ════════════════════════════════════════════════════');
@@ -332,7 +330,7 @@ const sendSMS = async (phone, message, orderId = null, options = {}) => {
     console.log(`📱 Message: ${message}`);
     console.log(`📱 Length: ${message.length} characters`);
     console.log('📱 ════════════════════════════════════════════════════\n');
-    
+
     await prisma.smsLog.update({
       where: { id: smsLog.id },
       data: {
@@ -341,14 +339,14 @@ const sendSMS = async (phone, message, orderId = null, options = {}) => {
         response: JSON.stringify({ mode: 'development', telco }),
       },
     });
-    
+
     return { success: true, mode: 'development', telco, smsLogId: smsLog.id };
   }
-  
+
   // Test mode - validate but don't actually send
   if (config.sms.testMode) {
     console.log(`📱 SMS Test Mode: Would send to ${formattedPhone} (${telco}): ${message.substring(0, 50)}...`);
-    
+
     await prisma.smsLog.update({
       where: { id: smsLog.id },
       data: {
@@ -357,35 +355,35 @@ const sendSMS = async (phone, message, orderId = null, options = {}) => {
         response: JSON.stringify({ mode: 'test', telco }),
       },
     });
-    
+
     return { success: true, mode: 'test', telco, smsLogId: smsLog.id };
   }
-  
+
   // Get provider order from config
   const providers = config.sms.providers || ['semaphore'];
   const maxRetries = config.sms.maxRetries || 2;
   const errors = [];
-  
+
   // Try each provider in order
   for (const providerName of providers) {
     const provider = SMS_PROVIDERS[providerName];
-    
+
     if (!provider) {
       console.warn(`⚠️ Unknown SMS provider: ${providerName}`);
       continue;
     }
-    
+
     // Check if provider is configured
     if (!isProviderConfigured(providerName)) {
       console.warn(`⚠️ SMS provider ${providerName} not configured, skipping...`);
       continue;
     }
-    
+
     try {
       console.log(`📱 Sending SMS via ${providerName} to ${formattedPhone} (${telco})...`);
-      
+
       const result = await provider(formattedPhone, message);
-      
+
       // Success - update log
       await prisma.smsLog.update({
         where: { id: smsLog.id },
@@ -399,9 +397,9 @@ const sendSMS = async (phone, message, orderId = null, options = {}) => {
           }),
         },
       });
-      
+
       console.log(`✅ SMS sent successfully via ${providerName} (ID: ${result.messageId || 'N/A'})`);
-      
+
       return {
         success: true,
         provider: providerName,
@@ -415,10 +413,10 @@ const sendSMS = async (phone, message, orderId = null, options = {}) => {
       errors.push({ provider: providerName, error: errorMsg });
     }
   }
-  
+
   // All providers failed
   const errorMessage = errors.map(e => `${e.provider}: ${e.error}`).join('; ');
-  
+
   await prisma.smsLog.update({
     where: { id: smsLog.id },
     data: {
@@ -426,15 +424,15 @@ const sendSMS = async (phone, message, orderId = null, options = {}) => {
       error: errorMessage,
     },
   });
-  
+
   // Retry if not exceeded max retries
   if (retryCount < maxRetries) {
     const delay = 2000 * (retryCount + 1); // Exponential backoff
-    console.log(`🔄 Retrying SMS in ${delay/1000}s (attempt ${retryCount + 1}/${maxRetries})...`);
+    console.log(`🔄 Retrying SMS in ${delay / 1000}s (attempt ${retryCount + 1}/${maxRetries})...`);
     await new Promise(resolve => setTimeout(resolve, delay));
     return sendSMS(phone, message, orderId, { skipValidation: true, retryCount: retryCount + 1 });
   }
-  
+
   throw new Error(`SMS sending failed after ${maxRetries + 1} attempts: ${errorMessage}`);
 };
 
@@ -459,7 +457,7 @@ const sendOrderConfirmation = async (phone, orderNumber, amount, orderId = null)
  */
 const sendStatusUpdate = async (phone, orderNumber, status, customMessage = null, orderId = null) => {
   let message;
-  
+
   switch (status) {
     case 'accepted':
       message = SMS_TEMPLATES.ORDER_ACCEPTED(orderNumber, config.store.name);
@@ -483,7 +481,7 @@ const sendStatusUpdate = async (phone, orderNumber, status, customMessage = null
     default:
       message = customMessage || `[${config.store.name}] Order ${orderNumber} status: ${status}`;
   }
-  
+
   return sendSMS(phone, message, orderId);
 };
 
@@ -492,12 +490,12 @@ const sendStatusUpdate = async (phone, orderNumber, status, customMessage = null
  */
 const notifyAdminNewOrder = async (orderNumber, amount, customerName = 'Customer') => {
   const adminPhone = config.sms.adminPhone;
-  
+
   if (!adminPhone) {
     console.log('ℹ️ Admin phone not configured, skipping notification');
     return { success: false, reason: 'Admin phone not configured' };
   }
-  
+
   const message = SMS_TEMPLATES.ADMIN_NEW_ORDER(orderNumber, amount, customerName);
   return sendSMS(adminPhone, message);
 };
@@ -524,20 +522,20 @@ const getSmsLogs = async (orderId) => {
  */
 const getSmsStats = async (startDate = null, endDate = null) => {
   const where = {};
-  
+
   if (startDate || endDate) {
     where.createdAt = {};
     if (startDate) where.createdAt.gte = new Date(startDate);
     if (endDate) where.createdAt.lte = new Date(endDate);
   }
-  
+
   const [total, sent, failed, pending] = await Promise.all([
     prisma.smsLog.count({ where }),
     prisma.smsLog.count({ where: { ...where, status: 'sent' } }),
     prisma.smsLog.count({ where: { ...where, status: 'failed' } }),
     prisma.smsLog.count({ where: { ...where, status: 'pending' } }),
   ]);
-  
+
   return {
     total,
     sent,
@@ -557,18 +555,18 @@ module.exports = {
   sendStatusUpdate,
   notifyAdminNewOrder,
   sendCustomSMS,
-  
+
   // Utility functions
   validatePhoneNumber,
   formatPhoneNumber,
   formatInternational,
   getTelco,
   isProviderConfigured,
-  
+
   // Data functions
   getSmsLogs,
   getSmsStats,
-  
+
   // Constants
   SMS_TEMPLATES,
   PH_TELCO_PREFIXES,

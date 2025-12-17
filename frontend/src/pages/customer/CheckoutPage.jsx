@@ -83,12 +83,40 @@ export default function CheckoutPage() {
     setShowConfirmModal(false)
     setLoading(true)
     try {
+      // First, validate cart items to ensure they're still available
+      const cartItems = items.map(item => ({
+        productId: item.id,
+        quantity: item.quantity,
+      }))
+
+      const validationResponse = await orderApi.validateCart(cartItems)
+      const validation = validationResponse.data
+
+      if (!validation.valid) {
+        // Show detailed errors for each problematic item
+        const errorMessages = validation.errors.map(err => err.message)
+        toast.error(
+          <div>
+            <strong>Some items have issues:</strong>
+            <ul className="mt-2 text-sm">
+              {errorMessages.slice(0, 3).map((msg, i) => (
+                <li key={i}>• {msg}</li>
+              ))}
+              {errorMessages.length > 3 && (
+                <li>• ...and {errorMessages.length - 3} more</li>
+              )}
+            </ul>
+          </div>,
+          { duration: 5000 }
+        )
+        setLoading(false)
+        return
+      }
+
+      // Cart is valid, proceed with order
       const orderData = {
         ...formData,
-        items: items.map(item => ({
-          productId: item.id,
-          quantity: item.quantity,
-        })),
+        items: cartItems,
       }
 
       const response = await orderApi.create(orderData)

@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../utils/prismaClient');
 const { getOrSet, CACHE_KEYS, CACHE_TTL, invalidateProducts } = require('../utils/cache');
 
 // GET /api/products
@@ -10,14 +9,14 @@ const getAllProducts = async (req, res, next) => {
     const where = { isDeleted: false };
 
     if (category) {
-      where.categoryId = parseInt(category);
+      where.categoryId = parseInt(category, 10);
     }
 
     if (available !== undefined) {
       where.isAvailable = available === 'true';
     }
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
 
     const [products, total] = await Promise.all([
       prisma.product.findMany({
@@ -31,7 +30,7 @@ const getAllProducts = async (req, res, next) => {
           },
         },
         skip,
-        take: parseInt(limit),
+        take: parseInt(limit, 10),
         orderBy: {
           name: 'asc',
         },
@@ -43,10 +42,10 @@ const getAllProducts = async (req, res, next) => {
       success: true,
       data: products,
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: parseInt(page, 10),
+        limit: parseInt(limit, 10),
         total,
-        totalPages: Math.ceil(total / parseInt(limit)),
+        totalPages: Math.ceil(total / parseInt(limit, 10)),
       },
     });
   } catch (error) {
@@ -66,7 +65,7 @@ const searchProducts = async (req, res, next) => {
       });
     }
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
 
     const [products, total] = await Promise.all([
       prisma.product.findMany({
@@ -88,7 +87,7 @@ const searchProducts = async (req, res, next) => {
           },
         },
         skip,
-        take: parseInt(limit),
+        take: parseInt(limit, 10),
       }),
       prisma.product.count({
         where: {
@@ -107,10 +106,10 @@ const searchProducts = async (req, res, next) => {
       success: true,
       data: products,
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: parseInt(page, 10),
+        limit: parseInt(limit, 10),
         total,
-        totalPages: Math.ceil(total / parseInt(limit)),
+        totalPages: Math.ceil(total / parseInt(limit, 10)),
       },
     });
   } catch (error) {
@@ -122,7 +121,7 @@ const searchProducts = async (req, res, next) => {
 const getProductById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const parsedId = parseInt(id);
+    const parsedId = parseInt(id, 10);
 
     if (isNaN(parsedId)) {
       return res.status(400).json({
@@ -166,7 +165,7 @@ const getProductsByCategory = async (req, res, next) => {
     const { categoryId } = req.params;
     const { page = 1, limit = 20 } = req.query;
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
 
     const [products, total] = await Promise.all([
       prisma.product.findMany({
@@ -184,7 +183,7 @@ const getProductsByCategory = async (req, res, next) => {
           },
         },
         skip,
-        take: parseInt(limit),
+        take: parseInt(limit, 10),
         orderBy: {
           name: 'asc',
         },
@@ -202,10 +201,10 @@ const getProductsByCategory = async (req, res, next) => {
       success: true,
       data: products,
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: parseInt(page, 10),
+        limit: parseInt(limit, 10),
         total,
-        totalPages: Math.ceil(total / parseInt(limit)),
+        totalPages: Math.ceil(total / parseInt(limit, 10)),
       },
     });
   } catch (error) {
@@ -225,11 +224,11 @@ const createProduct = async (req, res, next) => {
         description,
         price: parseFloat(price),
         unit,
-        categoryId: parseInt(categoryId),
+        categoryId: parseInt(categoryId, 10),
         sku,
         imageUrl,
-        stockQuantity: parseInt(stockQuantity) || 0,
-        lowStockThreshold: parseInt(lowStockThreshold) || 10,
+        stockQuantity: parseInt(stockQuantity, 10) || 0,
+        lowStockThreshold: parseInt(lowStockThreshold, 10) || 10,
         isAvailable: true,
       },
       include: {
@@ -254,7 +253,7 @@ const createProduct = async (req, res, next) => {
 const updateProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const parsedId = parseInt(id);
+    const parsedId = parseInt(id, 10);
 
     if (isNaN(parsedId)) {
       return res.status(400).json({
@@ -283,11 +282,11 @@ const updateProduct = async (req, res, next) => {
     if (description !== undefined) updateData.description = description;
     if (price) updateData.price = parseFloat(price);
     if (unit) updateData.unit = unit;
-    if (categoryId) updateData.categoryId = parseInt(categoryId);
+    if (categoryId) updateData.categoryId = parseInt(categoryId, 10);
     if (sku) updateData.sku = sku;
     if (isAvailable !== undefined) updateData.isAvailable = isAvailable === 'true' || isAvailable === true;
-    if (stockQuantity !== undefined) updateData.stockQuantity = parseInt(stockQuantity);
-    if (lowStockThreshold !== undefined) updateData.lowStockThreshold = parseInt(lowStockThreshold);
+    if (stockQuantity !== undefined) updateData.stockQuantity = parseInt(stockQuantity, 10);
+    if (lowStockThreshold !== undefined) updateData.lowStockThreshold = parseInt(lowStockThreshold, 10);
     if (req.file) updateData.imageUrl = `/uploads/${req.file.filename}`;
 
     const product = await prisma.product.update({
@@ -315,7 +314,7 @@ const updateProduct = async (req, res, next) => {
 const deleteProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const parsedId = parseInt(id);
+    const parsedId = parseInt(id, 10);
 
     if (isNaN(parsedId)) {
       return res.status(400).json({
@@ -358,7 +357,7 @@ const deleteProduct = async (req, res, next) => {
 const toggleAvailability = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const parsedId = parseInt(id);
+    const parsedId = parseInt(id, 10);
 
     if (isNaN(parsedId)) {
       return res.status(400).json({
@@ -391,7 +390,7 @@ const toggleAvailability = async (req, res, next) => {
 const updateStock = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const parsedId = parseInt(id);
+    const parsedId = parseInt(id, 10);
 
     if (isNaN(parsedId)) {
       return res.status(400).json({
@@ -404,10 +403,10 @@ const updateStock = async (req, res, next) => {
 
     const updateData = {};
     if (stockQuantity !== undefined) {
-      updateData.stockQuantity = parseInt(stockQuantity);
+      updateData.stockQuantity = parseInt(stockQuantity, 10);
     }
     if (lowStockThreshold !== undefined) {
-      updateData.lowStockThreshold = parseInt(lowStockThreshold);
+      updateData.lowStockThreshold = parseInt(lowStockThreshold, 10);
     }
 
     if (Object.keys(updateData).length === 0) {
@@ -438,33 +437,58 @@ const updateStock = async (req, res, next) => {
 // GET /api/admin/inventory/low-stock
 const getLowStockProducts = async (req, res, next) => {
   try {
-    const products = await prisma.product.findMany({
-      where: {
-        isDeleted: false,
-        isAvailable: true,
-        // Find products where stock is at or below threshold
-        // Using raw query comparison since Prisma doesn't support field-to-field comparison directly
-      },
-      include: {
-        category: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-      orderBy: {
-        stockQuantity: 'asc',
-      },
-    });
+    // Use raw SQL to compare stockQuantity with lowStockThreshold at database level
+    // This is more efficient than fetching all products and filtering in memory
+    const lowStockProducts = await prisma.$queryRaw`
+      SELECT 
+        p.id,
+        p.name,
+        p.description,
+        p.price,
+        p.unit,
+        p.sku,
+        p.imageUrl,
+        p.stockQuantity,
+        p.lowStockThreshold,
+        p.isAvailable,
+        p.categoryId,
+        p.createdAt,
+        p.updatedAt,
+        c.id as "category_id",
+        c.name as "category_name"
+      FROM products p
+      LEFT JOIN categories c ON p.categoryId = c.id
+      WHERE p.isDeleted = 0
+        AND p.isAvailable = 1
+        AND p.stockQuantity <= p.lowStockThreshold
+      ORDER BY p.stockQuantity ASC
+    `;
 
-    // Filter products where stockQuantity <= lowStockThreshold
-    const lowStockProducts = products.filter(p => p.stockQuantity <= p.lowStockThreshold);
+    // Transform the raw result to match the expected structure
+    const formattedProducts = lowStockProducts.map(p => ({
+      id: p.id,
+      name: p.name,
+      description: p.description,
+      price: p.price,
+      unit: p.unit,
+      sku: p.sku,
+      imageUrl: p.imageUrl,
+      stockQuantity: p.stockQuantity,
+      lowStockThreshold: p.lowStockThreshold,
+      isAvailable: Boolean(p.isAvailable),
+      categoryId: p.categoryId,
+      createdAt: p.createdAt,
+      updatedAt: p.updatedAt,
+      category: p.category_id ? {
+        id: p.category_id,
+        name: p.category_name,
+      } : null,
+    }));
 
     res.json({
       success: true,
-      data: lowStockProducts,
-      count: lowStockProducts.length,
+      data: formattedProducts,
+      count: formattedProducts.length,
     });
   } catch (error) {
     next(error);

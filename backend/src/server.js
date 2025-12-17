@@ -1,15 +1,48 @@
 const app = require('./app');
 const config = require('./config');
-const { PrismaClient } = require('@prisma/client');
-
-const prisma = new PrismaClient();
+const prisma = require('./utils/prismaClient');
 
 const PORT = config.port;
+
+/**
+ * Validate required environment variables before starting the server.
+ * This prevents the server from running with insecure default configurations.
+ */
+const validateEnvironment = () => {
+  const errors = [];
+
+  // Critical security check: JWT_SECRET must be set
+  if (!config.jwt.secret) {
+    errors.push('JWT_SECRET is required but not set in environment variables');
+  } else if (config.jwt.secret.length < 32) {
+    console.warn('⚠️  Warning: JWT_SECRET should be at least 32 characters for security');
+  }
+
+  // Check for production-specific requirements
+  if (config.nodeEnv === 'production') {
+    if (!process.env.DATABASE_URL) {
+      errors.push('DATABASE_URL is required in production');
+    }
+    if (config.cors.origin === 'http://localhost:5173') {
+      console.warn('⚠️  Warning: CORS origin is set to localhost in production');
+    }
+  }
+
+  // If there are critical errors, fail fast
+  if (errors.length > 0) {
+    console.error('\n❌ Environment validation failed:\n');
+    errors.forEach((err, i) => console.error(`   ${i + 1}. ${err}`));
+    console.error('\nPlease set the required environment variables and restart.\n');
+    process.exit(1);
+  }
+
+  console.log('✅ Environment validation passed');
+};
 
 // Graceful shutdown
 const gracefulShutdown = async (signal) => {
   console.log(`\n${signal} received. Starting graceful shutdown...`);
-  
+
   try {
     await prisma.$disconnect();
     console.log('Database connection closed.');
@@ -38,10 +71,13 @@ process.on('unhandledRejection', (reason, promise) => {
 // Start server
 const startServer = async () => {
   try {
+    // Validate environment first
+    validateEnvironment();
+
     // Test database connection
     await prisma.$connect();
     console.log('✅ Database connected successfully');
-    
+
     app.listen(PORT, () => {
       console.log(`
 ╔════════════════════════════════════════════════════╗
@@ -64,3 +100,4 @@ const startServer = async () => {
 };
 
 startServer();
+

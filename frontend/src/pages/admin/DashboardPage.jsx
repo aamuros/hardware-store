@@ -65,7 +65,7 @@ export default function DashboardPage() {
         adminApi.getLowStockProducts(),
         adminApi.getOrders({ limit: 100 }), // Get more orders for charts
       ])
-      
+
       const { stats: dashStats, recentOrders: orders } = dashboardRes.data.data
       setStats(dashStats)
       setRecentOrders(orders)
@@ -82,7 +82,7 @@ export default function DashboardPage() {
   // Generate chart data from orders
   const getOrderStatusData = () => {
     if (!allOrders.length) return []
-    
+
     const statusCounts = allOrders.reduce((acc, order) => {
       acc[order.status] = (acc[order.status] || 0) + 1
       return acc
@@ -99,27 +99,27 @@ export default function DashboardPage() {
   const getRevenueData = () => {
     const days = []
     const today = new Date()
-    
+
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today)
       date.setDate(date.getDate() - i)
       const dateStr = date.toISOString().split('T')[0]
-      
+
       const dayOrders = allOrders.filter(order => {
         const orderDate = new Date(order.createdAt).toISOString().split('T')[0]
         return orderDate === dateStr && ['delivered', 'completed'].includes(order.status)
       })
-      
+
       const revenue = dayOrders.reduce((sum, order) => sum + order.totalAmount, 0)
       const orderCount = dayOrders.length
-      
+
       days.push({
         date: date.toLocaleDateString('en-PH', { weekday: 'short' }),
         revenue,
         orders: orderCount,
       })
     }
-    
+
     return days
   }
 
@@ -139,14 +139,82 @@ export default function DashboardPage() {
     )
   }
 
+  // Calculate real trends by comparing today vs yesterday
+  const calculateTrends = () => {
+    const today = new Date()
+    const todayStr = today.toISOString().split('T')[0]
+
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+    const yesterdayStr = yesterday.toISOString().split('T')[0]
+
+    // Today's orders
+    const todayOrders = allOrders.filter(order => {
+      const orderDate = new Date(order.createdAt).toISOString().split('T')[0]
+      return orderDate === todayStr
+    })
+
+    // Yesterday's orders
+    const yesterdayOrders = allOrders.filter(order => {
+      const orderDate = new Date(order.createdAt).toISOString().split('T')[0]
+      return orderDate === yesterdayStr
+    })
+
+    // Calculate order count trend
+    const todayOrderCount = todayOrders.length
+    const yesterdayOrderCount = yesterdayOrders.length
+    let orderTrend = '0%'
+    let orderTrendUp = true
+
+    if (yesterdayOrderCount > 0) {
+      const orderChange = ((todayOrderCount - yesterdayOrderCount) / yesterdayOrderCount * 100).toFixed(0)
+      orderTrend = `${orderChange >= 0 ? '+' : ''}${orderChange}% vs yesterday`
+      orderTrendUp = todayOrderCount >= yesterdayOrderCount
+    } else if (todayOrderCount > 0) {
+      orderTrend = '+100% vs yesterday'
+      orderTrendUp = true
+    } else {
+      orderTrend = 'No orders yesterday'
+      orderTrendUp = true
+    }
+
+    // Calculate revenue trend
+    const todayRevenue = todayOrders
+      .filter(o => ['delivered', 'completed'].includes(o.status))
+      .reduce((sum, o) => sum + o.totalAmount, 0)
+
+    const yesterdayRevenue = yesterdayOrders
+      .filter(o => ['delivered', 'completed'].includes(o.status))
+      .reduce((sum, o) => sum + o.totalAmount, 0)
+
+    let revenueTrend = '0%'
+    let revenueTrendUp = true
+
+    if (yesterdayRevenue > 0) {
+      const revenueChange = ((todayRevenue - yesterdayRevenue) / yesterdayRevenue * 100).toFixed(0)
+      revenueTrend = `${revenueChange >= 0 ? '+' : ''}${revenueChange}% vs yesterday`
+      revenueTrendUp = todayRevenue >= yesterdayRevenue
+    } else if (todayRevenue > 0) {
+      revenueTrend = 'First revenue today!'
+      revenueTrendUp = true
+    } else {
+      revenueTrend = 'No revenue yet'
+      revenueTrendUp = true
+    }
+
+    return { orderTrend, orderTrendUp, revenueTrend, revenueTrendUp }
+  }
+
+  const trends = calculateTrends()
+
   const statCards = [
     {
       name: "Today's Orders",
       value: stats?.todayOrders || 0,
       icon: ShoppingBagIcon,
       color: 'bg-blue-500',
-      trend: '+12%',
-      trendUp: true,
+      trend: trends.orderTrend,
+      trendUp: trends.orderTrendUp,
     },
     {
       name: 'Pending Orders',
@@ -161,8 +229,8 @@ export default function DashboardPage() {
       value: `₱${(stats?.todayRevenue || 0).toLocaleString()}`,
       icon: CurrencyDollarIcon,
       color: 'bg-emerald-500',
-      trend: '+8%',
-      trendUp: true,
+      trend: trends.revenueTrend,
+      trendUp: trends.revenueTrendUp,
     },
     {
       name: 'Total Products',
@@ -230,29 +298,29 @@ export default function DashboardPage() {
               <AreaChart data={revenueData}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                 <XAxis dataKey="date" stroke="#9CA3AF" fontSize={12} />
                 <YAxis stroke="#9CA3AF" fontSize={12} tickFormatter={(value) => `₱${value.toLocaleString()}`} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1E293B', 
-                    border: 'none', 
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#1E293B',
+                    border: 'none',
                     borderRadius: '12px',
-                    color: '#fff' 
+                    color: '#fff'
                   }}
                   formatter={(value) => [`₱${value.toLocaleString()}`, 'Revenue']}
                 />
-                <Area 
-                  type="monotone" 
-                  dataKey="revenue" 
-                  stroke="#10B981" 
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#10B981"
                   strokeWidth={2}
-                  fillOpacity={1} 
-                  fill="url(#colorRevenue)" 
+                  fillOpacity={1}
+                  fill="url(#colorRevenue)"
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -281,10 +349,10 @@ export default function DashboardPage() {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1E293B', 
-                    border: 'none', 
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#1E293B',
+                    border: 'none',
                     borderRadius: '8px',
                     color: '#fff',
                     fontSize: '12px'
@@ -351,8 +419,8 @@ export default function DashboardPage() {
                   </div>
                 ))}
                 {lowStockProducts.length > 5 && (
-                  <Link 
-                    to="/admin/products" 
+                  <Link
+                    to="/admin/products"
                     className="block text-center text-sm text-accent-600 hover:text-accent-700 font-medium py-2"
                   >
                     View all {lowStockProducts.length} items →
@@ -371,7 +439,7 @@ export default function DashboardPage() {
               View All →
             </Link>
           </div>
-          
+
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-neutral-200">
               <thead className="bg-neutral-50">
