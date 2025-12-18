@@ -180,7 +180,7 @@ const getProductsByCategory = async (req, res, next) => {
     const [products, total] = await Promise.all([
       prisma.product.findMany({
         where: {
-          categoryId: parseInt(categoryId),
+          categoryId: parseInt(categoryId, 10),
           isAvailable: true,
           isDeleted: false,
         },
@@ -200,7 +200,7 @@ const getProductsByCategory = async (req, res, next) => {
       }),
       prisma.product.count({
         where: {
-          categoryId: parseInt(categoryId),
+          categoryId: parseInt(categoryId, 10),
           isAvailable: true,
           isDeleted: false,
         },

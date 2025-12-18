@@ -230,6 +230,18 @@ const updateVariantStock = async (req, res, next) => {
             });
         }
 
+        // Check if variant exists
+        const existingVariant = await prisma.productVariant.findUnique({
+            where: { id: parsedId },
+        });
+
+        if (!existingVariant || existingVariant.isDeleted) {
+            return res.status(404).json({
+                success: false,
+                message: 'Variant not found',
+            });
+        }
+
         const variant = await prisma.productVariant.update({
             where: { id: parsedId },
             data: { stockQuantity: parseInt(stockQuantity, 10) },

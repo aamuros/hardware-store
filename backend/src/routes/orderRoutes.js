@@ -194,11 +194,11 @@ router.post('/validate-cart', async (req, res, next) => {
 // Uses authenticateCustomer to optionally link order to logged-in customer
 router.post('/', authenticateCustomer, validateOrder, orderController.createOrder);
 
-// GET /api/orders/:id - Get order by ID (for customer to track)
-router.get('/:id', orderController.getOrderById);
-
 // GET /api/orders/track/:orderNumber - Track order by order number
 router.get('/track/:orderNumber', orderController.trackOrder);
+
+// GET /api/orders/:id - Get order by ID (for customer to track)
+router.get('/:id', orderController.getOrderById);
 
 module.exports = router;
 

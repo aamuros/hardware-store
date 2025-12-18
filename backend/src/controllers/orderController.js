@@ -84,8 +84,35 @@ const createOrder = async (req, res, next) => {
           message: `${product.name} is currently unavailable`,
         });
       }
-      // Check stock availability
-      if (product.stockQuantity < item.quantity) {
+      // Check stock availability (variant or product)
+      if (item.variantId) {
+        // Validate variant stock
+        const variant = await prisma.productVariant.findUnique({
+          where: { id: item.variantId },
+        });
+        if (!variant || variant.isDeleted) {
+          return res.status(400).json({
+            success: false,
+            message: `Variant not found for product ${product.name}`,
+          });
+        }
+        if (!variant.isAvailable) {
+          return res.status(400).json({
+            success: false,
+            message: `${product.name} (${variant.name}) is currently unavailable`,
+          });
+        }
+        if (variant.stockQuantity < item.quantity) {
+          return res.status(400).json({
+            success: false,
+            message: `Insufficient stock for ${product.name} (${variant.name}). Available: ${variant.stockQuantity}, Requested: ${item.quantity}`,
+            code: 'INSUFFICIENT_STOCK',
+            productId: product.id,
+            variantId: item.variantId,
+            availableStock: variant.stockQuantity,
+          });
+        }
+      } else if (product.stockQuantity < item.quantity) {
         return res.status(400).json({
           success: false,
           message: `Insufficient stock for ${product.name}. Available: ${product.stockQuantity}, Requested: ${item.quantity}`,
@@ -214,7 +241,7 @@ const createOrder = async (req, res, next) => {
 const getOrderById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const parsedId = parseInt(id);
+    const parsedId = parseInt(id, 10);
 
     if (isNaN(parsedId)) {
       return res.status(400).json({
