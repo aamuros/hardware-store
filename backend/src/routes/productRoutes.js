@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const productController = require('../controllers/productController');
+const { cacheMiddleware } = require('../utils/cache');
 
 // GET /api/products - Get all products (with optional filters)
-router.get('/', productController.getAllProducts);
+router.get('/', cacheMiddleware(60), productController.getAllProducts);
 
 // GET /api/products/search - Search products
 router.get('/search', productController.searchProducts);

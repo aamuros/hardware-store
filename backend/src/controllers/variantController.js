@@ -74,6 +74,21 @@ const createVariant = async (req, res, next) => {
             });
         }
 
+        // Safely handle attributes JSON
+        let attributesJson = null;
+        if (attributes) {
+            try {
+                attributesJson = typeof attributes === 'string'
+                    ? attributes
+                    : JSON.stringify(attributes);
+            } catch (e) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid attributes format',
+                });
+            }
+        }
+
         const variant = await prisma.productVariant.create({
             data: {
                 productId: parsedProductId,
@@ -81,7 +96,7 @@ const createVariant = async (req, res, next) => {
                 sku: sku || null,
                 price: parseFloat(price),
                 stockQuantity: parseInt(stockQuantity, 10) || 0,
-                attributes: attributes ? JSON.stringify(attributes) : null,
+                attributes: attributesJson,
                 isAvailable: true,
             },
         });

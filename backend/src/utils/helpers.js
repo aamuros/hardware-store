@@ -5,8 +5,10 @@
 const generateOrderNumber = () => {
   const date = new Date();
   const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
-  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-  return `HW-${dateStr}-${random}`;
+  // Use timestamp + random for better uniqueness
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `HW-${dateStr}-${timestamp}${random}`.substring(0, 24);
 };
 
 /**
@@ -68,7 +70,7 @@ const generateSlug = (str) => {
 const paginate = (array, page = 1, limit = 20) => {
   const startIndex = (page - 1) * limit;
   const endIndex = page * limit;
-  
+
   return {
     data: array.slice(startIndex, endIndex),
     pagination: {

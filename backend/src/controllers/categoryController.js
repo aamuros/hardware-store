@@ -85,6 +85,13 @@ const createCategory = async (req, res, next) => {
   try {
     const { name, description, icon } = req.body;
 
+    if (!name || !name.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Category name is required',
+      });
+    }
+
     const category = await prisma.category.create({
       data: {
         name,

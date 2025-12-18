@@ -67,6 +67,13 @@ const createOrder = async (req, res, next) => {
       where: { id: { in: productIds } },
     });
 
+    // Batch fetch all variants needed (N+1 optimization)
+    const variantIds = items.filter(item => item.variantId).map(item => item.variantId);
+    const variants = variantIds.length > 0
+      ? await prisma.productVariant.findMany({ where: { id: { in: variantIds } } })
+      : [];
+    const variantMap = new Map(variants.map(v => [v.id, v]));
+
     // Validate all products exist, are available, and have sufficient stock
     const productMap = new Map(products.map(p => [p.id, p]));
 
@@ -86,10 +93,8 @@ const createOrder = async (req, res, next) => {
       }
       // Check stock availability (variant or product)
       if (item.variantId) {
-        // Validate variant stock
-        const variant = await prisma.productVariant.findUnique({
-          where: { id: item.variantId },
-        });
+        // Validate variant stock (using pre-fetched map)
+        const variant = variantMap.get(item.variantId);
         if (!variant || variant.isDeleted) {
           return res.status(400).json({
             success: false,

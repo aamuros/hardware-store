@@ -18,7 +18,7 @@ export function CustomerAuthProvider({ children }) {
             setToken(savedToken)
             setCustomer(JSON.parse(savedCustomer))
             // Load wishlist IDs for quick checking
-            loadWishlistIds(savedToken)
+            loadWishlistIds()
         }
 
         setLoading(false)
