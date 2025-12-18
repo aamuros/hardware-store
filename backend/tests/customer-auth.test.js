@@ -7,7 +7,8 @@ const prisma = new PrismaClient();
 
 describe('Customer Authentication API', () => {
     const testEmail = 'testcustomer@example.com';
-    const testPassword = 'testpass123';
+    // Strong password meeting requirements: 8+ chars, uppercase, lowercase, number, special char
+    const testPassword = 'TestPass123!';
     let customerId = null;
 
     // Cleanup test customer before tests
@@ -52,7 +53,7 @@ describe('Customer Authentication API', () => {
                 .post('/api/customers/register')
                 .send({
                     email: testEmail,
-                    password: 'anotherpass123',
+                    password: 'AnotherPass123!',
                     name: 'Another Customer',
                 })
                 .expect(400);
@@ -77,7 +78,7 @@ describe('Customer Authentication API', () => {
                 .post('/api/customers/register')
                 .send({
                     email: 'not-an-email',
-                    password: 'testpass123',
+                    password: 'TestPass123!',
                     name: 'Test User',
                 })
                 .expect(400);
@@ -86,7 +87,7 @@ describe('Customer Authentication API', () => {
             expect(response.body.message).toContain('Invalid email');
         });
 
-        it('should reject registration with short password', async () => {
+        it('should reject registration with weak password', async () => {
             const response = await request(app)
                 .post('/api/customers/register')
                 .send({
@@ -97,7 +98,7 @@ describe('Customer Authentication API', () => {
                 .expect(400);
 
             expect(response.body).toHaveProperty('success', false);
-            expect(response.body.message).toContain('6 characters');
+            expect(response.body.message).toContain('Password does not meet requirements');
         });
 
         it('should normalize email to lowercase', async () => {
@@ -106,7 +107,7 @@ describe('Customer Authentication API', () => {
                 .post('/api/customers/register')
                 .send({
                     email: upperCaseEmail,
-                    password: 'testpass123',
+                    password: 'TestPass123!',
                     name: 'Uppercase User',
                 })
                 .expect(201);
@@ -309,7 +310,7 @@ describe('Customer Authentication API', () => {
                     .set('Authorization', `Bearer ${authToken}`)
                     .send({
                         currentPassword: testPassword,
-                        newPassword: 'newpass123',
+                        newPassword: 'NewPass456!',
                     })
                     .expect(200);
 
@@ -320,7 +321,7 @@ describe('Customer Authentication API', () => {
                     .post('/api/customers/login')
                     .send({
                         email: testEmail,
-                        password: 'newpass123',
+                        password: 'NewPass456!',
                     })
                     .expect(200);
 
@@ -332,7 +333,7 @@ describe('Customer Authentication API', () => {
                     .patch('/api/customers/change-password')
                     .set('Authorization', `Bearer ${authToken}`)
                     .send({
-                        currentPassword: 'newpass123',
+                        currentPassword: 'NewPass456!',
                         newPassword: testPassword,
                     });
             });
@@ -342,15 +343,15 @@ describe('Customer Authentication API', () => {
                     .patch('/api/customers/change-password')
                     .set('Authorization', `Bearer ${authToken}`)
                     .send({
-                        currentPassword: 'wrongpassword',
-                        newPassword: 'newpass123',
+                        currentPassword: 'WrongPassword1!',
+                        newPassword: 'NewPass456!',
                     })
                     .expect(401);
 
                 expect(response.body).toHaveProperty('success', false);
             });
 
-            it('should reject short new password', async () => {
+            it('should reject weak new password', async () => {
                 const response = await request(app)
                     .patch('/api/customers/change-password')
                     .set('Authorization', `Bearer ${authToken}`)
@@ -360,7 +361,7 @@ describe('Customer Authentication API', () => {
                     })
                     .expect(400);
 
-                expect(response.body.message).toContain('6 characters');
+                expect(response.body.message).toContain('does not meet requirements');
             });
         });
     });

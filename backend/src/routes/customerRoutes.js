@@ -1,6 +1,8 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const { requireCustomer, authenticateCustomer } = require('../middleware/auth');
+const config = require('../config');
 
 // Controllers
 const customerController = require('../controllers/customerController');
@@ -8,13 +10,27 @@ const addressController = require('../controllers/addressController');
 const wishlistController = require('../controllers/wishlistController');
 const orderHistoryController = require('../controllers/orderHistoryController');
 
+// Rate limiting for authentication endpoints (prevent brute force attacks)
+// Skip rate limiting in test environment to allow tests to run
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: config.nodeEnv === 'test' ? 1000 : 5, // limit each IP to 5 attempts per window (1000 for tests)
+  message: {
+    success: false,
+    message: 'Too many attempts, please try again after 15 minutes.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => config.nodeEnv === 'test', // Also skip entirely in test mode
+});
+
 // ============================================
 // Public routes (no authentication required)
 // ============================================
 
-// Registration and login
-router.post('/register', customerController.register);
-router.post('/login', customerController.login);
+// Registration and login (with rate limiting)
+router.post('/register', authLimiter, customerController.register);
+router.post('/login', authLimiter, customerController.login);
 
 // ============================================
 // Protected routes (customer authentication required)

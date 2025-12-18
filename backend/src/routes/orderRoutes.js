@@ -1,9 +1,25 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const orderController = require('../controllers/orderController');
 const { validateOrder } = require('../middleware/validators');
 const { authenticateCustomer } = require('../middleware/auth');
 const prisma = require('../utils/prismaClient');
+const config = require('../config');
+
+// Rate limiting for order tracking (prevent enumeration)
+// Skip rate limiting in test environment
+const trackingLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 30, // limit each IP to 30 requests per window
+    message: {
+        success: false,
+        message: 'Too many tracking requests, please try again later.',
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: () => config.nodeEnv === 'test',
+});
 
 // POST /api/orders/validate-cart - Validate cart items before checkout
 router.post('/validate-cart', async (req, res, next) => {
@@ -195,10 +211,10 @@ router.post('/validate-cart', async (req, res, next) => {
 router.post('/', authenticateCustomer, validateOrder, orderController.createOrder);
 
 // GET /api/orders/track/:orderNumber - Track order by order number
-router.get('/track/:orderNumber', orderController.trackOrder);
+router.get('/track/:orderNumber', trackingLimiter, orderController.trackOrder);
 
 // GET /api/orders/:id - Get order by ID (for customer to track)
-router.get('/:id', orderController.getOrderById);
+router.get('/:id', trackingLimiter, orderController.getOrderById);
 
 module.exports = router;
 

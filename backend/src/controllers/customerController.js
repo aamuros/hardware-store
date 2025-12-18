@@ -2,6 +2,7 @@ const prisma = require('../utils/prismaClient');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const config = require('../config');
+const { validatePasswordStrength } = require('../middleware/sanitizer');
 
 // POST /api/customers/register
 const register = async (req, res, next) => {
@@ -25,11 +26,13 @@ const register = async (req, res, next) => {
             });
         }
 
-        // Validate password length
-        if (password.length < 6) {
+        // Validate password strength
+        const passwordValidation = validatePasswordStrength(password);
+        if (!passwordValidation.isValid) {
             return res.status(400).json({
                 success: false,
-                message: 'Password must be at least 6 characters long',
+                message: 'Password does not meet requirements',
+                errors: passwordValidation.errors,
             });
         }
 
@@ -235,10 +238,13 @@ const changePassword = async (req, res, next) => {
             });
         }
 
-        if (newPassword.length < 6) {
+        // Validate new password strength
+        const passwordValidation = validatePasswordStrength(newPassword);
+        if (!passwordValidation.isValid) {
             return res.status(400).json({
                 success: false,
-                message: 'New password must be at least 6 characters long',
+                message: 'New password does not meet requirements',
+                errors: passwordValidation.errors,
             });
         }
 

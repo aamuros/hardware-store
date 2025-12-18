@@ -1,5 +1,6 @@
 const prisma = require('../utils/prismaClient');
 const smsService = require('../services/smsService');
+const { invalidateProducts } = require('../utils/cache');
 const { generateOrderNumber } = require('../utils/helpers');
 const { logOrderStatus } = require('../utils/logger');
 
@@ -211,6 +212,9 @@ const createOrder = async (req, res, next) => {
 
       return newOrder;
     });
+
+    // Invalidate product cache after stock changes
+    invalidateProducts();
 
     // Send SMS notification to customer
     try {
@@ -470,13 +474,14 @@ const updateOrderStatus = async (req, res, next) => {
 
     const previousStatus = order.status;
 
+    // Check if we need to restore stock (moved outside transaction for cache invalidation)
+    const isRestoreStock =
+      (status === ORDER_STATUS.CANCELLED || status === ORDER_STATUS.REJECTED) &&
+      previousStatus !== ORDER_STATUS.CANCELLED &&
+      previousStatus !== ORDER_STATUS.REJECTED;
+
     // Update order status and create history entry in a transaction
     const updatedOrder = await prisma.$transaction(async (tx) => {
-      // Restore stock if order is being cancelled or rejected (and wasn't already)
-      const isRestoreStock =
-        (status === ORDER_STATUS.CANCELLED || status === ORDER_STATUS.REJECTED) &&
-        previousStatus !== ORDER_STATUS.CANCELLED &&
-        previousStatus !== ORDER_STATUS.REJECTED;
 
       if (isRestoreStock) {
         // Get order items to restore stock
@@ -556,6 +561,11 @@ const updateOrderStatus = async (req, res, next) => {
 
       return updated;
     });
+
+    // Invalidate product cache if stock was restored
+    if (isRestoreStock) {
+      invalidateProducts();
+    }
 
     // Log the status change
     logOrderStatus(order.orderNumber, previousStatus, status, req.user?.id);

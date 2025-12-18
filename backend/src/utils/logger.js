@@ -13,17 +13,17 @@ const logFormat = winston.format.combine(
   winston.format.errors({ stack: true }),
   winston.format.printf(({ level, message, timestamp, stack, ...meta }) => {
     let log = `${timestamp} [${level.toUpperCase()}]: ${message}`;
-    
+
     // Add metadata if present
     if (Object.keys(meta).length > 0) {
       log += ` ${JSON.stringify(meta)}`;
     }
-    
+
     // Add stack trace for errors
     if (stack) {
       log += `\n${stack}`;
     }
-    
+
     return log;
   })
 );
@@ -91,20 +91,39 @@ const logRequest = (req, message = 'Request received') => {
   });
 };
 
+// Fields that should never be logged
+const SENSITIVE_FIELDS = ['password', 'currentPassword', 'newPassword', 'token', 'apiKey', 'secret'];
+
+/**
+ * Sanitize object by removing sensitive fields
+ */
+const sanitizeForLogging = (obj) => {
+  if (!obj || typeof obj !== 'object') return obj;
+
+  const sanitized = { ...obj };
+  for (const field of SENSITIVE_FIELDS) {
+    if (field in sanitized) {
+      sanitized[field] = '[REDACTED]';
+    }
+  }
+  return sanitized;
+};
+
 const logError = (error, req = null) => {
   const errorInfo = {
     message: error.message,
     stack: error.stack,
     code: error.code,
   };
-  
+
   if (req) {
     errorInfo.method = req.method;
     errorInfo.url = req.originalUrl;
     errorInfo.ip = req.ip;
-    errorInfo.body = req.body;
+    // Sanitize request body to prevent logging sensitive data
+    errorInfo.body = sanitizeForLogging(req.body);
   }
-  
+
   logger.error('Error occurred', errorInfo);
 };
 

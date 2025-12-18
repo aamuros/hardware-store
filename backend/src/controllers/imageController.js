@@ -135,10 +135,31 @@ const deleteImage = async (req, res, next) => {
             });
         }
 
-        // Delete the file from disk
-        const filePath = path.join(__dirname, '../../uploads', path.basename(image.imageUrl));
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
+        // Delete the file from disk with path traversal protection
+        const uploadsDir = path.resolve(__dirname, '../../uploads');
+        const fileName = path.basename(image.imageUrl);
+
+        // Validate filename doesn't contain path traversal sequences
+        if (fileName.includes('..') || fileName.includes('/') || fileName.includes('\\')) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid file path',
+            });
+        }
+
+        const filePath = path.join(uploadsDir, fileName);
+        const resolvedPath = path.resolve(filePath);
+
+        // Ensure the resolved path is within the uploads directory
+        if (!resolvedPath.startsWith(uploadsDir)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid file path',
+            });
+        }
+
+        if (fs.existsSync(resolvedPath)) {
+            fs.unlinkSync(resolvedPath);
         }
 
         // If this was the primary image, make the next one primary
