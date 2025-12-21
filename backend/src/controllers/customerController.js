@@ -205,6 +205,13 @@ const updateProfile = async (req, res, next) => {
         if (name) updateData.name = name;
         if (phone !== undefined) updateData.phone = phone || null;
 
+        if (Object.keys(updateData).length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'No fields to update',
+            });
+        }
+
         const customer = await prisma.customer.update({
             where: { id: req.customer.id },
             data: updateData,

@@ -54,6 +54,14 @@ const createOrder = async (req, res, next) => {
       }
     }
 
+    // Validate required delivery information
+    if (!deliveryInfo.customerName || !deliveryInfo.phone || !deliveryInfo.address || !deliveryInfo.barangay) {
+      return res.status(400).json({
+        success: false,
+        message: 'Customer name, phone, address, and barangay are required for delivery',
+      });
+    }
+
     // Validate items
     if (!items || items.length === 0) {
       return res.status(400).json({

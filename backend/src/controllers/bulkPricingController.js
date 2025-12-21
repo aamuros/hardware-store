@@ -57,6 +57,20 @@ const createBulkPricingTier = async (req, res, next) => {
             });
         }
 
+        if (discountValue < 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'discountValue must be a positive number',
+            });
+        }
+
+        if (discountType === 'percentage' && discountValue > 100) {
+            return res.status(400).json({
+                success: false,
+                message: 'Percentage discount cannot exceed 100%',
+            });
+        }
+
         // Check if product exists
         const product = await prisma.product.findUnique({
             where: { id: parsedProductId },

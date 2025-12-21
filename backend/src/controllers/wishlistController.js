@@ -118,12 +118,20 @@ const addToWishlist = async (req, res, next) => {
 const removeFromWishlist = async (req, res, next) => {
     try {
         const { productId } = req.params;
+        const parsedProductId = parseInt(productId, 10);
+
+        if (isNaN(parsedProductId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid product ID format',
+            });
+        }
 
         const existing = await prisma.wishlistItem.findUnique({
             where: {
                 customerId_productId: {
                     customerId: req.customer.id,
-                    productId: parseInt(productId, 10),
+                    productId: parsedProductId,
                 },
             },
         });
@@ -139,7 +147,7 @@ const removeFromWishlist = async (req, res, next) => {
             where: {
                 customerId_productId: {
                     customerId: req.customer.id,
-                    productId: parseInt(productId, 10),
+                    productId: parsedProductId,
                 },
             },
         });
@@ -157,12 +165,20 @@ const removeFromWishlist = async (req, res, next) => {
 const checkWishlist = async (req, res, next) => {
     try {
         const { productId } = req.params;
+        const parsedProductId = parseInt(productId, 10);
+
+        if (isNaN(parsedProductId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid product ID format',
+            });
+        }
 
         const existing = await prisma.wishlistItem.findUnique({
             where: {
                 customerId_productId: {
                     customerId: req.customer.id,
-                    productId: parseInt(productId, 10),
+                    productId: parsedProductId,
                 },
             },
         });

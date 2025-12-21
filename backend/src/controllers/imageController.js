@@ -224,6 +224,23 @@ const reorderImages = async (req, res, next) => {
             });
         }
 
+        // Validate all image IDs belong to this product
+        const imageIds = orderedIds.map(id => parseInt(id, 10));
+        const validImages = await prisma.productImage.findMany({
+            where: { productId: parsedProductId },
+            select: { id: true },
+        });
+        const validImageIds = new Set(validImages.map(img => img.id));
+
+        const invalidIds = imageIds.filter(id => !validImageIds.has(id));
+        if (invalidIds.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Some image IDs do not belong to this product',
+                invalidIds,
+            });
+        }
+
         // Update sort order for each image
         await Promise.all(
             orderedIds.map((id, index) =>

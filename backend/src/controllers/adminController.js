@@ -231,6 +231,23 @@ const createUser = async (req, res, next) => {
   try {
     const { username, password, name, role } = req.body;
 
+    if (!username || !password || !name) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username, password, and name are required',
+      });
+    }
+
+    // Validate password strength
+    const passwordValidation = validatePasswordStrength(password);
+    if (!passwordValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password does not meet requirements',
+        errors: passwordValidation.errors,
+      });
+    }
+
     const existingUser = await prisma.user.findUnique({
       where: { username },
     });

@@ -95,6 +95,19 @@ const updateAddress = async (req, res, next) => {
             });
         }
 
+        // Prevent unsetting default without replacement
+        if (isDefault === false && existingAddress.isDefault) {
+            const otherAddresses = await prisma.savedAddress.count({
+                where: { customerId: req.customer.id, id: { not: parseInt(id, 10) } },
+            });
+            if (otherAddresses > 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Cannot unset default address. Set another address as default first.',
+                });
+            }
+        }
+
         const updateData = {};
         if (label) updateData.label = label;
         if (address) updateData.address = address;
