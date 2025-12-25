@@ -3,8 +3,23 @@
  * Prevents XSS attacks by sanitizing user input
  */
 
-// Simple XSS sanitization function
+// XSS sanitization function - removes dangerous patterns while preserving valid data
 const sanitizeString = (str) => {
+  if (typeof str !== 'string') return str;
+  
+  // Remove script tags and event handlers (actual XSS vectors)
+  let sanitized = str
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+    .replace(/javascript:/gi, '')
+    .replace(/data:/gi, 'data_blocked:')
+    .trim();
+  
+  return sanitized;
+};
+
+// Strict HTML entity encoding for fields that will be rendered as HTML
+const encodeHtmlEntities = (str) => {
   if (typeof str !== 'string') return str;
   
   return str
@@ -13,32 +28,45 @@ const sanitizeString = (str) => {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#x27;')
-    .replace(/\//g, '&#x2F;')
     .replace(/`/g, '&#96;')
     .trim();
 };
 
-// Recursively sanitize object
-const sanitizeObject = (obj) => {
+// Fields that should be strictly HTML-encoded (user-generated content displayed as HTML)
+const HTML_DISPLAY_FIELDS = ['description', 'bio', 'content', 'message', 'comment', 'notes'];
+
+// Fields that should NOT be sanitized at all (URLs, paths, technical data)
+const PRESERVE_FIELDS = ['password', 'url', 'href', 'src', 'path', 'imageurl', 'callback', 'redirect', 'token', 'authorization'];
+
+// Recursively sanitize object with field-aware logic
+const sanitizeObject = (obj, parentKey = '') => {
   if (obj === null || obj === undefined) return obj;
   
   if (typeof obj === 'string') {
+    const lowerKey = parentKey.toLowerCase();
+    
+    // Don't sanitize technical/URL fields
+    if (PRESERVE_FIELDS.some(field => lowerKey.includes(field))) {
+      return obj;
+    }
+    
+    // Strictly encode HTML display fields
+    if (HTML_DISPLAY_FIELDS.some(field => lowerKey.includes(field))) {
+      return encodeHtmlEntities(obj);
+    }
+    
+    // Light sanitization for other fields (remove script injection)
     return sanitizeString(obj);
   }
   
   if (Array.isArray(obj)) {
-    return obj.map(item => sanitizeObject(item));
+    return obj.map(item => sanitizeObject(item, parentKey));
   }
   
   if (typeof obj === 'object') {
     const sanitized = {};
     for (const key of Object.keys(obj)) {
-      // Don't sanitize password fields
-      if (key.toLowerCase().includes('password')) {
-        sanitized[key] = obj[key];
-      } else {
-        sanitized[key] = sanitizeObject(obj[key]);
-      }
+      sanitized[key] = sanitizeObject(obj[key], key);
     }
     return sanitized;
   }
@@ -131,6 +159,7 @@ module.exports = {
   sanitizeInput,
   sanitizeString,
   sanitizeObject,
+  encodeHtmlEntities,
   validatePasswordStrength,
   validatePassword,
 };

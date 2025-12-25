@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { customerApi } from '../../services/api'
-import { ClipboardDocumentListIcon, ArrowLeftIcon } from '@heroicons/react/24/outline'
+import { OrdersIcon, ArrowLeftIcon } from '../../components/icons'
 
 export default function OrderHistoryPage() {
     const [orders, setOrders] = useState([])
@@ -97,7 +97,7 @@ export default function OrderHistoryPage() {
 
             {orders.length === 0 ? (
                 <div className="card p-12 text-center">
-                    <ClipboardDocumentListIcon className="w-16 h-16 text-neutral-300 mx-auto mb-4" />
+                    <OrdersIcon className="w-16 h-16 text-neutral-300 mx-auto mb-4" />
                     <h2 className="text-xl font-bold text-primary-900 mb-2">No orders yet</h2>
                     <p className="text-neutral-600 mb-6">Start shopping to see your orders here</p>
                     <Link to="/products" className="btn-primary">

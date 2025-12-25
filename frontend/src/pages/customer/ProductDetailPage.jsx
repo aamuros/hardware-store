@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { MinusIcon, PlusIcon, ShoppingCartIcon, HeartIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
-import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid'
+import { MinusIcon, PlusIcon, CartIcon, HeartIcon, HeartSolidIcon, CloseIcon, ChevronLeftIcon, ChevronRightIcon, BoxIcon } from '../../components/icons'
 import { productApi } from '../../services/api'
 import { useCart } from '../../context/CartContext'
 import { useCustomerAuth } from '../../context/CustomerAuthContext'
@@ -156,9 +155,7 @@ export default function ProductDetailPage() {
 
               return (
                 <div className="w-full h-full flex items-center justify-center text-neutral-300">
-                  <svg className="h-32 w-32" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                  </svg>
+                  <BoxIcon className="h-32 w-32" />
                 </div>
               )
             })()}
@@ -385,7 +382,7 @@ export default function ProductDetailPage() {
                 onClick={handleAddToCart}
                 className="btn-primary btn-lg w-full flex items-center justify-center gap-2"
               >
-                <ShoppingCartIcon className="h-5 w-5" />
+                <CartIcon className="h-5 w-5" />
                 Add to Cart
               </button>
 
@@ -419,7 +416,7 @@ export default function ProductDetailPage() {
             className="absolute top-4 right-4 text-white hover:text-neutral-300 transition-colors z-10"
             aria-label="Close lightbox"
           >
-            <XMarkIcon className="h-8 w-8" />
+            <CloseIcon className="h-8 w-8" />
           </button>
 
           {/* Navigation Arrows (if multiple images) */}

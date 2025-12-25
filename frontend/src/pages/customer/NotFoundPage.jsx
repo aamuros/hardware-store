@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { HomeIcon, ArrowLeftIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
+import { HomeIcon, ArrowLeftIcon, SearchIcon, WrenchIcon } from '../../components/icons'
 
 export default function NotFoundPage() {
   return (
@@ -11,7 +11,7 @@ export default function NotFoundPage() {
             404
           </div>
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-6xl animate-bounce">🔧</div>
+            <WrenchIcon className="w-16 h-16 text-primary-600 animate-bounce" />
           </div>
         </div>
 
@@ -37,7 +37,7 @@ export default function NotFoundPage() {
             to="/products"
             className="btn bg-neutral-200 text-neutral-700 hover:bg-neutral-300 inline-flex items-center justify-center gap-2"
           >
-            <MagnifyingGlassIcon className="w-5 h-5" />
+            <SearchIcon className="w-5 h-5" />
             Browse Products
           </Link>
         </div>

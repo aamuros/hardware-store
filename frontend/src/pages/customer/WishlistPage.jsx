@@ -6,11 +6,11 @@ import { customerApi } from '../../services/api'
 import toast from 'react-hot-toast'
 import {
     HeartIcon,
+    HeartSolidIcon,
     ArrowLeftIcon,
-    ShoppingCartIcon,
+    CartIcon,
     TrashIcon
-} from '@heroicons/react/24/outline'
-import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid'
+} from '../../components/icons'
 
 export default function WishlistPage() {
     const { removeFromWishlist } = useCustomerAuth()
@@ -151,7 +151,7 @@ export default function WishlistPage() {
                                     disabled={!item.product.isAvailable}
                                     className="btn-primary w-full mt-4 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <ShoppingCartIcon className="w-5 h-5" />
+                                    <CartIcon className="w-5 h-5" />
                                     Add to Cart
                                 </button>
                             </div>

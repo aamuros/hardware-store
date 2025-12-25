@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { useCustomerAuth } from '../../context/CustomerAuthContext'
 import toast from 'react-hot-toast'
-import { UserIcon, EnvelopeIcon, LockClosedIcon, PhoneIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
+import { UserIcon, EmailIcon, LockIcon, PhoneIcon, EyeIcon, EyeSlashIcon } from '../../components/icons'
 
 export default function CustomerRegisterPage() {
     const navigate = useNavigate()
@@ -122,7 +122,7 @@ export default function CustomerRegisterPage() {
                                 Email Address <span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
-                                <EnvelopeIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                                <EmailIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                                 <input
                                     type="email"
                                     id="email"
@@ -166,7 +166,7 @@ export default function CustomerRegisterPage() {
                                 Password <span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
-                                <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                                <LockIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                                 <input
                                     type={showPassword ? 'text' : 'password'}
                                     id="password"
@@ -199,7 +199,7 @@ export default function CustomerRegisterPage() {
                                 Confirm Password <span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
-                                <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                                <LockIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                                 <input
                                     type={showPassword ? 'text' : 'password'}
                                     id="confirmPassword"

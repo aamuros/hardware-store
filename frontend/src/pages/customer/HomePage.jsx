@@ -1,17 +1,23 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback, memo } from 'react'
 import { Link } from 'react-router-dom'
 import { categoryApi, productApi } from '../../services/api'
 import ProductCard from '../../components/ProductCard'
-import { 
-  TruckIcon, 
-  ShieldCheckIcon, 
-  CreditCardIcon, 
+import {
+  TruckIcon,
+  ShieldIcon,
+  CashIcon,
   PhoneIcon,
-  WrenchScrewdriverIcon,
-  CubeIcon,
   SparklesIcon,
-  ClockIcon
-} from '@heroicons/react/24/outline'
+  SearchIcon,
+  CartIcon,
+  CheckIcon,
+  CategoryIcon,
+  QualityIcon,
+  FastDeliveryIcon,
+  SelectionIcon,
+  EasyOrderIcon,
+  BoxIcon
+} from '../../components/icons'
 
 // Animated counter hook
 function useCountUp(end, duration = 2000, startOnView = true) {
@@ -21,7 +27,7 @@ function useCountUp(end, duration = 2000, startOnView = true) {
 
   useEffect(() => {
     if (!startOnView) return
-    
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !hasStarted) {
@@ -40,7 +46,7 @@ function useCountUp(end, duration = 2000, startOnView = true) {
 
   useEffect(() => {
     if (!hasStarted) return
-    
+
     let startTime
     const animate = (currentTime) => {
       if (!startTime) startTime = currentTime
@@ -124,15 +130,15 @@ export default function HomePage() {
       <section className="bg-gradient-to-br from-primary-800 via-primary-900 to-primary-950 text-white py-20 md:py-28 relative overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{ 
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")` 
+          <div className="absolute inset-0" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
           }}></div>
         </div>
-        
+
         {/* Floating Elements */}
         <div className="absolute top-20 left-10 w-20 h-20 bg-accent-500/20 rounded-full blur-xl animate-pulse"></div>
         <div className="absolute bottom-20 right-10 w-32 h-32 bg-accent-500/10 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
@@ -141,27 +147,27 @@ export default function HomePage() {
                 <SparklesIcon className="h-4 w-4 text-accent-400" />
                 <span className="text-primary-200">Your Trusted Hardware Partner</span>
               </div>
-              
+
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 tracking-tight leading-tight">
                 Quality Hardware
                 <span className="block text-accent-400">&amp; Building Materials</span>
               </h1>
-              
+
               <p className="text-lg md:text-xl text-primary-200 mb-8 max-w-xl leading-relaxed">
-                From construction materials to plumbing supplies and professional tools. 
+                From construction materials to plumbing supplies and professional tools.
                 Get everything you need delivered to your doorstep.
               </p>
-              
+
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Link 
-                  to="/products" 
+                <Link
+                  to="/products"
                   className="btn btn-lg bg-accent-500 hover:bg-accent-600 text-white shadow-lg hover:shadow-xl transition-all group"
                 >
                   Browse Products
                   <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
                 </Link>
-                <Link 
-                  to="/track-order" 
+                <Link
+                  to="/track-order"
                   className="btn btn-lg border-2 border-white/30 text-white hover:bg-white/10 backdrop-blur-sm"
                 >
                   Track Your Order
@@ -171,7 +177,7 @@ export default function HomePage() {
 
             {/* Right Content - Stats */}
             <div className="hidden lg:block">
-              <div 
+              <div
                 ref={productsCount.ref}
                 className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20"
               >
@@ -189,7 +195,7 @@ export default function HomePage() {
                     <div className="text-primary-300 text-sm">Happy Customers</div>
                   </div>
                 </div>
-                
+
                 {/* Mini Feature Icons */}
                 <div className="flex justify-center gap-8 mt-8 pt-6 border-t border-white/20">
                   <div className="flex items-center gap-2 text-primary-200 text-sm">
@@ -197,7 +203,7 @@ export default function HomePage() {
                     Fast Delivery
                   </div>
                   <div className="flex items-center gap-2 text-primary-200 text-sm">
-                    <ShieldCheckIcon className="h-5 w-5 text-accent-400" />
+                    <ShieldIcon className="h-5 w-5 text-accent-400" />
                     Quality Guaranteed
                   </div>
                 </div>
@@ -233,12 +239,12 @@ export default function HomePage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
               { icon: TruckIcon, title: 'Free Delivery', desc: 'On orders over ₱2,000' },
-              { icon: ShieldCheckIcon, title: 'Quality Guaranteed', desc: '100% authentic products' },
-              { icon: CreditCardIcon, title: 'Cash on Delivery', desc: 'Pay when you receive' },
+              { icon: ShieldIcon, title: 'Quality Guaranteed', desc: '100% authentic products' },
+              { icon: CashIcon, title: 'Cash on Delivery', desc: 'Pay when you receive' },
               { icon: PhoneIcon, title: 'SMS Updates', desc: 'Real-time order tracking' },
             ].map((badge, idx) => (
-              <div key={idx} className="flex items-center gap-3">
-                <div className="flex-shrink-0 w-12 h-12 bg-accent-100 rounded-xl flex items-center justify-center">
+              <div key={idx} className="flex items-center gap-3 group">
+                <div className="flex-shrink-0 w-12 h-12 bg-accent-100 rounded-xl flex items-center justify-center group-hover:bg-accent-200 transition-colors">
                   <badge.icon className="h-6 w-6 text-accent-600" />
                 </div>
                 <div>
@@ -265,7 +271,9 @@ export default function HomePage() {
                 to={`/products?category=${category.id}`}
                 className="card-hover p-6 text-center group"
               >
-                <span className="text-4xl mb-3 block group-hover:scale-110 transition-transform duration-300">{category.icon || '📦'}</span>
+                <div className="w-14 h-14 bg-gradient-to-br from-accent-100 to-accent-200 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 group-hover:shadow-lg transition-all duration-300 text-accent-600">
+                  <CategoryIcon category={category} className="h-7 w-7" />
+                </div>
                 <h3 className="font-semibold text-primary-800">{category.name}</h3>
                 <p className="text-sm text-neutral-500 mt-1">
                   {category._count?.products || 0} products
@@ -287,37 +295,41 @@ export default function HomePage() {
               We&apos;re committed to providing the best hardware shopping experience in the Philippines
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               {
-                icon: WrenchScrewdriverIcon,
+                icon: QualityIcon,
                 title: 'Professional Quality',
                 desc: 'We stock only trusted brands and professional-grade tools that contractors and DIY enthusiasts rely on.',
-                color: 'bg-blue-500'
+                color: 'bg-gradient-to-br from-blue-500 to-blue-600',
+                iconBg: 'bg-blue-400/20'
               },
               {
-                icon: TruckIcon,
+                icon: FastDeliveryIcon,
                 title: 'Fast & Reliable Delivery',
                 desc: 'Same-day delivery available in Metro Manila. Track your order in real-time via SMS notifications.',
-                color: 'bg-emerald-500'
+                color: 'bg-gradient-to-br from-emerald-500 to-emerald-600',
+                iconBg: 'bg-emerald-400/20'
               },
               {
-                icon: CubeIcon,
+                icon: SelectionIcon,
                 title: 'Wide Selection',
                 desc: 'From small screws to large construction materials — find everything you need in one place.',
-                color: 'bg-violet-500'
+                color: 'bg-gradient-to-br from-violet-500 to-violet-600',
+                iconBg: 'bg-violet-400/20'
               },
               {
-                icon: ClockIcon,
+                icon: EasyOrderIcon,
                 title: 'Hassle-Free Ordering',
                 desc: "No account needed! Just add to cart, checkout, and pay on delivery. It's that simple.",
-                color: 'bg-amber-500'
+                color: 'bg-gradient-to-br from-amber-500 to-amber-600',
+                iconBg: 'bg-amber-400/20'
               },
             ].map((feature, idx) => (
-              <div key={idx} className="bg-white rounded-2xl p-6 shadow-soft hover:shadow-soft-lg transition-shadow">
-                <div className={`${feature.color} w-12 h-12 rounded-xl flex items-center justify-center mb-4`}>
-                  <feature.icon className="h-6 w-6 text-white" />
+              <div key={idx} className="bg-white rounded-2xl p-6 shadow-soft hover:shadow-soft-lg transition-all hover:-translate-y-1 group">
+                <div className={`${feature.color} w-14 h-14 rounded-xl flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                  <feature.icon className="h-7 w-7 text-white" />
                 </div>
                 <h3 className="font-semibold text-lg text-primary-800 mb-2">{feature.title}</h3>
                 <p className="text-neutral-500 text-sm leading-relaxed">{feature.desc}</p>
@@ -356,10 +368,10 @@ export default function HomePage() {
           <p className="text-neutral-500 text-center mb-12">Simple steps to get your materials</p>
           <div className="grid md:grid-cols-4 gap-8">
             {[
-              { step: 1, title: 'Browse Products', desc: 'Find what you need from our catalog', icon: '🔍' },
-              { step: 2, title: 'Add to Cart', desc: 'Select quantities and add to cart', icon: '🛒' },
-              { step: 3, title: 'Checkout', desc: 'Enter your delivery details', icon: '📝' },
-              { step: 4, title: 'Receive Order', desc: 'We deliver to your doorstep', icon: '🚚' },
+              { step: 1, title: 'Browse Products', desc: 'Find what you need from our catalog', Icon: SearchIcon },
+              { step: 2, title: 'Add to Cart', desc: 'Select quantities and add to cart', Icon: CartIcon },
+              { step: 3, title: 'Checkout', desc: 'Enter your delivery details', Icon: BoxIcon },
+              { step: 4, title: 'Receive Order', desc: 'We deliver to your doorstep', Icon: CheckIcon },
             ].map((item, idx) => (
               <div key={item.step} className="text-center group relative">
                 {/* Connector Line */}
@@ -367,8 +379,8 @@ export default function HomePage() {
                   <div className="hidden md:block absolute top-8 left-[60%] w-[80%] h-0.5 bg-accent-200"></div>
                 )}
                 <div className="relative">
-                  <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 shadow-soft group-hover:shadow-soft-lg transition-shadow duration-300">
-                    {item.icon}
+                  <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-soft group-hover:shadow-soft-lg transition-all duration-300 group-hover:-translate-y-1">
+                    <item.Icon className="h-7 w-7 text-primary-700" />
                   </div>
                   <div className="absolute -top-2 -right-2 w-6 h-6 bg-accent-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
                     {item.step}
@@ -389,17 +401,17 @@ export default function HomePage() {
           <div className="absolute top-0 left-0 w-40 h-40 bg-white rounded-full -translate-x-1/2 -translate-y-1/2"></div>
           <div className="absolute bottom-0 right-0 w-60 h-60 bg-white rounded-full translate-x-1/3 translate-y-1/3"></div>
         </div>
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
           <h2 className="text-2xl md:text-4xl font-bold mb-4">
             Ready to Start Your Project?
           </h2>
           <p className="text-accent-100 mb-8 text-lg max-w-xl mx-auto">
-            Browse our complete catalog and get your materials delivered today. 
+            Browse our complete catalog and get your materials delivered today.
             Cash on delivery available!
           </p>
-          <Link 
-            to="/products" 
+          <Link
+            to="/products"
             className="btn btn-lg bg-white text-accent-600 hover:bg-neutral-100 shadow-lg hover:shadow-xl transition-all inline-flex items-center gap-2"
           >
             Start Shopping

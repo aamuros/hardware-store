@@ -4,15 +4,15 @@ import { useCustomerAuth } from '../../context/CustomerAuthContext'
 import { customerApi } from '../../services/api'
 import toast from 'react-hot-toast'
 import {
-    UserCircleIcon,
-    MapPinIcon,
+    UserIcon,
+    LocationIcon,
     HeartIcon,
-    ClipboardDocumentListIcon,
-    ArrowRightOnRectangleIcon,
-    PencilIcon,
+    OrdersIcon,
+    LogoutIcon,
+    EditIcon,
     CheckIcon,
-    XMarkIcon
-} from '@heroicons/react/24/outline'
+    CloseIcon
+} from '../../components/icons'
 
 export default function AccountPage() {
     const navigate = useNavigate()
@@ -75,7 +75,7 @@ export default function AccountPage() {
 
     const menuItems = [
         {
-            icon: ClipboardDocumentListIcon,
+            icon: OrdersIcon,
             label: 'Order History',
             description: 'View your past orders',
             count: stats.orders,
@@ -83,7 +83,7 @@ export default function AccountPage() {
             color: 'bg-blue-500',
         },
         {
-            icon: MapPinIcon,
+            icon: LocationIcon,
             label: 'Saved Addresses',
             description: 'Manage delivery addresses',
             count: stats.addresses,
@@ -109,7 +109,7 @@ export default function AccountPage() {
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4">
                         <div className="w-16 h-16 bg-accent-100 rounded-full flex items-center justify-center">
-                            <UserCircleIcon className="w-10 h-10 text-accent-600" />
+                            <UserIcon className="w-10 h-10 text-accent-600" />
                         </div>
                         <div>
                             {editing ? (
@@ -160,7 +160,7 @@ export default function AccountPage() {
                                     }}
                                     className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
                                 >
-                                    <XMarkIcon className="w-5 h-5" />
+                                    <CloseIcon className="w-5 h-5" />
                                 </button>
                             </>
                         ) : (
@@ -168,7 +168,7 @@ export default function AccountPage() {
                                 onClick={() => setEditing(true)}
                                 className="p-2 bg-neutral-100 text-neutral-600 rounded-lg hover:bg-neutral-200 transition-colors"
                             >
-                                <PencilIcon className="w-5 h-5" />
+                                <EditIcon className="w-5 h-5" />
                             </button>
                         )}
                     </div>
@@ -207,7 +207,7 @@ export default function AccountPage() {
                     onClick={handleLogout}
                     className="flex items-center gap-3 w-full p-3 text-left text-red-600 hover:bg-red-50 rounded-xl transition-colors"
                 >
-                    <ArrowRightOnRectangleIcon className="w-5 h-5" />
+                    <LogoutIcon className="w-5 h-5" />
                     <span className="font-medium">Log Out</span>
                 </button>
             </div>

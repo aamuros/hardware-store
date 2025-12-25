@@ -3,14 +3,14 @@ import { Link } from 'react-router-dom'
 import { customerApi } from '../../services/api'
 import toast from 'react-hot-toast'
 import {
-    MapPinIcon,
+    LocationIcon,
     ArrowLeftIcon,
     PlusIcon,
-    PencilIcon,
+    EditIcon,
     TrashIcon,
     CheckCircleIcon,
-    XMarkIcon
-} from '@heroicons/react/24/outline'
+    CloseIcon
+} from '../../components/icons'
 
 export default function SavedAddressesPage() {
     const [addresses, setAddresses] = useState([])
@@ -143,7 +143,7 @@ export default function SavedAddressesPage() {
 
             {addresses.length === 0 ? (
                 <div className="card p-12 text-center">
-                    <MapPinIcon className="w-16 h-16 text-neutral-300 mx-auto mb-4" />
+                    <LocationIcon className="w-16 h-16 text-neutral-300 mx-auto mb-4" />
                     <h2 className="text-xl font-bold text-primary-900 mb-2">No saved addresses</h2>
                     <p className="text-neutral-600 mb-6">Add addresses for quicker checkout</p>
                     <button onClick={openAddModal} className="btn-primary">
@@ -184,7 +184,7 @@ export default function SavedAddressesPage() {
                                         onClick={() => openEditModal(address)}
                                         className="p-2 text-neutral-500 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors"
                                     >
-                                        <PencilIcon className="w-5 h-5" />
+                                        <EditIcon className="w-5 h-5" />
                                     </button>
                                     <button
                                         onClick={() => handleDelete(address.id)}
@@ -208,7 +208,7 @@ export default function SavedAddressesPage() {
                                 {editingAddress ? 'Edit Address' : 'Add New Address'}
                             </h2>
                             <button onClick={() => setShowModal(false)} className="p-2 hover:bg-neutral-100 rounded-lg">
-                                <XMarkIcon className="w-5 h-5" />
+                                <CloseIcon className="w-5 h-5" />
                             </button>
                         </div>
 

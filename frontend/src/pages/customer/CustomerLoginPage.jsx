@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { useCustomerAuth } from '../../context/CustomerAuthContext'
 import toast from 'react-hot-toast'
-import { EnvelopeIcon, LockClosedIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
+import { EmailIcon, LockIcon, EyeIcon, EyeSlashIcon } from '../../components/icons'
 
 export default function CustomerLoginPage() {
     const navigate = useNavigate()
@@ -83,7 +83,7 @@ export default function CustomerLoginPage() {
                                 Email Address
                             </label>
                             <div className="relative">
-                                <EnvelopeIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                                <EmailIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                                 <input
                                     type="email"
                                     id="email"
@@ -105,7 +105,7 @@ export default function CustomerLoginPage() {
                                 Password
                             </label>
                             <div className="relative">
-                                <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                                <LockIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                                 <input
                                     type={showPassword ? 'text' : 'password'}
                                     id="password"

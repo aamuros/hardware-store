@@ -1,15 +1,18 @@
 import { useState, useRef, useEffect } from 'react'
 import { Outlet, Link } from 'react-router-dom'
 import {
-  ShoppingCartIcon,
-  UserCircleIcon,
+  CartIcon,
+  UserIcon,
   HeartIcon,
   ChevronDownIcon,
-  ArrowRightOnRectangleIcon,
-  ClipboardDocumentListIcon,
-  MapPinIcon,
-  Cog6ToothIcon
-} from '@heroicons/react/24/outline'
+  LogoutIcon,
+  OrdersIcon,
+  LocationIcon,
+  SettingsIcon,
+  WrenchIcon,
+  PhoneIcon,
+  ClockIcon
+} from '../icons'
 import { useCart } from '../../context/CartContext'
 import { useCustomerAuth } from '../../context/CustomerAuthContext'
 
@@ -42,9 +45,11 @@ export default function CustomerLayout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2">
-              <span className="text-2xl">🔧</span>
-              <span className="text-xl font-semibold text-primary-800 tracking-tight">Hardware Store</span>
+            <Link to="/" className="flex items-center gap-2 group">
+              <div className="w-8 h-8 bg-primary-800 rounded-lg flex items-center justify-center group-hover:bg-primary-900 transition-colors">
+                <WrenchIcon className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-xl font-semibold text-primary-800 tracking-tight">Wena's Hardware</span>
             </Link>
 
             {/* Navigation */}
@@ -64,7 +69,7 @@ export default function CustomerLayout() {
             <div className="flex items-center space-x-2">
               {/* Wishlist */}
               {isAuthenticated() && (
-                <Link to="/account/wishlist" className="relative p-2 text-neutral-600 hover:text-pink-500 transition-colors">
+                <Link to="/account/wishlist" className="relative p-2 text-neutral-600 hover:text-pink-500 transition-all hover:scale-110">
                   <HeartIcon className="h-6 w-6" />
                   {wishlistIds.size > 0 && (
                     <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
@@ -75,8 +80,8 @@ export default function CustomerLayout() {
               )}
 
               {/* Cart */}
-              <Link to="/cart" className="relative p-2 text-neutral-600 hover:text-primary-800 transition-colors">
-                <ShoppingCartIcon className="h-6 w-6" />
+              <Link to="/cart" className="relative p-2 text-neutral-600 hover:text-primary-800 transition-all hover:scale-110">
+                <CartIcon className="h-6 w-6" />
                 {totalItems > 0 && (
                   <span className="absolute -top-1 -right-1 bg-accent-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
                     {totalItems > 99 ? '99+' : totalItems}
@@ -91,7 +96,7 @@ export default function CustomerLayout() {
                     onClick={() => setShowDropdown(!showDropdown)}
                     className="flex items-center gap-1 p-2 text-neutral-600 hover:text-primary-800 transition-colors"
                   >
-                    <UserCircleIcon className="h-6 w-6" />
+                    <UserIcon className="h-6 w-6" />
                     <span className="hidden sm:inline text-sm font-medium max-w-24 truncate">
                       {customer?.name?.split(' ')[0]}
                     </span>
@@ -109,7 +114,7 @@ export default function CustomerLayout() {
                         onClick={() => setShowDropdown(false)}
                         className="flex items-center gap-2 px-4 py-2 text-neutral-700 hover:bg-neutral-50"
                       >
-                        <Cog6ToothIcon className="h-4 w-4" />
+                        <SettingsIcon className="h-4 w-4" />
                         My Account
                       </Link>
                       <Link
@@ -117,7 +122,7 @@ export default function CustomerLayout() {
                         onClick={() => setShowDropdown(false)}
                         className="flex items-center gap-2 px-4 py-2 text-neutral-700 hover:bg-neutral-50"
                       >
-                        <ClipboardDocumentListIcon className="h-4 w-4" />
+                        <OrdersIcon className="h-4 w-4" />
                         Order History
                       </Link>
                       <Link
@@ -125,7 +130,7 @@ export default function CustomerLayout() {
                         onClick={() => setShowDropdown(false)}
                         className="flex items-center gap-2 px-4 py-2 text-neutral-700 hover:bg-neutral-50"
                       >
-                        <MapPinIcon className="h-4 w-4" />
+                        <LocationIcon className="h-4 w-4" />
                         Addresses
                       </Link>
                       <Link
@@ -141,7 +146,7 @@ export default function CustomerLayout() {
                           onClick={handleLogout}
                           className="flex items-center gap-2 w-full px-4 py-2 text-red-600 hover:bg-red-50"
                         >
-                          <ArrowRightOnRectangleIcon className="h-4 w-4" />
+                          <LogoutIcon className="h-4 w-4" />
                           Log Out
                         </button>
                       </div>
@@ -153,7 +158,7 @@ export default function CustomerLayout() {
                   to="/login"
                   className="hidden sm:flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-accent-600 hover:bg-accent-700 rounded-lg transition-colors"
                 >
-                  <UserCircleIcon className="h-4 w-4" />
+                  <UserIcon className="h-4 w-4" />
                   Login
                 </Link>
               )}
@@ -187,8 +192,10 @@ export default function CustomerLayout() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <span className="text-2xl">🔧</span>
-                <span className="text-lg font-semibold">Hardware Store</span>
+                <div className="w-8 h-8 bg-primary-700 rounded-lg flex items-center justify-center">
+                  <WrenchIcon className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-lg font-semibold">Wena's Hardware</span>
               </div>
               <p className="text-primary-300 text-sm leading-relaxed">
                 Your trusted partner for quality hardware, tools, and construction materials.
@@ -196,10 +203,19 @@ export default function CustomerLayout() {
             </div>
             <div>
               <h3 className="text-sm font-semibold uppercase tracking-wider text-primary-400 mb-4">Contact Us</h3>
-              <div className="space-y-2 text-primary-200 text-sm">
-                <p>📞 0917-123-4567</p>
-                <p>📍 123 Main St, Your City</p>
-                <p>🕐 Mon-Sat: 7AM - 7PM</p>
+              <div className="space-y-3 text-primary-200 text-sm">
+                <p className="flex items-center gap-2">
+                  <PhoneIcon className="h-4 w-4 text-accent-400" />
+                  +63 948 195 7862
+                </p>
+                <p className="flex items-center gap-2">
+                  <LocationIcon className="h-4 w-4 text-accent-400" />
+                  Brgy. Caybunga, Balayan, Batangas
+                </p>
+                <p className="flex items-center gap-2">
+                  <ClockIcon className="h-4 w-4 text-accent-400" />
+                  Mon-Sat: 7AM-5PM | Sun: 7AM-12PM
+                </p>
               </div>
             </div>
             <div>
@@ -213,7 +229,7 @@ export default function CustomerLayout() {
             </div>
           </div>
           <div className="mt-10 pt-8 border-t border-primary-800 text-center text-primary-400 text-sm">
-            © {new Date().getFullYear()} Hardware Store. All rights reserved.
+            © {new Date().getFullYear()} Wena's Hardware. All rights reserved.
           </div>
         </div>
       </footer>

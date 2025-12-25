@@ -4,12 +4,12 @@ import { adminApi } from '../../services/api'
 import {
   ArrowLeftIcon,
   PhoneIcon,
-  MapPinIcon,
+  LocationIcon,
   ClockIcon,
   CheckCircleIcon,
-  XCircleIcon,
+  StatusRejectedIcon,
   TruckIcon,
-} from '@heroicons/react/24/outline'
+} from '../../components/icons'
 
 const ORDER_STATUSES = {
   pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
@@ -162,7 +162,7 @@ export default function OrderDetailPage() {
                 disabled={updating}
                 className="btn bg-red-600 text-white hover:bg-red-700 flex items-center gap-2"
               >
-                <XCircleIcon className="h-5 w-5" />
+                <StatusRejectedIcon className="h-5 w-5" />
                 Reject Order
               </button>
             )}
@@ -295,7 +295,7 @@ export default function OrderDetailPage() {
             <h3 className="font-semibold text-primary-900 mb-4">Delivery Address</h3>
             <div className="space-y-3">
               <div className="flex items-start gap-2">
-                <MapPinIcon className="h-5 w-5 text-neutral-400 mt-0.5" />
+                <LocationIcon className="h-5 w-5 text-neutral-400 mt-0.5" />
                 <div>
                   <p className="text-primary-900">{order.address}</p>
                   <p className="text-neutral-600">{order.barangay}</p>

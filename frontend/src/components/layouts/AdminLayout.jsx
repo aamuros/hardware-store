@@ -3,21 +3,22 @@ import { useAuth } from '../../context/AuthContext'
 import {
   HomeIcon,
   ShoppingBagIcon,
-  CubeIcon,
+  BoxIcon,
   TagIcon,
-  ArrowRightOnRectangleIcon,
-  Bars3Icon,
-  XMarkIcon,
-  ChartBarIcon,
-} from '@heroicons/react/24/outline'
+  LogoutIcon,
+  MenuIcon,
+  CloseIcon,
+  ChartIcon,
+  WrenchIcon
+} from '../icons'
 import { useState } from 'react'
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: HomeIcon },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingBagIcon },
-  { name: 'Products', href: '/admin/products', icon: CubeIcon },
+  { name: 'Products', href: '/admin/products', icon: BoxIcon },
   { name: 'Categories', href: '/admin/categories', icon: TagIcon },
-  { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon },
+  { name: 'Reports', href: '/admin/reports', icon: ChartIcon },
 ]
 
 export default function AdminLayout() {
@@ -50,14 +51,18 @@ export default function AdminLayout() {
 
       {/* Mobile sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-primary-900 transform transition-transform duration-300 ease-in-out lg:hidden ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-primary-900 transform transition-transform duration-300 ease-in-out lg:hidden ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
         <div className="flex items-center justify-between h-16 px-4 bg-primary-950">
-          <span className="text-xl font-semibold text-white">🔧 Admin</span>
-          <button onClick={() => setSidebarOpen(false)} className="text-primary-400 hover:text-white">
-            <XMarkIcon className="h-6 w-6" />
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 bg-accent-500 rounded-lg flex items-center justify-center">
+              <WrenchIcon className="h-4 w-4 text-white" />
+            </div>
+            <span className="text-xl font-semibold text-white">Admin</span>
+          </div>
+          <button onClick={() => setSidebarOpen(false)} className="text-primary-400 hover:text-white transition-colors">
+            <CloseIcon className="h-6 w-6" />
           </button>
         </div>
         <nav className="mt-4">
@@ -66,11 +71,10 @@ export default function AdminLayout() {
               key={item.name}
               to={item.href}
               onClick={() => setSidebarOpen(false)}
-              className={`flex items-center px-4 py-3 text-sm font-medium ${
-                isActive(item.href)
+              className={`flex items-center px-4 py-3 text-sm font-medium transition-colors ${isActive(item.href)
                   ? 'bg-primary-800 text-white'
                   : 'text-primary-300 hover:bg-primary-800 hover:text-white'
-              }`}
+                }`}
             >
               <item.icon className="h-5 w-5 mr-3" />
               {item.name}
@@ -83,18 +87,22 @@ export default function AdminLayout() {
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
         <div className="flex flex-col flex-1 bg-primary-900">
           <div className="flex items-center h-16 px-4 bg-primary-950">
-            <Link to="/admin" className="text-xl font-semibold text-white">🔧 Admin Panel</Link>
+            <Link to="/admin" className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-accent-500 rounded-lg flex items-center justify-center">
+                <WrenchIcon className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-xl font-semibold text-white">Admin Panel</span>
+            </Link>
           </div>
           <nav className="flex-1 mt-4">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 to={item.href}
-                className={`flex items-center px-4 py-3 text-sm font-medium transition-colors ${
-                  isActive(item.href)
+                className={`flex items-center px-4 py-3 text-sm font-medium transition-all ${isActive(item.href)
                     ? 'bg-primary-800 text-white border-l-4 border-accent-500'
-                    : 'text-primary-300 hover:bg-primary-800 hover:text-white'
-                }`}
+                    : 'text-primary-300 hover:bg-primary-800 hover:text-white hover:translate-x-1'
+                  }`}
               >
                 <item.icon className="h-5 w-5 mr-3" />
                 {item.name}
@@ -102,7 +110,7 @@ export default function AdminLayout() {
             ))}
           </nav>
           <div className="p-4 border-t border-primary-800">
-            <Link to="/" className="block text-primary-400 hover:text-white text-sm font-medium">
+            <Link to="/" className="block text-primary-400 hover:text-white text-sm font-medium transition-colors">
               ← Back to Store
             </Link>
           </div>
@@ -116,11 +124,11 @@ export default function AdminLayout() {
           <div className="flex items-center justify-between h-16 px-4">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden text-neutral-500 hover:text-neutral-700"
+              className="lg:hidden text-neutral-500 hover:text-neutral-700 transition-colors"
             >
-              <Bars3Icon className="h-6 w-6" />
+              <MenuIcon className="h-6 w-6" />
             </button>
-            
+
             <div className="flex items-center space-x-4">
               <span className="text-sm text-neutral-600">
                 Welcome, <strong>{user?.name || 'Admin'}</strong>
@@ -129,7 +137,7 @@ export default function AdminLayout() {
                 onClick={handleLogout}
                 className="flex items-center text-sm text-neutral-600 hover:text-red-600 transition-colors"
               >
-                <ArrowRightOnRectangleIcon className="h-5 w-5 mr-1" />
+                <LogoutIcon className="h-5 w-5 mr-1" />
                 Logout
               </button>
             </div>

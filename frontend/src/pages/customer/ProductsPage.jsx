@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
+import { SearchIcon, CategoryIcon } from '../../components/icons'
 import { productApi, categoryApi } from '../../services/api'
 import ProductCard from '../../components/ProductCard'
 import { useDebounce } from '../../hooks/useDebounce'
@@ -113,7 +113,7 @@ export default function ProductsPage() {
         {/* Search */}
         <form onSubmit={handleSearch} className="flex gap-2 mb-4">
           <div className="relative flex-1">
-            <MagnifyingGlassIcon className="h-5 w-5 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <SearchIcon className="h-5 w-5 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Search products..."
@@ -132,8 +132,8 @@ export default function ProductsPage() {
           <button
             onClick={() => handleCategoryChange('')}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${!selectedCategory
-                ? 'bg-primary-800 text-white shadow-sm'
-                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+              ? 'bg-primary-800 text-white shadow-sm'
+              : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
               }`}
           >
             All Products
@@ -143,11 +143,14 @@ export default function ProductsPage() {
               key={category.id}
               onClick={() => handleCategoryChange(category.id.toString())}
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${selectedCategory === category.id.toString()
-                  ? 'bg-primary-800 text-white shadow-sm'
-                  : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                ? 'bg-primary-800 text-white shadow-sm'
+                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
                 }`}
             >
-              {category.icon} {category.name}
+              <span className="inline-flex items-center gap-1.5">
+                <CategoryIcon category={category} className="h-4 w-4" />
+                {category.name}
+              </span>
             </button>
           ))}
         </div>

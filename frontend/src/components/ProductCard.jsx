@@ -1,21 +1,36 @@
+import { memo, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { PlusIcon } from '@heroicons/react/24/outline'
+import { PlusIcon, BoxIcon } from './icons'
 import { useCart } from '../context/CartContext'
 import toast from 'react-hot-toast'
+import OptimizedImage from './OptimizedImage'
 
-export default function ProductCard({ product }) {
+// Memoized price formatter
+const formatPrice = (price) => {
+  return new Intl.NumberFormat('en-PH', {
+    style: 'currency',
+    currency: 'PHP',
+  }).format(price)
+}
+
+const ProductCard = memo(function ProductCard({ product }) {
   const { addToCart, getItemQuantity } = useCart()
   const quantity = getItemQuantity(product.id)
 
-  // Check if product is in stock (stockQuantity > 0 and isAvailable)
-  const isInStock = product.isAvailable && (product.stockQuantity ?? 0) > 0
-  const isLowStock = isInStock && (product.stockQuantity ?? 0) <= (product.lowStockThreshold ?? 10)
+  // Memoize stock calculations
+  const { isInStock, isLowStock } = useMemo(() => {
+    const inStock = product.isAvailable && (product.stockQuantity ?? 0) > 0
+    const lowStock = inStock && (product.stockQuantity ?? 0) <= (product.lowStockThreshold ?? 10)
+    return { isInStock: inStock, isLowStock: lowStock }
+  }, [product.isAvailable, product.stockQuantity, product.lowStockThreshold])
 
-  const handleAddToCart = (e) => {
+  // Memoize formatted price
+  const formattedPrice = useMemo(() => formatPrice(product.price), [product.price])
+
+  const handleAddToCart = useCallback((e) => {
     e.preventDefault()
     e.stopPropagation()
 
-    // Prevent adding if no stock available
     if (!isInStock) {
       toast.error('This product is out of stock')
       return
@@ -23,30 +38,18 @@ export default function ProductCard({ product }) {
 
     addToCart(product, 1)
     toast.success(`${product.name} added to cart!`)
-  }
-
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('en-PH', {
-      style: 'currency',
-      currency: 'PHP',
-    }).format(price)
-  }
+  }, [isInStock, addToCart, product])
 
   return (
     <Link to={`/products/${product.id}`} className="card-hover group">
       {/* Product Image */}
-      <div className="aspect-square bg-neutral-100 relative overflow-hidden">
-        {product.imageUrl ? (
-          <img
-            src={product.imageUrl}
-            alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-neutral-300">
-            <CubeIcon className="h-16 w-16" />
-          </div>
-        )}
+      <div className="relative overflow-hidden">
+        <OptimizedImage
+          src={product.imageUrl}
+          alt={product.name}
+          className="group-hover:scale-105 transition-transform duration-300"
+          fallback={<BoxIcon className="h-16 w-16 text-neutral-300" />}
+        />
 
         {/* Out of Stock overlay */}
         {!isInStock && (
@@ -81,7 +84,7 @@ export default function ProductCard({ product }) {
         <div className="flex items-center justify-between mt-3">
           <div>
             <span className="text-lg font-bold text-primary-800">
-              {formatPrice(product.price)}
+              {formattedPrice}
             </span>
             <span className="text-xs text-neutral-500 ml-1">/ {product.unit}</span>
           </div>
@@ -89,7 +92,7 @@ export default function ProductCard({ product }) {
           {isInStock && (
             <button
               onClick={handleAddToCart}
-              className="p-2.5 bg-primary-800 text-white rounded-xl hover:bg-primary-900 transition-all duration-200 hover:shadow-md"
+              className="p-2.5 bg-primary-800 text-white rounded-xl hover:bg-primary-900 transition-all duration-200 hover:shadow-md active:scale-95"
               aria-label="Add to cart"
             >
               <PlusIcon className="h-5 w-5" />
@@ -99,13 +102,6 @@ export default function ProductCard({ product }) {
       </div>
     </Link>
   )
-}
+})
 
-// Cube icon for missing images
-function CubeIcon({ className }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-    </svg>
-  )
-}
+export default ProductCard

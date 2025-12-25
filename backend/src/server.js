@@ -15,7 +15,7 @@ const validateEnvironment = () => {
   if (!config.jwt.secret) {
     errors.push('JWT_SECRET is required but not set in environment variables');
   } else if (config.jwt.secret.length < 32) {
-    console.warn('⚠️  Warning: JWT_SECRET should be at least 32 characters for security');
+    console.warn('[!] Warning: JWT_SECRET should be at least 32 characters for security');
   }
 
   // Check for production-specific requirements
@@ -24,19 +24,19 @@ const validateEnvironment = () => {
       errors.push('DATABASE_URL is required in production');
     }
     if (config.cors.origin === 'http://localhost:5173') {
-      console.warn('⚠️  Warning: CORS origin is set to localhost in production');
+      console.warn('[!] Warning: CORS origin is set to localhost in production');
     }
   }
 
   // If there are critical errors, fail fast
   if (errors.length > 0) {
-    console.error('\n❌ Environment validation failed:\n');
+    console.error('\n[X] Environment validation failed:\n');
     errors.forEach((err, i) => console.error(`   ${i + 1}. ${err}`));
     console.error('\nPlease set the required environment variables and restart.\n');
     process.exit(1);
   }
 
-  console.log('✅ Environment validation passed');
+  console.log('[OK] Environment validation passed');
 };
 
 // Graceful shutdown
@@ -76,13 +76,13 @@ const startServer = async () => {
 
     // Test database connection
     await prisma.$connect();
-    console.log('✅ Database connected successfully');
+    console.log('[OK] Database connected successfully');
 
     app.listen(PORT, () => {
       console.log(`
 ╔════════════════════════════════════════════════════╗
 ║                                                    ║
-║   🔧 Hardware Store API Server                     ║
+║   HARDWARE STORE API SERVER                        ║
 ║                                                    ║
 ║   Environment: ${config.nodeEnv.padEnd(32)}║
 ║   Port: ${PORT.toString().padEnd(39)}║
@@ -94,7 +94,7 @@ const startServer = async () => {
       `);
     });
   } catch (error) {
-    console.error('❌ Failed to start server:', error);
+    console.error('[X] Failed to start server:', error);
     process.exit(1);
   }
 };

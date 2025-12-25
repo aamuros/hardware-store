@@ -10,27 +10,27 @@ A full-stack web ordering system for local hardware stores in the Philippines, f
 ## Features
 
 ### Customer Portal
-- 🛒 Browse products by category
-- 🔍 Search and filter products
-- 🛍️ Shopping cart with variant support
-- 📦 Order tracking by order number
-- 👤 Customer accounts with saved addresses
-- ❤️ Wishlist functionality
+- Browse products by category
+- Search and filter products
+- Shopping cart with variant support
+- Order tracking by order number
+- Customer accounts with saved addresses
+- Wishlist functionality
 
 ### Admin Dashboard
-- 📊 Sales dashboard with analytics
-- 📋 Order management with status workflow
-- 📦 Product management with variants & bulk pricing
-- 📁 Category management
-- 👥 Staff user management
-- 📈 Reports and insights
+- Sales dashboard with analytics
+- Order management with status workflow
+- Product management with variants & bulk pricing
+- Category management
+- Staff user management
+- Reports and insights
 
 ### SMS Notifications
-- 📱 Order confirmation
-- ✅ Order accepted/rejected
-- 🚚 Out for delivery alerts
-- ✔️ Delivery confirmation
-- 🔔 Admin notifications for new orders
+- Order confirmation
+- Order accepted/rejected
+- Out for delivery alerts
+- Delivery confirmation
+- Admin notifications for new orders
 
 ## Tech Stack
 

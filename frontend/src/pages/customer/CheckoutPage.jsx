@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useCart } from '../../context/CartContext'
 import { orderApi } from '../../services/api'
 import toast from 'react-hot-toast'
-import { XMarkIcon } from '@heroicons/react/24/outline'
+import { CloseIcon, CashIcon, PhoneIcon, CartIcon } from '../../components/icons'
 
 export default function CheckoutPage() {
   const navigate = useNavigate()
@@ -339,16 +339,16 @@ export default function CheckoutPage() {
             </Link>
 
             <div className="mt-6 p-4 bg-amber-50 rounded-xl border border-amber-100">
-              <p className="text-sm text-amber-800">
-                💵 <strong>Cash on Delivery</strong><br />
-                Pay when you receive your order
+              <p className="text-sm text-amber-800 flex items-center gap-2">
+                <CashIcon className="h-5 w-5 text-amber-600" />
+                <span><strong>Cash on Delivery</strong><br />Pay when you receive your order</span>
               </p>
             </div>
 
             <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
-              <p className="text-sm text-blue-800">
-                📱 <strong>SMS Updates</strong><br />
-                You'll receive order updates via SMS
+              <p className="text-sm text-blue-800 flex items-center gap-2">
+                <PhoneIcon className="h-5 w-5 text-blue-600" />
+                <span><strong>SMS Updates</strong><br />You'll receive order updates via SMS</span>
               </p>
             </div>
           </div>
@@ -371,13 +371,13 @@ export default function CheckoutPage() {
                   className="text-neutral-400 hover:text-neutral-600 transition-colors"
                   aria-label="Close confirmation modal"
                 >
-                  <XMarkIcon className="w-6 h-6" />
+                  <CloseIcon className="w-6 h-6" />
                 </button>
               </div>
 
               <div className="sm:flex sm:items-start">
                 <div className="flex items-center justify-center flex-shrink-0 w-12 h-12 mx-auto bg-accent-100 rounded-xl sm:mx-0 sm:h-10 sm:w-10">
-                  <span className="text-xl">🛒</span>
+                  <CartIcon className="h-5 w-5 text-accent-600" />
                 </div>
                 <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
                   <h3 className="text-lg font-semibold leading-6 text-primary-900">

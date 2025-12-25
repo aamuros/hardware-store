@@ -1,6 +1,13 @@
 const prisma = require('../utils/prismaClient');
 const { getOrSet, CACHE_KEYS, CACHE_TTL, invalidateProducts } = require('../utils/cache');
 
+// Helper function to safely parse integers with validation
+const safeParseInt = (value, defaultValue, min = 1, max = Infinity) => {
+  const parsed = parseInt(value, 10);
+  if (isNaN(parsed)) return defaultValue;
+  return Math.min(Math.max(parsed, min), max);
+};
+
 // GET /api/products
 const getAllProducts = async (req, res, next) => {
   try {
@@ -9,14 +16,23 @@ const getAllProducts = async (req, res, next) => {
     const where = { isDeleted: false };
 
     if (category) {
-      where.categoryId = parseInt(category, 10);
+      const categoryId = safeParseInt(category, null);
+      if (categoryId === null) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid category ID format',
+        });
+      }
+      where.categoryId = categoryId;
     }
 
     if (available !== undefined) {
       where.isAvailable = available === 'true';
     }
 
-    const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
+    const parsedPage = safeParseInt(page, 1, 1);
+    const parsedLimit = safeParseInt(limit, 20, 1, 100); // Cap at 100 to prevent abuse
+    const skip = (parsedPage - 1) * parsedLimit;
 
     const [products, total] = await Promise.all([
       prisma.product.findMany({
@@ -30,7 +46,7 @@ const getAllProducts = async (req, res, next) => {
           },
         },
         skip,
-        take: parseInt(limit, 10),
+        take: parsedLimit,
         orderBy: {
           name: 'asc',
         },
@@ -42,10 +58,10 @@ const getAllProducts = async (req, res, next) => {
       success: true,
       data: products,
       pagination: {
-        page: parseInt(page, 10),
-        limit: parseInt(limit, 10),
+        page: parsedPage,
+        limit: parsedLimit,
         total,
-        totalPages: Math.ceil(total / parseInt(limit, 10)),
+        totalPages: Math.ceil(total / parsedLimit),
       },
     });
   } catch (error) {
@@ -65,19 +81,24 @@ const searchProducts = async (req, res, next) => {
       });
     }
 
-    const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
+    const parsedPage = safeParseInt(page, 1, 1);
+    const parsedLimit = safeParseInt(limit, 20, 1, 100);
+    const skip = (parsedPage - 1) * parsedLimit;
+    const searchTerm = q.trim();
+
+    const searchWhere = {
+      OR: [
+        { name: { contains: searchTerm, mode: 'insensitive' } },
+        { description: { contains: searchTerm, mode: 'insensitive' } },
+        { sku: { contains: searchTerm, mode: 'insensitive' } },
+      ],
+      isAvailable: true,
+      isDeleted: false,
+    };
 
     const [products, total] = await Promise.all([
       prisma.product.findMany({
-        where: {
-          OR: [
-            { name: { contains: q } },
-            { description: { contains: q } },
-            { sku: { contains: q } },
-          ],
-          isAvailable: true,
-          isDeleted: false,
-        },
+        where: searchWhere,
         include: {
           category: {
             select: {
@@ -87,29 +108,19 @@ const searchProducts = async (req, res, next) => {
           },
         },
         skip,
-        take: parseInt(limit, 10),
+        take: parsedLimit,
       }),
-      prisma.product.count({
-        where: {
-          OR: [
-            { name: { contains: q } },
-            { description: { contains: q } },
-            { sku: { contains: q } },
-          ],
-          isAvailable: true,
-          isDeleted: false,
-        },
-      }),
+      prisma.product.count({ where: searchWhere }),
     ]);
 
     res.json({
       success: true,
       data: products,
       pagination: {
-        page: parseInt(page, 10),
-        limit: parseInt(limit, 10),
+        page: parsedPage,
+        limit: parsedLimit,
         total,
-        totalPages: Math.ceil(total / parseInt(limit, 10)),
+        totalPages: Math.ceil(total / parsedLimit),
       },
     });
   } catch (error) {

@@ -1,17 +1,27 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { orderApi } from '../../services/api'
+import { 
+  SearchIcon,
+  StatusPendingIcon,
+  StatusAcceptedIcon,
+  StatusRejectedIcon,
+  StatusPreparingIcon,
+  StatusDeliveryIcon,
+  StatusDeliveredIcon,
+  StatusCompletedIcon,
+  StatusCancelledIcon
+} from '../../components/icons'
 
 const STATUS_INFO = {
-  pending: { label: 'Pending', color: 'bg-amber-50 text-amber-700 border border-amber-200', icon: '⏳' },
-  accepted: { label: 'Accepted', color: 'bg-blue-50 text-blue-700 border border-blue-200', icon: '✅' },
-  rejected: { label: 'Rejected', color: 'bg-red-50 text-red-700 border border-red-200', icon: '❌' },
-  preparing: { label: 'Preparing', color: 'bg-violet-50 text-violet-700 border border-violet-200', icon: '🔧' },
-  out_for_delivery: { label: 'Out for Delivery', color: 'bg-accent-50 text-accent-700 border border-accent-200', icon: '🚚' },
-  delivered: { label: 'Delivered', color: 'bg-emerald-50 text-emerald-700 border border-emerald-200', icon: '📦' },
-  completed: { label: 'Completed', color: 'bg-emerald-50 text-emerald-700 border border-emerald-200', icon: '✨' },
-  cancelled: { label: 'Cancelled', color: 'bg-neutral-100 text-neutral-700 border border-neutral-200', icon: '🚫' },
+  pending: { label: 'Pending', color: 'bg-amber-50 text-amber-700 border border-amber-200', Icon: StatusPendingIcon },
+  accepted: { label: 'Accepted', color: 'bg-blue-50 text-blue-700 border border-blue-200', Icon: StatusAcceptedIcon },
+  rejected: { label: 'Rejected', color: 'bg-red-50 text-red-700 border border-red-200', Icon: StatusRejectedIcon },
+  preparing: { label: 'Preparing', color: 'bg-violet-50 text-violet-700 border border-violet-200', Icon: StatusPreparingIcon },
+  out_for_delivery: { label: 'Out for Delivery', color: 'bg-accent-50 text-accent-700 border border-accent-200', Icon: StatusDeliveryIcon },
+  delivered: { label: 'Delivered', color: 'bg-emerald-50 text-emerald-700 border border-emerald-200', Icon: StatusDeliveredIcon },
+  completed: { label: 'Completed', color: 'bg-emerald-50 text-emerald-700 border border-emerald-200', Icon: StatusCompletedIcon },
+  cancelled: { label: 'Cancelled', color: 'bg-neutral-100 text-neutral-700 border border-neutral-200', Icon: StatusCancelledIcon },
 }
 
 export default function TrackOrderPage() {
@@ -78,7 +88,7 @@ export default function TrackOrderPage() {
       <form onSubmit={handleTrack} className="mb-8">
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <MagnifyingGlassIcon className="h-5 w-5 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <SearchIcon className="h-5 w-5 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Enter your order number (e.g., HW-20241211-0001)"
@@ -103,8 +113,9 @@ export default function TrackOrderPage() {
                 <p className="text-sm text-neutral-500">Order Number</p>
                 <p className="text-xl font-bold text-primary-900">{order.orderNumber}</p>
               </div>
-              <span className={`px-4 py-2 rounded-xl text-sm font-medium ${statusInfo.color}`}>
-                {statusInfo.icon} {statusInfo.label}
+              <span className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 ${statusInfo.color}`}>
+                <statusInfo.Icon className="w-4 h-4" />
+                {statusInfo.label}
               </span>
             </div>
 
@@ -126,6 +137,7 @@ export default function TrackOrderPage() {
             <div className="space-y-4">
               {['pending', 'accepted', 'preparing', 'out_for_delivery', 'completed'].map((status, index) => {
                 const info = STATUS_INFO[status]
+                const StatusIcon = info.Icon
                 const statusOrder = ['pending', 'accepted', 'preparing', 'out_for_delivery', 'completed']
                 const currentIndex = statusOrder.indexOf(order.status)
                 const isActive = index <= currentIndex && !['rejected', 'cancelled'].includes(order.status)
@@ -133,10 +145,10 @@ export default function TrackOrderPage() {
                 
                 return (
                   <div key={status} className="flex items-center gap-4">
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm transition-all ${
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
                       isActive ? 'bg-primary-800 text-white' : 'bg-neutral-200 text-neutral-400'
                     } ${isCurrent ? 'ring-4 ring-primary-100' : ''}`}>
-                      {isActive ? info.icon : (index + 1)}
+                      {isActive ? <StatusIcon className="w-4 h-4" /> : (index + 1)}
                     </div>
                     <div className={isActive ? 'text-primary-900' : 'text-neutral-400'}>
                       <p className="font-medium">{info.label}</p>

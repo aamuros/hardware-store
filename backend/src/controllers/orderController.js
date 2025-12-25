@@ -28,9 +28,16 @@ const createOrder = async (req, res, next) => {
     let deliveryInfo = { customerName, phone, address, barangay, landmarks };
 
     if (savedAddressId && customerId) {
+      const parsedAddressId = parseInt(savedAddressId, 10);
+      if (isNaN(parsedAddressId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid saved address ID format',
+        });
+      }
       const savedAddress = await prisma.savedAddress.findFirst({
         where: {
-          id: parseInt(savedAddressId, 10),
+          id: parsedAddressId,
           customerId: customerId,
         },
       });
@@ -70,99 +77,74 @@ const createOrder = async (req, res, next) => {
       });
     }
 
-    // Get product details and calculate totals
+    // Pre-validate product IDs exist (basic check outside transaction)
     const productIds = items.map(item => item.productId);
-    const products = await prisma.product.findMany({
-      where: { id: { in: productIds } },
-    });
-
-    // Batch fetch all variants needed (N+1 optimization)
     const variantIds = items.filter(item => item.variantId).map(item => item.variantId);
-    const variants = variantIds.length > 0
-      ? await prisma.productVariant.findMany({ where: { id: { in: variantIds } } })
-      : [];
-    const variantMap = new Map(variants.map(v => [v.id, v]));
 
-    // Validate all products exist, are available, and have sufficient stock
-    const productMap = new Map(products.map(p => [p.id, p]));
-
-    for (const item of items) {
-      const product = productMap.get(item.productId);
-      if (!product) {
-        return res.status(400).json({
-          success: false,
-          message: `Product with ID ${item.productId} not found`,
-        });
-      }
-      if (!product.isAvailable) {
-        return res.status(400).json({
-          success: false,
-          message: `${product.name} is currently unavailable`,
-        });
-      }
-      // Check stock availability (variant or product)
-      if (item.variantId) {
-        // Validate variant stock (using pre-fetched map)
-        const variant = variantMap.get(item.variantId);
-        if (!variant || variant.isDeleted) {
-          return res.status(400).json({
-            success: false,
-            message: `Variant not found for product ${product.name}`,
-          });
-        }
-        if (!variant.isAvailable) {
-          return res.status(400).json({
-            success: false,
-            message: `${product.name} (${variant.name}) is currently unavailable`,
-          });
-        }
-        if (variant.stockQuantity < item.quantity) {
-          return res.status(400).json({
-            success: false,
-            message: `Insufficient stock for ${product.name} (${variant.name}). Available: ${variant.stockQuantity}, Requested: ${item.quantity}`,
-            code: 'INSUFFICIENT_STOCK',
-            productId: product.id,
-            variantId: item.variantId,
-            availableStock: variant.stockQuantity,
-          });
-        }
-      } else if (product.stockQuantity < item.quantity) {
-        return res.status(400).json({
-          success: false,
-          message: `Insufficient stock for ${product.name}. Available: ${product.stockQuantity}, Requested: ${item.quantity}`,
-          code: 'INSUFFICIENT_STOCK',
-          productId: product.id,
-          availableStock: product.stockQuantity,
-        });
-      }
-    }
-
-    // Calculate order items with prices
-    const orderItems = items.map(item => {
-      const product = productMap.get(item.productId);
-      // Use variant price if provided, otherwise product price
-      const unitPrice = item.unitPrice || product.price;
-      return {
-        productId: item.productId,
-        variantId: item.variantId || null,
-        variantName: item.variantName || null,
-        quantity: item.quantity,
-        unitPrice: unitPrice,
-        subtotal: unitPrice * item.quantity,
-      };
-    });
-
-    const totalAmount = orderItems.reduce((sum, item) => sum + item.subtotal, 0);
-
-    // Generate order number
+    // Generate order number before transaction
     const orderNumber = generateOrderNumber();
 
-    // Create order and deduct stock in a transaction
+    // Create order with atomic stock validation and deduction inside transaction
+    // This prevents race conditions where two users could buy the last item
     const order = await prisma.$transaction(async (tx) => {
+      // Fetch products with row-level locking (SELECT FOR UPDATE behavior in transaction)
+      const products = await tx.product.findMany({
+        where: { id: { in: productIds } },
+      });
+      const productMap = new Map(products.map(p => [p.id, p]));
+
+      // Fetch variants if needed
+      const variants = variantIds.length > 0
+        ? await tx.productVariant.findMany({ where: { id: { in: variantIds } } })
+        : [];
+      const variantMap = new Map(variants.map(v => [v.id, v]));
+
+      // Validate all products exist, are available, and have sufficient stock
+      for (const item of items) {
+        const product = productMap.get(item.productId);
+        if (!product) {
+          throw new Error(`VALIDATION:Product with ID ${item.productId} not found`);
+        }
+        if (!product.isAvailable || product.isDeleted) {
+          throw new Error(`VALIDATION:${product.name} is currently unavailable`);
+        }
+
+        // Check stock availability (variant or product)
+        if (item.variantId) {
+          const variant = variantMap.get(item.variantId);
+          if (!variant || variant.isDeleted) {
+            throw new Error(`VALIDATION:Variant not found for product ${product.name}`);
+          }
+          if (!variant.isAvailable) {
+            throw new Error(`VALIDATION:${product.name} (${variant.name}) is currently unavailable`);
+          }
+          if (variant.stockQuantity < item.quantity) {
+            throw new Error(`STOCK:${product.name} (${variant.name}):${variant.stockQuantity}:${item.quantity}:${product.id}:${item.variantId}`);
+          }
+        } else if (product.stockQuantity < item.quantity) {
+          throw new Error(`STOCK:${product.name}:${product.stockQuantity}:${item.quantity}:${product.id}`);
+        }
+      }
+
+      // Calculate order items with prices
+      const orderItems = items.map(item => {
+        const product = productMap.get(item.productId);
+        const unitPrice = item.unitPrice || product.price;
+        return {
+          productId: item.productId,
+          variantId: item.variantId || null,
+          variantName: item.variantName || null,
+          quantity: item.quantity,
+          unitPrice: unitPrice,
+          subtotal: unitPrice * item.quantity,
+        };
+      });
+
+      const totalAmount = orderItems.reduce((sum, item) => sum + item.subtotal, 0);
+
       // Deduct stock for each item (from variant or product)
       for (const item of items) {
         if (item.variantId) {
-          // Deduct from variant stock
           await tx.productVariant.update({
             where: { id: item.variantId },
             data: {
@@ -172,7 +154,6 @@ const createOrder = async (req, res, next) => {
             },
           });
         } else {
-          // Deduct from product stock
           await tx.product.update({
             where: { id: item.productId },
             data: {
@@ -188,7 +169,7 @@ const createOrder = async (req, res, next) => {
       const newOrder = await tx.order.create({
         data: {
           orderNumber,
-          customerId, // Link to customer if logged in
+          customerId,
           customerName: deliveryInfo.customerName,
           phone: deliveryInfo.phone,
           address: deliveryInfo.address,
@@ -200,7 +181,6 @@ const createOrder = async (req, res, next) => {
           items: {
             create: orderItems,
           },
-          // Create initial status history entry
           statusHistory: {
             create: {
               fromStatus: null,
@@ -219,7 +199,40 @@ const createOrder = async (req, res, next) => {
       });
 
       return newOrder;
+    }).catch((error) => {
+      // Handle validation errors thrown from within the transaction
+      if (error.message.startsWith('VALIDATION:')) {
+        const message = error.message.replace('VALIDATION:', '');
+        return { error: true, status: 400, message };
+      }
+      if (error.message.startsWith('STOCK:')) {
+        const parts = error.message.replace('STOCK:', '').split(':');
+        const [productName, available, requested, productId, variantId] = parts;
+        return {
+          error: true,
+          status: 400,
+          message: `Insufficient stock for ${productName}. Available: ${available}, Requested: ${requested}`,
+          code: 'INSUFFICIENT_STOCK',
+          productId: parseInt(productId, 10),
+          variantId: variantId ? parseInt(variantId, 10) : undefined,
+          availableStock: parseInt(available, 10),
+        };
+      }
+      throw error;
     });
+
+    // Handle validation errors
+    if (order.error) {
+      const response = {
+        success: false,
+        message: order.message,
+      };
+      if (order.code) response.code = order.code;
+      if (order.productId) response.productId = order.productId;
+      if (order.variantId) response.variantId = order.variantId;
+      if (order.availableStock !== undefined) response.availableStock = order.availableStock;
+      return res.status(order.status).json(response);
+    }
 
     // Invalidate product cache after stock changes
     invalidateProducts();

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { TrashIcon, MinusIcon, PlusIcon } from '@heroicons/react/24/outline'
+import { TrashIcon, MinusIcon, PlusIcon, CartIcon, BoxIcon, CashIcon } from '../../components/icons'
 import { useCart } from '../../context/CartContext'
 
 export default function CartPage() {
@@ -15,7 +15,9 @@ export default function CartPage() {
   if (items.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center animate-fade-in">
-        <div className="text-6xl mb-4">🛒</div>
+        <div className="w-20 h-20 bg-neutral-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+          <CartIcon className="h-10 w-10 text-neutral-400" />
+        </div>
         <h1 className="text-2xl font-bold text-primary-900 mb-2">Your Cart is Empty</h1>
         <p className="text-neutral-600 mb-8">Start adding products to your cart!</p>
         <Link to="/products" className="btn-primary">
@@ -54,8 +56,8 @@ export default function CartPage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-neutral-400 text-2xl">
-                      📦
+                    <div className="w-full h-full flex items-center justify-center text-neutral-400">
+                      <BoxIcon className="h-8 w-8" />
                     </div>
                   )}
                 </div>
@@ -149,8 +151,9 @@ export default function CartPage() {
             </Link>
 
             <div className="mt-6 p-4 bg-amber-50 rounded-xl border border-amber-100">
-              <p className="text-sm text-amber-800">
-                💵 <strong>Cash on Delivery</strong> - Payment upon delivery
+              <p className="text-sm text-amber-800 flex items-center gap-2">
+                <CashIcon className="h-5 w-5 text-amber-600" />
+                <span><strong>Cash on Delivery</strong> - Payment upon delivery</span>
               </p>
             </div>
           </div>

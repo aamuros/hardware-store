@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom'
-import { CheckCircleIcon } from '@heroicons/react/24/solid'
+import { CheckCircleIcon } from '../../components/icons'
 
 export default function OrderConfirmationPage() {
   const { orderNumber } = useParams()
