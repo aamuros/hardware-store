@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
-import { Outlet, Link } from 'react-router-dom'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
 import {
   CartIcon,
   UserIcon,
@@ -11,16 +11,41 @@ import {
   SettingsIcon,
   WrenchIcon,
   PhoneIcon,
-  ClockIcon
+  ClockIcon,
+  SearchIcon,
+  HomeIcon,
+  CloseIcon,
 } from '../icons'
 import { useCart } from '../../context/CartContext'
 import { useCustomerAuth } from '../../context/CustomerAuthContext'
+import { productApi } from '../../services/api'
+import { useDebounce } from '../../hooks/useDebounce'
 
 export default function CustomerLayout() {
   const { totalItems } = useCart()
   const { customer, isAuthenticated, logout, wishlistIds } = useCustomerAuth()
   const [showDropdown, setShowDropdown] = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [cartPulse, setCartPulse] = useState(false)
+  const [prevTotalItems, setPrevTotalItems] = useState(totalItems)
   const dropdownRef = useRef(null)
+  const searchRef = useRef(null)
+  const navigate = useNavigate()
+  const location = useLocation()
+  const debouncedSearch = useDebounce(searchQuery, 300)
+
+  // Cart pulse animation when items change
+  useEffect(() => {
+    if (totalItems > prevTotalItems) {
+      setCartPulse(true)
+      const timer = setTimeout(() => setCartPulse(false), 400)
+      return () => clearTimeout(timer)
+    }
+    setPrevTotalItems(totalItems)
+  }, [totalItems, prevTotalItems])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -28,10 +53,51 @@ export default function CustomerLayout() {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false)
       }
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowSearch(false)
+        setSearchResults([])
+      }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  // Search products
+  useEffect(() => {
+    const searchProducts = async () => {
+      if (debouncedSearch.trim().length < 2) {
+        setSearchResults([])
+        return
+      }
+      setSearchLoading(true)
+      try {
+        const response = await productApi.search(debouncedSearch)
+        setSearchResults(response.data.data.slice(0, 5))
+      } catch (error) {
+        console.error('Search error:', error)
+      } finally {
+        setSearchLoading(false)
+      }
+    }
+    searchProducts()
+  }, [debouncedSearch])
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      navigate(`/products?search=${encodeURIComponent(searchQuery)}`)
+      setShowSearch(false)
+      setSearchQuery('')
+      setSearchResults([])
+    }
+  }
+
+  const handleSearchResultClick = (productId) => {
+    navigate(`/products/${productId}`)
+    setShowSearch(false)
+    setSearchQuery('')
+    setSearchResults([])
+  }
 
   const handleLogout = () => {
     logout()
@@ -40,8 +106,16 @@ export default function CustomerLayout() {
 
   return (
     <div className="min-h-screen flex flex-col bg-neutral-50">
+      {/* Skip to main content - Accessibility */}
+      <a 
+        href="#main-content" 
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary-800 focus:text-white focus:rounded-lg focus:shadow-lg"
+      >
+        Skip to main content
+      </a>
+
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-neutral-100 sticky top-0 z-50">
+      <header className="bg-white/80 backdrop-blur-md border-b border-neutral-100 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
@@ -53,17 +127,103 @@ export default function CustomerLayout() {
             </Link>
 
             {/* Navigation */}
-            <nav className="hidden md:flex items-center space-x-8">
-              <Link to="/" className="text-neutral-600 hover:text-primary-800 transition-colors font-medium">
+            <nav className="hidden md:flex items-center space-x-1">
+              <Link 
+                to="/" 
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  location.pathname === '/' 
+                    ? 'text-primary-800 bg-primary-50' 
+                    : 'text-neutral-600 hover:text-primary-800 hover:bg-neutral-50'
+                }`}
+              >
                 Home
               </Link>
-              <Link to="/products" className="text-neutral-600 hover:text-primary-800 transition-colors font-medium">
+              <Link 
+                to="/products" 
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  location.pathname.startsWith('/products') 
+                    ? 'text-primary-800 bg-primary-50' 
+                    : 'text-neutral-600 hover:text-primary-800 hover:bg-neutral-50'
+                }`}
+              >
                 Products
               </Link>
-              <Link to="/track-order" className="text-neutral-600 hover:text-primary-800 transition-colors font-medium">
+              <Link 
+                to="/track-order" 
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  location.pathname === '/track-order' 
+                    ? 'text-primary-800 bg-primary-50' 
+                    : 'text-neutral-600 hover:text-primary-800 hover:bg-neutral-50'
+                }`}
+              >
                 Track Order
               </Link>
             </nav>
+
+            {/* Search Bar - Desktop */}
+            <div className="hidden md:block flex-1 max-w-md mx-8" ref={searchRef}>
+              <form onSubmit={handleSearchSubmit} className="relative">
+                <SearchIcon className="h-5 w-5 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setShowSearch(true)}
+                  className="w-full pl-10 pr-4 py-2 bg-neutral-100 border-0 rounded-xl text-sm placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:bg-white transition-all"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => { setSearchQuery(''); setSearchResults([]) }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                  >
+                    <CloseIcon className="h-4 w-4" />
+                  </button>
+                )}
+
+                {/* Search Results Dropdown */}
+                {showSearch && (searchResults.length > 0 || searchLoading) && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg border border-neutral-100 overflow-hidden z-50 search-dropdown-enter">
+                    {searchLoading ? (
+                      <div className="p-4 text-center text-neutral-500 text-sm">
+                        Searching...
+                      </div>
+                    ) : (
+                      <>
+                        {searchResults.map((product) => (
+                          <button
+                            key={product.id}
+                            onClick={() => handleSearchResultClick(product.id)}
+                            className="w-full flex items-center gap-3 p-3 hover:bg-neutral-50 transition-colors text-left"
+                          >
+                            <div className="w-10 h-10 bg-neutral-100 rounded-lg overflow-hidden flex-shrink-0">
+                              {product.imageUrl ? (
+                                <img src={product.imageUrl} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-neutral-400">
+                                  <WrenchIcon className="h-5 w-5" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-primary-900 truncate">{product.name}</p>
+                              <p className="text-xs text-accent-600">₱{product.price.toLocaleString()}</p>
+                            </div>
+                          </button>
+                        ))}
+                        <button
+                          onClick={handleSearchSubmit}
+                          className="w-full p-3 text-sm text-primary-600 hover:bg-primary-50 font-medium border-t border-neutral-100"
+                        >
+                          View all results for "{searchQuery}"
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </form>
+            </div>
 
             {/* Actions */}
             <div className="flex items-center space-x-2">
@@ -83,7 +243,7 @@ export default function CustomerLayout() {
               <Link to="/cart" className="relative p-2 text-neutral-600 hover:text-primary-800 transition-all hover:scale-110">
                 <CartIcon className="h-6 w-6" />
                 {totalItems > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-accent-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                  <span className={`absolute -top-1 -right-1 bg-accent-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium ${cartPulse ? 'cart-badge-pulse' : ''}`}>
                     {totalItems > 99 ? '99+' : totalItems}
                   </span>
                 )}
@@ -166,23 +326,25 @@ export default function CustomerLayout() {
           </div>
         </div>
 
-        {/* Mobile navigation */}
+        {/* Mobile navigation - Simplified header */}
         <div className="md:hidden border-t border-neutral-100">
-          <div className="flex justify-around py-2">
-            <Link to="/" className="text-neutral-600 hover:text-primary-800 text-sm font-medium">Home</Link>
-            <Link to="/products" className="text-neutral-600 hover:text-primary-800 text-sm font-medium">Products</Link>
-            <Link to="/track-order" className="text-neutral-600 hover:text-primary-800 text-sm font-medium">Track Order</Link>
-            {isAuthenticated() ? (
-              <Link to="/account" className="text-neutral-600 hover:text-primary-800 text-sm font-medium">Account</Link>
-            ) : (
-              <Link to="/login" className="text-accent-600 hover:text-accent-700 text-sm font-medium">Login</Link>
-            )}
+          <div className="flex items-center justify-center py-2 px-4">
+            <form onSubmit={handleSearchSubmit} className="relative w-full">
+              <SearchIcon className="h-4 w-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 bg-neutral-100 border-0 rounded-lg text-sm placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:bg-white"
+              />
+            </form>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         <Outlet />
       </main>
 
@@ -233,6 +395,59 @@ export default function CustomerLayout() {
           </div>
         </div>
       </footer>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 z-50 mobile-nav-enter pb-safe">
+        <div className="flex items-center justify-around py-2">
+          <Link 
+            to="/" 
+            className={`flex flex-col items-center px-3 py-1 ${location.pathname === '/' ? 'text-primary-800' : 'text-neutral-500'}`}
+          >
+            <HomeIcon className="h-6 w-6" />
+            <span className="text-xs mt-0.5 font-medium">Home</span>
+          </Link>
+          <Link 
+            to="/products" 
+            className={`flex flex-col items-center px-3 py-1 ${location.pathname.startsWith('/products') ? 'text-primary-800' : 'text-neutral-500'}`}
+          >
+            <WrenchIcon className="h-6 w-6" />
+            <span className="text-xs mt-0.5 font-medium">Products</span>
+          </Link>
+          <Link 
+            to="/cart" 
+            className={`flex flex-col items-center px-3 py-1 relative ${location.pathname === '/cart' ? 'text-primary-800' : 'text-neutral-500'}`}
+          >
+            <div className="relative">
+              <CartIcon className="h-6 w-6" />
+              {totalItems > 0 && (
+                <span className={`absolute -top-2 -right-2 bg-accent-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium ${cartPulse ? 'cart-badge-pulse' : ''}`}>
+                  {totalItems > 99 ? '99+' : totalItems}
+                </span>
+              )}
+            </div>
+            <span className="text-xs mt-0.5 font-medium">Cart</span>
+          </Link>
+          {isAuthenticated() ? (
+            <Link 
+              to="/account" 
+              className={`flex flex-col items-center px-3 py-1 ${location.pathname.startsWith('/account') ? 'text-primary-800' : 'text-neutral-500'}`}
+            >
+              <UserIcon className="h-6 w-6" />
+              <span className="text-xs mt-0.5 font-medium">Account</span>
+            </Link>
+          ) : (
+            <Link 
+              to="/login" 
+              className={`flex flex-col items-center px-3 py-1 ${location.pathname === '/login' ? 'text-primary-800' : 'text-neutral-500'}`}
+            >
+              <UserIcon className="h-6 w-6" />
+              <span className="text-xs mt-0.5 font-medium">Login</span>
+            </Link>
+          )}
+        </div>
+      </nav>
+      {/* Spacer for mobile bottom nav */}
+      <div className="md:hidden h-16"></div>
     </div>
   )
 }

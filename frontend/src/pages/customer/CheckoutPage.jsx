@@ -3,7 +3,41 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useCart } from '../../context/CartContext'
 import { orderApi } from '../../services/api'
 import toast from 'react-hot-toast'
-import { CloseIcon, CashIcon, PhoneIcon, CartIcon } from '../../components/icons'
+import { CloseIcon, CashIcon, PhoneIcon, CartIcon, CheckIcon } from '../../components/icons'
+
+// Checkout Progress Steps Component
+function CheckoutProgress({ currentStep }) {
+  const steps = [
+    { id: 1, name: 'Cart', shortName: '1' },
+    { id: 2, name: 'Details', shortName: '2' },
+    { id: 3, name: 'Confirm', shortName: '3' },
+  ]
+
+  return (
+    <div className="flex items-center justify-center mb-8">
+      {steps.map((step, index) => (
+        <div key={step.id} className="flex items-center">
+          <div className={`checkout-step ${currentStep === step.id ? 'active' : currentStep > step.id ? 'completed' : ''}`}>
+            <span className={`checkout-step-dot ${
+              currentStep === step.id ? 'active' : 
+              currentStep > step.id ? 'completed' : 'inactive'
+            }`}>
+              {currentStep > step.id ? (
+                <CheckIcon className="h-4 w-4" />
+              ) : (
+                step.shortName
+              )}
+            </span>
+            <span className="ml-2 hidden sm:inline">{step.name}</span>
+          </div>
+          {index < steps.length - 1 && (
+            <div className={`checkout-step-line w-8 sm:w-16 ${currentStep > step.id ? 'completed' : ''}`} />
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export default function CheckoutPage() {
   const navigate = useNavigate()
@@ -151,7 +185,10 @@ export default function CheckoutPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
-      <h1 className="text-3xl font-bold text-primary-900 mb-8">Checkout</h1>
+      <h1 className="text-3xl font-bold text-primary-900 mb-4">Checkout</h1>
+      
+      {/* Progress Indicator */}
+      <CheckoutProgress currentStep={2} />
 
       <form onSubmit={handleSubmit} className="grid lg:grid-cols-3 gap-8">
         {/* Delivery Information */}

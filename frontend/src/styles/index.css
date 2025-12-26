@@ -16,13 +16,18 @@
   h1, h2, h3, h4, h5, h6 {
     @apply text-primary-900 font-semibold tracking-tight;
   }
+
+  /* Safe area padding for iOS */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
 }
 
 /* Custom component styles */
 @layer components {
-  /* Button system - clean and minimal */
+  /* Button system - clean and minimal with micro-interactions */
   .btn {
-    @apply inline-flex items-center justify-center px-5 py-2.5 border border-transparent rounded-xl font-medium transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center px-5 py-2.5 border border-transparent rounded-xl font-medium transition-all duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] active:transition-transform;
   }
   
   .btn-primary {
@@ -142,6 +147,18 @@
     @apply bg-clip-text text-transparent bg-gradient-to-r from-accent-500 to-accent-700;
   }
   
+  /* Shimmer animation for skeletons */
+  .animate-shimmer {
+    animation: shimmer 1.5s ease-in-out infinite;
+    background: linear-gradient(90deg, #f0f0f0 0%, #e0e0e0 20%, #f0f0f0 40%, #f0f0f0 100%);
+    background-size: 200% 100%;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
   /* Animation utilities */
   .animate-fade-in {
     animation: fadeIn 0.4s ease-out;
@@ -194,6 +211,16 @@
   /* Focus visible ring - accessible */
   .focus-ring {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2;
+  }
+
+  /* Global link focus states */
+  a:focus-visible {
+    @apply outline-none ring-2 ring-primary-500/50 ring-offset-2 rounded-lg;
+  }
+
+  /* Interactive element focus */
+  .interactive-focus {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 focus-visible:ring-offset-1 focus-visible:rounded-lg;
   }
 
   /* Icon utilities */
@@ -270,5 +297,112 @@
   /* Touch-friendly tap targets */
   .tap-highlight-none {
     -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Staggered animation delays for grid items */
+  .stagger-1 { animation-delay: 0.05s; }
+  .stagger-2 { animation-delay: 0.1s; }
+  .stagger-3 { animation-delay: 0.15s; }
+  .stagger-4 { animation-delay: 0.2s; }
+  .stagger-5 { animation-delay: 0.25s; }
+  .stagger-6 { animation-delay: 0.3s; }
+  .stagger-7 { animation-delay: 0.35s; }
+  .stagger-8 { animation-delay: 0.4s; }
+  .stagger-9 { animation-delay: 0.45s; }
+  .stagger-10 { animation-delay: 0.5s; }
+  .stagger-11 { animation-delay: 0.55s; }
+  .stagger-12 { animation-delay: 0.6s; }
+
+  /* Cart badge pulse animation */
+  .cart-badge-pulse {
+    animation: cartPulse 0.4s ease-out;
+  }
+
+  @keyframes cartPulse {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.3);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  /* Search dropdown animation */
+  .search-dropdown-enter {
+    animation: searchDropdown 0.2s ease-out;
+  }
+
+  @keyframes searchDropdown {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Mobile bottom nav slide up */
+  .mobile-nav-enter {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  /* Table row hover enhancement */
+  .table-row-hover {
+    @apply transition-colors duration-150;
+  }
+  
+  .table-row-hover:hover {
+    @apply bg-primary-50/50;
+  }
+
+  /* Checkout progress step styles */
+  .checkout-step {
+    @apply flex items-center text-sm font-medium text-neutral-400 transition-colors duration-200;
+  }
+  
+  .checkout-step.active {
+    @apply text-primary-800;
+  }
+  
+  .checkout-step.completed {
+    @apply text-emerald-600;
+  }
+  
+  .checkout-step-dot {
+    @apply w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-all duration-200;
+  }
+  
+  .checkout-step-dot.inactive {
+    @apply border-neutral-300 text-neutral-400 bg-white;
+  }
+  
+  .checkout-step-dot.active {
+    @apply border-primary-600 text-white bg-primary-600;
+  }
+  
+  .checkout-step-dot.completed {
+    @apply border-emerald-500 text-white bg-emerald-500;
+  }
+  
+  .checkout-step-line {
+    @apply flex-1 h-0.5 mx-3 bg-neutral-200 transition-colors duration-200;
+  }
+  
+  .checkout-step-line.completed {
+    @apply bg-emerald-500;
   }
 }

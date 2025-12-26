@@ -39,10 +39,9 @@ export const FormInput = ({
         disabled={disabled}
         placeholder={placeholder}
         className={`
-          w-full px-3 py-2 border rounded-md shadow-sm
-          focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500
-          disabled:bg-neutral-100 disabled:cursor-not-allowed
-          ${hasError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-neutral-300'}
+          input
+          ${hasError ? 'input-error' : ''}
+          ${disabled ? 'bg-neutral-100 cursor-not-allowed opacity-60' : ''}
           ${inputClassName}
         `}
         aria-invalid={hasError}
@@ -103,10 +102,9 @@ export const FormTextarea = ({
         placeholder={placeholder}
         rows={rows}
         className={`
-          w-full px-3 py-2 border rounded-md shadow-sm
-          focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500
-          disabled:bg-neutral-100 disabled:cursor-not-allowed
-          ${hasError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-neutral-300'}
+          input resize-none
+          ${hasError ? 'input-error' : ''}
+          ${disabled ? 'bg-neutral-100 cursor-not-allowed opacity-60' : ''}
         `}
         aria-invalid={hasError}
         aria-describedby={hasError ? `${name}-error` : undefined}

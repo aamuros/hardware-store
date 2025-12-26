@@ -47,14 +47,14 @@ const ProductCard = memo(function ProductCard({ product }) {
         <OptimizedImage
           src={product.imageUrl}
           alt={product.name}
-          className="group-hover:scale-105 transition-transform duration-300"
+          className="group-hover:scale-[1.03] transition-transform duration-500 ease-out"
           fallback={<BoxIcon className="h-16 w-16 text-neutral-300" />}
         />
 
         {/* Out of Stock overlay */}
         {!isInStock && (
-          <div className="absolute inset-0 bg-primary-900/60 backdrop-blur-sm flex items-center justify-center">
-            <span className="bg-white text-primary-800 px-3 py-1 rounded-lg text-sm font-medium">
+          <div className="absolute inset-0 bg-primary-900/40 backdrop-blur-[2px] flex items-center justify-center">
+            <span className="bg-white text-primary-800 px-3 py-1.5 rounded-lg text-sm font-medium shadow-sm">
               Out of Stock
             </span>
           </div>

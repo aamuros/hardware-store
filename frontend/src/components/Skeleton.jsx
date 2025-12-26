@@ -1,24 +1,27 @@
 // Skeleton loading components for better UX
 import React from 'react';
 
-// Base skeleton with pulse animation
+// Base skeleton with shimmer animation for professional loading state
 const Skeleton = ({ className = '', ...props }) => (
   <div
-    className={`animate-pulse bg-neutral-200 rounded ${className}`}
+    className={`animate-shimmer rounded-xl ${className}`}
     {...props}
   />
 );
 
-// Product card skeleton
+// Product card skeleton - matches actual ProductCard design
 export const ProductCardSkeleton = () => (
-  <div className="bg-white rounded-lg shadow-md overflow-hidden">
-    <Skeleton className="h-48 w-full" />
+  <div className="bg-white rounded-2xl shadow-soft border border-neutral-100 overflow-hidden">
+    <Skeleton className="h-48 w-full rounded-none" />
     <div className="p-4 space-y-3">
-      <Skeleton className="h-4 w-3/4" />
-      <Skeleton className="h-4 w-1/2" />
+      <Skeleton className="h-3 w-16 rounded-lg" />
+      <Skeleton className="h-4 w-3/4 rounded-lg" />
       <div className="flex justify-between items-center pt-2">
-        <Skeleton className="h-6 w-20" />
-        <Skeleton className="h-10 w-24 rounded-md" />
+        <div className="space-y-1">
+          <Skeleton className="h-5 w-20 rounded-lg" />
+          <Skeleton className="h-3 w-12 rounded-lg" />
+        </div>
+        <Skeleton className="h-10 w-10 rounded-xl" />
       </div>
     </div>
   </div>
@@ -33,15 +36,12 @@ export const ProductGridSkeleton = ({ count = 8 }) => (
   </div>
 );
 
-// Category card skeleton
+// Category card skeleton - matches design system
 export const CategoryCardSkeleton = () => (
-  <div className="bg-white rounded-lg shadow p-6">
-    <div className="flex items-center space-x-4">
-      <Skeleton className="h-12 w-12 rounded-full" />
-      <div className="flex-1 space-y-2">
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-3 w-1/2" />
-      </div>
+  <div className="bg-white rounded-2xl shadow-soft border border-neutral-100 p-6">
+    <div className="flex flex-col items-center space-y-3">
+      <Skeleton className="h-12 w-12 rounded-xl" />
+      <Skeleton className="h-4 w-20 rounded-lg" />
     </div>
   </div>
 );

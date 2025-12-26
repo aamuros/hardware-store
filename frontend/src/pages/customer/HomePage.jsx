@@ -161,14 +161,14 @@ export default function HomePage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link
                   to="/products"
-                  className="btn btn-lg bg-accent-500 hover:bg-accent-600 text-white shadow-lg hover:shadow-xl transition-all group"
+                  className="btn btn-lg bg-accent-500 hover:bg-accent-600 text-white shadow-lg hover:shadow-xl hover:shadow-accent-500/25 transition-all duration-300 group"
                 >
                   Browse Products
-                  <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                  <span className="ml-2 group-hover:translate-x-1 transition-transform duration-300">→</span>
                 </Link>
                 <Link
                   to="/track-order"
-                  className="btn btn-lg border-2 border-white/30 text-white hover:bg-white/10 backdrop-blur-sm"
+                  className="btn btn-lg border-2 border-white/30 text-white hover:bg-white/10 hover:border-white/50 backdrop-blur-sm transition-all duration-300"
                 >
                   Track Your Order
                 </Link>
@@ -179,20 +179,20 @@ export default function HomePage() {
             <div className="hidden lg:block">
               <div
                 ref={productsCount.ref}
-                className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20"
+                className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 shadow-2xl shadow-black/10"
               >
                 <div className="grid grid-cols-3 gap-6 text-center">
-                  <div>
-                    <div className="text-4xl font-bold text-white mb-1">{productsCount.count}+</div>
-                    <div className="text-primary-300 text-sm">Products</div>
+                  <div className="space-y-1">
+                    <div className="text-4xl font-bold text-white">{productsCount.count}+</div>
+                    <div className="text-primary-300 text-sm font-medium">Products</div>
                   </div>
-                  <div>
-                    <div className="text-4xl font-bold text-white mb-1">{ordersCount.count}+</div>
-                    <div className="text-primary-300 text-sm">Orders Delivered</div>
+                  <div className="space-y-1">
+                    <div className="text-4xl font-bold text-white">{ordersCount.count}+</div>
+                    <div className="text-primary-300 text-sm font-medium">Orders Delivered</div>
                   </div>
-                  <div>
-                    <div className="text-4xl font-bold text-white mb-1">{customersCount.count}+</div>
-                    <div className="text-primary-300 text-sm">Happy Customers</div>
+                  <div className="space-y-1">
+                    <div className="text-4xl font-bold text-white">{customersCount.count}+</div>
+                    <div className="text-primary-300 text-sm font-medium">Happy Customers</div>
                   </div>
                 </div>
 

@@ -1,6 +1,40 @@
 import { Link } from 'react-router-dom'
-import { TrashIcon, MinusIcon, PlusIcon, CartIcon, BoxIcon, CashIcon } from '../../components/icons'
+import { TrashIcon, MinusIcon, PlusIcon, CartIcon, BoxIcon, CashIcon, CheckIcon } from '../../components/icons'
 import { useCart } from '../../context/CartContext'
+
+// Checkout Progress Steps Component
+function CheckoutProgress({ currentStep }) {
+  const steps = [
+    { id: 1, name: 'Cart', shortName: '1' },
+    { id: 2, name: 'Details', shortName: '2' },
+    { id: 3, name: 'Confirm', shortName: '3' },
+  ]
+
+  return (
+    <div className="flex items-center justify-center mb-8">
+      {steps.map((step, index) => (
+        <div key={step.id} className="flex items-center">
+          <div className={`checkout-step ${currentStep === step.id ? 'active' : currentStep > step.id ? 'completed' : ''}`}>
+            <span className={`checkout-step-dot ${
+              currentStep === step.id ? 'active' : 
+              currentStep > step.id ? 'completed' : 'inactive'
+            }`}>
+              {currentStep > step.id ? (
+                <CheckIcon className="h-4 w-4" />
+              ) : (
+                step.shortName
+              )}
+            </span>
+            <span className="ml-2 hidden sm:inline">{step.name}</span>
+          </div>
+          {index < steps.length - 1 && (
+            <div className={`checkout-step-line w-8 sm:w-16 ${currentStep > step.id ? 'completed' : ''}`} />
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export default function CartPage() {
   const { items, totalAmount, updateQuantity, removeFromCart, clearCart } = useCart()
@@ -29,8 +63,12 @@ export default function CartPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-primary-900">Shopping Cart</h1>
+      <h1 className="text-3xl font-bold text-primary-900 mb-4">Shopping Cart</h1>
+      
+      {/* Progress Indicator */}
+      <CheckoutProgress currentStep={1} />
+
+      <div className="flex items-center justify-end mb-4">
         <button
           onClick={clearCart}
           className="text-red-600 hover:text-red-700 text-sm font-medium"
