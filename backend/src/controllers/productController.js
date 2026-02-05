@@ -295,19 +295,20 @@ const updateProduct = async (req, res, next) => {
       });
     }
 
-    const { name, description, price, unit, categoryId, sku, isAvailable, stockQuantity, lowStockThreshold } = req.body;
+    const { name, description, price, unit, categoryId, sku, isAvailable, stockQuantity, lowStockThreshold, hasVariants } = req.body;
 
     const updateData = {};
 
     if (name) updateData.name = name;
     if (description !== undefined) updateData.description = description;
-    if (price) updateData.price = parseFloat(price);
+    if (price !== undefined) updateData.price = parseFloat(price);
     if (unit) updateData.unit = unit;
     if (categoryId) updateData.categoryId = parseInt(categoryId, 10);
-    if (sku) updateData.sku = sku;
+    if (sku !== undefined) updateData.sku = sku;
     if (isAvailable !== undefined) updateData.isAvailable = isAvailable === 'true' || isAvailable === true;
     if (stockQuantity !== undefined) updateData.stockQuantity = parseInt(stockQuantity, 10);
     if (lowStockThreshold !== undefined) updateData.lowStockThreshold = parseInt(lowStockThreshold, 10);
+    if (hasVariants !== undefined) updateData.hasVariants = hasVariants === 'true' || hasVariants === true;
     if (req.file) updateData.imageUrl = `/uploads/${req.file.filename}`;
 
     const product = await prisma.product.update({
