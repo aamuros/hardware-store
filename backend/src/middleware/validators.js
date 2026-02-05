@@ -96,7 +96,7 @@ const validateOrder = [
     .isFloat({ min: 0 }).withMessage('Unit price cannot be negative'),
 
   body('items.*.variantId')
-    .optional()
+    .optional({ nullable: true })
     .isInt({ min: 1 }).withMessage('Invalid variant ID'),
 
   validate,

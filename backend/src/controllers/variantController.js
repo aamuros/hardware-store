@@ -65,7 +65,7 @@ const createVariant = async (req, res, next) => {
             });
         }
 
-        const { name, sku, price, stockQuantity, attributes } = req.body;
+        const { name, sku, price, stockQuantity, attributes, isAvailable } = req.body;
 
         if (!name || price === undefined) {
             return res.status(400).json({
@@ -97,7 +97,7 @@ const createVariant = async (req, res, next) => {
                 price: parseFloat(price),
                 stockQuantity: parseInt(stockQuantity, 10) || 0,
                 attributes: attributesJson,
-                isAvailable: true,
+                isAvailable: isAvailable !== undefined ? (isAvailable === 'true' || isAvailable === true) : true,
             },
         });
 

@@ -19,7 +19,7 @@ function CheckoutProgress({ currentStep }) {
         <div key={step.id} className="flex items-center">
           <div className={`checkout-step ${currentStep === step.id ? 'active' : currentStep > step.id ? 'completed' : ''}`}>
             <span className={`checkout-step-dot ${currentStep === step.id ? 'active' :
-                currentStep > step.id ? 'completed' : 'inactive'
+              currentStep > step.id ? 'completed' : 'inactive'
               }`}>
               {currentStep > step.id ? (
                 <CheckIcon className="h-4 w-4" />
@@ -163,8 +163,49 @@ export default function CheckoutPage() {
       navigate(`/order-confirmation/${orderNumber}`)
     } catch (error) {
       console.error('Order error:', error)
-      const message = error.response?.data?.message || 'Failed to place order'
-      toast.error(message)
+      const responseData = error.response?.data
+
+      // Handle specific validation errors from backend
+      if (responseData?.errors && Array.isArray(responseData.errors)) {
+        // Map backend field errors to frontend form fields
+        const fieldMapping = {
+          customerName: 'customerName',
+          phone: 'phone',
+          address: 'address',
+          barangay: 'barangay',
+          landmarks: 'landmarks',
+          notes: 'notes',
+        }
+
+        const newErrors = {}
+        const unmappedErrors = []
+
+        responseData.errors.forEach(err => {
+          const fieldPath = err.path || err.param
+          const mappedField = fieldMapping[fieldPath]
+
+          if (mappedField) {
+            newErrors[mappedField] = err.msg || err.message
+          } else {
+            unmappedErrors.push(err.msg || err.message)
+          }
+        })
+
+        // Set field-specific errors
+        if (Object.keys(newErrors).length > 0) {
+          setErrors(newErrors)
+        }
+
+        // Show toast for unmapped errors or a summary
+        if (unmappedErrors.length > 0) {
+          toast.error(unmappedErrors.join('. '))
+        } else if (Object.keys(newErrors).length > 0) {
+          toast.error('Please correct the errors in the form')
+        }
+      } else {
+        const message = responseData?.message || 'Failed to place order'
+        toast.error(message)
+      }
     } finally {
       setLoading(false)
     }
