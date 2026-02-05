@@ -18,10 +18,9 @@ function CheckoutProgress({ currentStep }) {
       {steps.map((step, index) => (
         <div key={step.id} className="flex items-center">
           <div className={`checkout-step ${currentStep === step.id ? 'active' : currentStep > step.id ? 'completed' : ''}`}>
-            <span className={`checkout-step-dot ${
-              currentStep === step.id ? 'active' : 
-              currentStep > step.id ? 'completed' : 'inactive'
-            }`}>
+            <span className={`checkout-step-dot ${currentStep === step.id ? 'active' :
+                currentStep > step.id ? 'completed' : 'inactive'
+              }`}>
               {currentStep > step.id ? (
                 <CheckIcon className="h-4 w-4" />
               ) : (
@@ -84,8 +83,8 @@ export default function CheckoutPage() {
 
     if (!formData.address.trim()) {
       newErrors.address = 'Address is required'
-    } else if (formData.address.trim().length < 10) {
-      newErrors.address = 'Please provide a complete address'
+    } else if (formData.address.trim().length < 5) {
+      newErrors.address = 'Address must be at least 5 characters'
     }
 
     if (!formData.barangay.trim()) {
@@ -186,7 +185,7 @@ export default function CheckoutPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
       <h1 className="text-3xl font-bold text-primary-900 mb-4">Checkout</h1>
-      
+
       {/* Progress Indicator */}
       <CheckoutProgress currentStep={2} />
 

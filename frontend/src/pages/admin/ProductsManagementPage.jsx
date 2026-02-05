@@ -30,11 +30,27 @@ export default function ProductsManagementPage() {
     stockQuantity: '0',
     lowStockThreshold: '10',
     isAvailable: true,
+    hasVariants: false,
   })
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(null)
+
+  // Variant management state
+  const [showVariantModal, setShowVariantModal] = useState(false)
+  const [managingProductVariants, setManagingProductVariants] = useState(null)
+  const [variants, setVariants] = useState([])
+  const [editingVariant, setEditingVariant] = useState(null)
+  const [variantFormData, setVariantFormData] = useState({
+    name: '',
+    sku: '',
+    price: '',
+    stockQuantity: '0',
+    isAvailable: true,
+  })
+  const [savingVariant, setSavingVariant] = useState(false)
+  const [deletingVariant, setDeletingVariant] = useState(null)
 
   useEffect(() => {
     fetchCategories()
@@ -86,6 +102,7 @@ export default function ProductsManagementPage() {
         stockQuantity: (product.stockQuantity || 0).toString(),
         lowStockThreshold: (product.lowStockThreshold || 10).toString(),
         isAvailable: product.isAvailable,
+        hasVariants: product.hasVariants || false,
       })
       setImagePreview(product.imageUrl)
     } else {
@@ -100,6 +117,7 @@ export default function ProductsManagementPage() {
         stockQuantity: '0',
         lowStockThreshold: '10',
         isAvailable: true,
+        hasVariants: false,
       })
       setImagePreview(null)
     }
@@ -149,6 +167,7 @@ export default function ProductsManagementPage() {
       form.append('stockQuantity', parseInt(formData.stockQuantity) || 0)
       form.append('lowStockThreshold', parseInt(formData.lowStockThreshold) || 10)
       form.append('isAvailable', formData.isAvailable)
+      form.append('hasVariants', formData.hasVariants)
       if (imageFile) {
         form.append('image', imageFile)
       }
@@ -194,6 +213,105 @@ export default function ProductsManagementPage() {
       )
     } catch (error) {
       console.error('Error toggling availability:', error)
+    }
+  }
+
+  // Variant Management Functions
+  const openVariantModal = async (product) => {
+    setManagingProductVariants(product)
+    setShowVariantModal(true)
+    await fetchVariants(product.id)
+  }
+
+  const closeVariantModal = () => {
+    setShowVariantModal(false)
+    setManagingProductVariants(null)
+    setVariants([])
+    setEditingVariant(null)
+    resetVariantForm()
+  }
+
+  const fetchVariants = async (productId) => {
+    try {
+      const response = await productApi.getVariants(productId)
+      setVariants(response.data.data || [])
+    } catch (error) {
+      console.error('Error fetching variants:', error)
+      setVariants([])
+    }
+  }
+
+  const resetVariantForm = () => {
+    setVariantFormData({
+      name: '',
+      sku: '',
+      price: '',
+      stockQuantity: '0',
+      isAvailable: true,
+    })
+    setEditingVariant(null)
+  }
+
+  const handleVariantInputChange = (e) => {
+    const { name, value, type, checked } = e.target
+    setVariantFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }))
+  }
+
+  const handleEditVariant = (variant) => {
+    setEditingVariant(variant)
+    setVariantFormData({
+      name: variant.name,
+      sku: variant.sku || '',
+      price: variant.price.toString(),
+      stockQuantity: variant.stockQuantity.toString(),
+      isAvailable: variant.isAvailable,
+    })
+  }
+
+  const handleVariantSubmit = async (e) => {
+    e.preventDefault()
+    setSavingVariant(true)
+
+    try {
+      const variantData = {
+        name: variantFormData.name,
+        sku: variantFormData.sku || null,
+        price: parseFloat(variantFormData.price),
+        stockQuantity: parseInt(variantFormData.stockQuantity) || 0,
+        isAvailable: variantFormData.isAvailable,
+      }
+
+      if (editingVariant) {
+        await adminApi.updateVariant(editingVariant.id, variantData)
+      } else {
+        await adminApi.createVariant(managingProductVariants.id, variantData)
+      }
+
+      await fetchVariants(managingProductVariants.id)
+      resetVariantForm()
+    } catch (error) {
+      console.error('Error saving variant:', error)
+      alert('Failed to save variant. Please try again.')
+    } finally {
+      setSavingVariant(false)
+    }
+  }
+
+  const handleDeleteVariant = async (variant) => {
+    if (!confirm(`Are you sure you want to delete variant "${variant.name}"?`)) return
+
+    setDeletingVariant(variant.id)
+    try {
+      await adminApi.deleteVariant(variant.id)
+      await fetchVariants(managingProductVariants.id)
+    } catch (error) {
+      console.error('Error deleting variant:', error)
+      alert('Failed to delete variant.')
+    } finally {
+      setDeletingVariant(null)
     }
   }
 
@@ -335,6 +453,17 @@ export default function ProductsManagementPage() {
                       </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
+                      {product.hasVariants && (
+                        <button
+                          onClick={() => openVariantModal(product)}
+                          className="text-blue-600 hover:text-blue-700 mr-3"
+                          title="Manage Variants"
+                        >
+                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                          </svg>
+                        </button>
+                      )}
                       <button
                         onClick={() => openModal(product)}
                         className="text-accent-600 hover:text-accent-700 mr-3"
@@ -560,6 +689,21 @@ export default function ProductsManagementPage() {
                   </div>
                 </div>
 
+                {/* Has Variants Toggle */}
+                <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
+                  <input
+                    type="checkbox"
+                    name="hasVariants"
+                    id="hasVariants"
+                    checked={formData.hasVariants}
+                    onChange={handleInputChange}
+                    className="h-4 w-4 text-accent-600 rounded"
+                  />
+                  <label htmlFor="hasVariants" className="text-sm text-neutral-700">
+                    This product has variants (sizes, colors, etc.)
+                  </label>
+                </div>
+
                 {/* Availability */}
                 <div className="flex items-center gap-2">
                   <input
@@ -589,6 +733,176 @@ export default function ProductsManagementPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Variant Management Modal */}
+      {showVariantModal && managingProductVariants && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4 py-8">
+            <div className="fixed inset-0 bg-primary-900/30 backdrop-blur-sm" onClick={closeVariantModal} />
+            <div className="relative bg-white rounded-2xl shadow-soft-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 sticky top-0 bg-white z-10">
+                <div>
+                  <h3 className="text-lg font-semibold text-primary-900">
+                    Manage Variants - {managingProductVariants.name}
+                  </h3>
+                  <p className="text-sm text-neutral-600">Add different options like sizes, colors, or configurations</p>
+                </div>
+                <button onClick={closeVariantModal} className="text-neutral-400 hover:text-neutral-600">
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div className="p-6">
+                {/* Variant Form */}
+                <form onSubmit={handleVariantSubmit} className="mb-6 p-4 bg-neutral-50 rounded-xl">
+                  <h4 className="text-sm font-semibold text-primary-900 mb-3">
+                    {editingVariant ? 'Edit Variant' : 'Add New Variant'}
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-primary-700 mb-1">
+                        Variant Name *
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={variantFormData.name}
+                        onChange={handleVariantInputChange}
+                        required
+                        className="input w-full"
+                        placeholder="e.g., Large, Red, 500ml"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-primary-700 mb-1">
+                        SKU
+                      </label>
+                      <input
+                        type="text"
+                        name="sku"
+                        value={variantFormData.sku}
+                        onChange={handleVariantInputChange}
+                        className="input w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-primary-700 mb-1">
+                        Price (₱) *
+                      </label>
+                      <input
+                        type="number"
+                        name="price"
+                        value={variantFormData.price}
+                        onChange={handleVariantInputChange}
+                        required
+                        min="0"
+                        step="0.01"
+                        className="input w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-primary-700 mb-1">
+                        Stock Quantity *
+                      </label>
+                      <input
+                        type="number"
+                        name="stockQuantity"
+                        value={variantFormData.stockQuantity}
+                        onChange={handleVariantInputChange}
+                        required
+                        min="0"
+                        className="input w-full"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 mt-3">
+                    <input
+                      type="checkbox"
+                      name="isAvailable"
+                      id="variantIsAvailable"
+                      checked={variantFormData.isAvailable}
+                      onChange={handleVariantInputChange}
+                      className="h-4 w-4 text-accent-600 rounded"
+                    />
+                    <label htmlFor="variantIsAvailable" className="text-sm text-neutral-700">
+                      Available for ordering
+                    </label>
+                  </div>
+                  <div className="flex justify-end gap-3 mt-4">
+                    {editingVariant && (
+                      <button
+                        type="button"
+                        onClick={resetVariantForm}
+                        className="btn bg-neutral-200 text-neutral-700 hover:bg-neutral-300"
+                      >
+                        Cancel Edit
+                      </button>
+                    )}
+                    <button type="submit" disabled={savingVariant} className="btn btn-primary">
+                      {savingVariant ? 'Saving...' : editingVariant ? 'Update Variant' : 'Add Variant'}
+                    </button>
+                  </div>
+                </form>
+
+                {/* Variants List */}
+                <div>
+                  <h4 className="text-sm font-semibold text-primary-900 mb-3">Existing Variants</h4>
+                  {variants.length === 0 ? (
+                    <p className="text-sm text-neutral-500 text-center py-4">No variants yet. Add one above.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {variants.map((variant) => (
+                        <div
+                          key={variant.id}
+                          className="flex items-center justify-between p-3 bg-white border border-neutral-200 rounded-lg hover:border-primary-300 transition-colors"
+                        >
+                          <div className="flex-1">
+                            <p className="font-medium text-primary-900">{variant.name}</p>
+                            <div className="flex items-center gap-4 mt-1 text-sm text-neutral-600">
+                              <span>₱{variant.price.toLocaleString()}</span>
+                              <span>Stock: {variant.stockQuantity}</span>
+                              {variant.sku && <span>SKU: {variant.sku}</span>}
+                              <span className={`px-2 py-0.5 text-xs font-medium rounded ${variant.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                {variant.isAvailable ? 'Available' : 'Unavailable'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleEditVariant(variant)}
+                              className="text-accent-600 hover:text-accent-700"
+                              title="Edit"
+                            >
+                              <PencilIcon className="h-5 w-5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteVariant(variant)}
+                              disabled={deletingVariant === variant.id}
+                              className="text-red-600 hover:text-red-700"
+                              title="Delete"
+                            >
+                              <TrashIcon className="h-5 w-5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-end mt-6 pt-4 border-t border-neutral-200">
+                  <button
+                    onClick={closeVariantModal}
+                    className="btn bg-neutral-200 text-neutral-700 hover:bg-neutral-300"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

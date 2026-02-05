@@ -65,7 +65,7 @@ const validateOrder = [
   body('address')
     .trim()
     .notEmpty().withMessage('Address is required')
-    .isLength({ min: 10, max: 500 }).withMessage('Address must be 10-500 characters'),
+    .isLength({ min: 5, max: 500 }).withMessage('Address must be 5-500 characters'),
 
   body('barangay')
     .trim()
