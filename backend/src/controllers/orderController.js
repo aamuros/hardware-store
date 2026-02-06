@@ -239,7 +239,7 @@ const createOrder = async (req, res, next) => {
 
     // Send SMS notification to customer
     try {
-      await smsService.sendOrderConfirmation(phone, orderNumber, totalAmount, order.id);
+      await smsService.sendOrderConfirmation(order.phone || deliveryInfo.phone, order.orderNumber, order.totalAmount, order.id);
     } catch (smsError) {
       console.error('SMS sending failed:', smsError.message);
       // Don't fail the order creation if SMS fails
@@ -247,7 +247,7 @@ const createOrder = async (req, res, next) => {
 
     // Send notification to admin
     try {
-      await smsService.notifyAdminNewOrder(orderNumber, totalAmount, customerName);
+      await smsService.notifyAdminNewOrder(order.orderNumber, order.totalAmount, order.customerName || deliveryInfo.customerName);
     } catch (smsError) {
       console.error('Admin SMS notification failed:', smsError.message);
     }
