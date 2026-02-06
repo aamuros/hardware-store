@@ -67,7 +67,7 @@ ADMIN_NOTIFICATION_PHONE=09171234567
 
 ### Provider Configuration
 
-#### Semaphore (Recommended for Philippines)
+#### Semaphore ✅ (Primary Provider - Configured)
 
 ```env
 SEMAPHORE_API_KEY=your_api_key
@@ -77,7 +77,7 @@ SEMAPHORE_API_KEY=your_api_key
 - **Cost:** ~₱0.35 per SMS
 - **Coverage:** All Philippine networks
 
-#### Movider
+#### Movider (Backup)
 
 ```env
 MOVIDER_API_KEY=your_api_key
@@ -86,8 +86,9 @@ MOVIDER_API_SECRET=your_api_secret
 
 - **Website:** https://movider.co/
 - **Cost:** ~₱0.50 per SMS
+- **Status:** Available as backup if Semaphore fails
 
-#### Vonage (International)
+#### Vonage (International Backup)
 
 ```env
 VONAGE_API_KEY=your_api_key
@@ -96,6 +97,7 @@ VONAGE_API_SECRET=your_api_secret
 
 - **Website:** https://dashboard.nexmo.com/
 - **Cost:** ~$0.05 per SMS
+- **Status:** Available for international use cases
 
 ---
 

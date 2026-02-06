@@ -40,7 +40,7 @@ A full-stack web ordering system for local hardware stores in the Philippines, f
 | **Backend** | Node.js 18+, Express.js, Prisma ORM |
 | **Database** | SQLite (development), PostgreSQL (production) |
 | **Auth** | JWT (JSON Web Tokens) |
-| **SMS** | Semaphore, Movider, Vonage |
+| **SMS** | Semaphore (primary for Philippines) |
 
 ## Quick Start
 
