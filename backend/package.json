@@ -10,6 +10,8 @@
     "postinstall": "prisma generate",
     "test": "jest --coverage --runInBand",
     "test:watch": "jest --watch",
+    "test:setup": "dotenv -e .env.test -- npx prisma migrate deploy && dotenv -e .env.test -- npx prisma db seed",
+    "test:reset": "dotenv -e .env.test -- npx prisma migrate reset --force",
     "lint": "eslint src/ tests/",
     "lint:fix": "eslint src/ tests/ --fix",
     "format": "prettier --write \"src/**/*.js\" \"tests/**/*.js\"",

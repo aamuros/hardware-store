@@ -1,5 +1,7 @@
 module.exports = {
   testEnvironment: 'node',
+  // Load test environment BEFORE tests run (uses .env.test with test.db)
+  setupFiles: ['<rootDir>/tests/loadEnv.js'],
   testMatch: ['**/tests/**/*.test.js'],
   collectCoverageFrom: [
     'src/**/*.js',

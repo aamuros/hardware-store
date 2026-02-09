@@ -86,11 +86,13 @@ const searchProducts = async (req, res, next) => {
     const skip = (parsedPage - 1) * parsedLimit;
     const searchTerm = q.trim();
 
+    // Note: SQLite's LIKE is case-insensitive by default for ASCII characters
+    // PostgreSQL would need mode: 'insensitive', but that's not supported in SQLite
     const searchWhere = {
       OR: [
-        { name: { contains: searchTerm, mode: 'insensitive' } },
-        { description: { contains: searchTerm, mode: 'insensitive' } },
-        { sku: { contains: searchTerm, mode: 'insensitive' } },
+        { name: { contains: searchTerm } },
+        { description: { contains: searchTerm } },
+        { sku: { contains: searchTerm } },
       ],
       isAvailable: true,
       isDeleted: false,
