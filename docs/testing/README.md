@@ -2,6 +2,13 @@
 
 This guide covers how to run tests and write new tests for the Hardware Store application.
 
+## Testing Documentation
+
+- **[Manual Test Cases](./manual-test-cases.md)** - Comprehensive step-by-step test scenarios for manual browser testing
+- **Automated Tests** - Jest/Supertest API tests (covered in this document)
+
+---
+
 ## Overview
 
 The project uses **Jest** as the testing framework with **Supertest** for API testing.
@@ -358,6 +365,51 @@ jobs:
       - name: Upload coverage
         uses: codecov/codecov-action@v3
 ```
+
+---
+
+## Manual Testing
+
+For comprehensive manual testing of the application's user interface and features, refer to:
+
+**📋 [Manual Test Cases Document](./manual-test-cases.md)**
+
+This document provides:
+- **140+ step-by-step test scenarios** covering all customer and admin features
+- Detailed instructions for testing each feature
+- Expected results with checkboxes for tracking progress
+- Test cases for:
+  - Customer Portal (browsing, cart, checkout, account management, wishlist, order tracking)
+  - Admin Dashboard (orders, products, categories, reports, analytics)
+  - Edge cases and error handling
+  - Responsive design and cross-browser compatibility
+
+### When to Use Manual Testing
+
+- **Before deployment** - Verify all features work end-to-end
+- **After major changes** - Ensure UI updates work correctly
+- **User acceptance testing** - Validate against requirements
+- **Exploratory testing** - Find issues automated tests might miss
+- **UI/UX validation** - Check visual design and user experience
+
+### Running Manual Tests
+
+1. **Start the application**:
+   ```bash
+   # Terminal 1 - Backend
+   cd backend
+   npm run dev
+
+   # Terminal 2 - Frontend
+   cd frontend
+   npm run dev
+   ```
+
+2. **Open the test document**: [manual-test-cases.md](./manual-test-cases.md)
+
+3. **Follow test scenarios** systematically, checking off each expected result
+
+4. **Document issues** found during testing
 
 ---
 
