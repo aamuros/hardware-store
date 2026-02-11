@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link, useLocation } from 'react-router-dom'
+import { useNavigate, Link, useLocation, Navigate } from 'react-router-dom'
 import { useCustomerAuth } from '../../context/CustomerAuthContext'
 import toast from 'react-hot-toast'
 import { EmailIcon, LockIcon, EyeIcon, EyeSlashIcon } from '../../components/icons'
@@ -19,8 +19,7 @@ export default function CustomerLoginPage() {
     // Redirect if already logged in
     if (isAuthenticated()) {
         const from = location.state?.from?.pathname || '/account'
-        navigate(from, { replace: true })
-        return null
+        return <Navigate to={from} replace />
     }
 
     const handleChange = (e) => {

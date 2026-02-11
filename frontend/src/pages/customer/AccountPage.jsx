@@ -63,6 +63,8 @@ export default function AccountPage() {
         if (result.success) {
             toast.success('Profile updated')
             setEditing(false)
+            // Re-fetch stats to ensure the page reflects current data
+            loadStats()
         } else {
             toast.error(result.message)
         }
