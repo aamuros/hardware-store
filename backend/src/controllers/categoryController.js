@@ -117,6 +117,27 @@ const createCategory = async (req, res, next) => {
 const updateCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
+    const parsedId = parseInt(id, 10);
+
+    if (isNaN(parsedId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid category ID format',
+      });
+    }
+
+    // Check if category exists and is not soft-deleted
+    const existingCategory = await prisma.category.findUnique({
+      where: { id: parsedId },
+    });
+
+    if (!existingCategory || existingCategory.isDeleted) {
+      return res.status(404).json({
+        success: false,
+        message: 'Category not found',
+      });
+    }
+
     const { name, description, icon } = req.body;
 
     const updateData = {};
@@ -125,7 +146,7 @@ const updateCategory = async (req, res, next) => {
     if (icon !== undefined) updateData.icon = icon;
 
     const category = await prisma.category.update({
-      where: { id: parseInt(id, 10) },
+      where: { id: parsedId },
       data: updateData,
     });
 
@@ -146,10 +167,30 @@ const updateCategory = async (req, res, next) => {
 const deleteCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
+    const parsedId = parseInt(id, 10);
+
+    if (isNaN(parsedId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid category ID format',
+      });
+    }
+
+    // Check if category exists and is not soft-deleted
+    const existingCategory = await prisma.category.findUnique({
+      where: { id: parsedId },
+    });
+
+    if (!existingCategory || existingCategory.isDeleted) {
+      return res.status(404).json({
+        success: false,
+        message: 'Category not found',
+      });
+    }
 
     // Check if category has active products
     const productsCount = await prisma.product.count({
-      where: { categoryId: parseInt(id, 10), isDeleted: false },
+      where: { categoryId: parsedId, isDeleted: false },
     });
 
     if (productsCount > 0) {
@@ -161,7 +202,7 @@ const deleteCategory = async (req, res, next) => {
 
     // Soft delete
     await prisma.category.update({
-      where: { id: parseInt(id, 10) },
+      where: { id: parsedId },
       data: { isDeleted: true },
     });
 

@@ -162,34 +162,37 @@ const deleteImage = async (req, res, next) => {
             fs.unlinkSync(resolvedPath);
         }
 
-        // If this was the primary image, make the next one primary
-        if (image.isPrimary) {
-            const nextImage = await prisma.productImage.findFirst({
-                where: { productId: image.productId, id: { not: parsedId } },
-                orderBy: { sortOrder: 'asc' },
-            });
+        // Use a transaction to atomically handle primary image reassignment + deletion
+        await prisma.$transaction(async (tx) => {
+            // If this was the primary image, make the next one primary
+            if (image.isPrimary) {
+                const nextImage = await tx.productImage.findFirst({
+                    where: { productId: image.productId, id: { not: parsedId } },
+                    orderBy: { sortOrder: 'asc' },
+                });
 
-            if (nextImage) {
-                await prisma.productImage.update({
-                    where: { id: nextImage.id },
-                    data: { isPrimary: true },
-                });
-                // Update product's main imageUrl
-                await prisma.product.update({
-                    where: { id: image.productId },
-                    data: { imageUrl: nextImage.imageUrl },
-                });
-            } else {
-                // No more images, clear product's imageUrl
-                await prisma.product.update({
-                    where: { id: image.productId },
-                    data: { imageUrl: null },
-                });
+                if (nextImage) {
+                    await tx.productImage.update({
+                        where: { id: nextImage.id },
+                        data: { isPrimary: true },
+                    });
+                    // Update product's main imageUrl
+                    await tx.product.update({
+                        where: { id: image.productId },
+                        data: { imageUrl: nextImage.imageUrl },
+                    });
+                } else {
+                    // No more images, clear product's imageUrl
+                    await tx.product.update({
+                        where: { id: image.productId },
+                        data: { imageUrl: null },
+                    });
+                }
             }
-        }
 
-        await prisma.productImage.delete({
-            where: { id: parsedId },
+            await tx.productImage.delete({
+                where: { id: parsedId },
+            });
         });
 
         invalidateProducts();
@@ -286,22 +289,25 @@ const setPrimaryImage = async (req, res, next) => {
             });
         }
 
-        // Remove primary from all other images of this product
-        await prisma.productImage.updateMany({
-            where: { productId: image.productId },
-            data: { isPrimary: false },
-        });
+        // Use a transaction to atomically swap the primary image
+        await prisma.$transaction(async (tx) => {
+            // Remove primary from all other images of this product
+            await tx.productImage.updateMany({
+                where: { productId: image.productId },
+                data: { isPrimary: false },
+            });
 
-        // Set this image as primary
-        await prisma.productImage.update({
-            where: { id: parsedId },
-            data: { isPrimary: true },
-        });
+            // Set this image as primary
+            await tx.productImage.update({
+                where: { id: parsedId },
+                data: { isPrimary: true },
+            });
 
-        // Update product's main imageUrl
-        await prisma.product.update({
-            where: { id: image.productId },
-            data: { imageUrl: image.imageUrl },
+            // Update product's main imageUrl
+            await tx.product.update({
+                where: { id: image.productId },
+                data: { imageUrl: image.imageUrl },
+            });
         });
 
         invalidateProducts();
