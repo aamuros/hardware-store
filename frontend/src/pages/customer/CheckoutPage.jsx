@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useCart } from '../../context/CartContext'
-import { orderApi } from '../../services/api'
+import { useCustomerAuth } from '../../context/CustomerAuthContext'
+import { orderApi, customerApi } from '../../services/api'
 import toast from 'react-hot-toast'
 import { CloseIcon, CashIcon, PhoneIcon, CartIcon, CheckIcon } from '../../components/icons'
 
@@ -41,8 +42,12 @@ function CheckoutProgress({ currentStep }) {
 export default function CheckoutPage() {
   const navigate = useNavigate()
   const { items, totalAmount, clearCart } = useCart()
+  const { customer, isAuthenticated } = useCustomerAuth()
   const [loading, setLoading] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [showAddressModal, setShowAddressModal] = useState(false)
+  const [savedAddresses, setSavedAddresses] = useState([])
+  const [selectedSavedAddress, setSelectedSavedAddress] = useState(null)
   const [formData, setFormData] = useState({
     customerName: '',
     phone: '',
@@ -52,6 +57,56 @@ export default function CheckoutPage() {
     notes: '',
   })
   const [errors, setErrors] = useState({})
+
+  // Load saved addresses if customer is authenticated
+  useEffect(() => {
+    if (isAuthenticated()) {
+      loadSavedAddresses()
+      // Pre-fill customer name and phone if available
+      if (customer) {
+        setFormData(prev => ({
+          ...prev,
+          customerName: customer.name || '',
+          phone: customer.phone || ''
+        }))
+      }
+    }
+  }, [customer, isAuthenticated])
+
+  const loadSavedAddresses = async () => {
+    try {
+      const response = await customerApi.getAddresses()
+      const addresses = response.data.data
+      setSavedAddresses(addresses)
+      
+      // Auto-select default address if available
+      const defaultAddress = addresses.find(addr => addr.isDefault)
+      if (defaultAddress) {
+        handleSelectAddress(defaultAddress)
+      }
+    } catch (error) {
+      console.error('Failed to load saved addresses:', error)
+    }
+  }
+
+  const handleSelectAddress = (address) => {
+    setSelectedSavedAddress(address)
+    setFormData(prev => ({
+      ...prev,
+      address: address.address,
+      barangay: address.barangay,
+      landmarks: address.landmarks || '',
+    }))
+    // Clear address-related errors
+    setErrors(prev => {
+      const newErrors = { ...prev }
+      delete newErrors.address
+      delete newErrors.barangay
+      delete newErrors.landmarks
+      return newErrors
+    })
+    setShowAddressModal(false)
+  }
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('en-PH', {
@@ -155,6 +210,11 @@ export default function CheckoutPage() {
         items: cartItems,
       }
 
+      // Include savedAddressId if a saved address was selected
+      if (selectedSavedAddress) {
+        orderData.savedAddressId = selectedSavedAddress.id
+      }
+
       const response = await orderApi.create(orderData)
       const { orderNumber } = response.data.data
 
@@ -235,6 +295,50 @@ export default function CheckoutPage() {
         <div className="lg:col-span-2 space-y-6">
           <div className="card p-6">
             <h2 className="text-lg font-bold text-primary-900 mb-4">Delivery Information</h2>
+
+            {/* Saved Addresses - Button to open modal */}
+            {isAuthenticated() && savedAddresses.length > 0 && (
+              <div className="mb-6">
+                {selectedSavedAddress ? (
+                  <div className="border border-neutral-200 rounded-lg p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-sm font-medium text-neutral-600">Delivering to:</span>
+                          <span className="font-semibold text-primary-900">{selectedSavedAddress.label}</span>
+                          {selectedSavedAddress.isDefault && (
+                            <span className="text-xs text-neutral-500">(Default)</span>
+                          )}
+                        </div>
+                        <p className="text-sm text-neutral-700">{selectedSavedAddress.address}</p>
+                        <p className="text-sm text-neutral-600">Barangay {selectedSavedAddress.barangay}</p>
+                        {selectedSavedAddress.landmarks && (
+                          <p className="text-xs text-neutral-500 mt-1">Near: {selectedSavedAddress.landmarks}</p>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowAddressModal(true)}
+                        className="text-sm text-primary-600 hover:text-primary-800 font-medium ml-4"
+                      >
+                        Change
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowAddressModal(true)}
+                    className="w-full border-2 border-dashed border-neutral-300 rounded-lg p-4 text-primary-600 hover:border-primary-400 hover:bg-primary-50 transition-colors text-left"
+                  >
+                    <span className="font-medium">Choose Address</span>
+                    <span className="text-sm text-neutral-600 block mt-1">
+                      Select from your saved addresses
+                    </span>
+                  </button>
+                )}
+              </div>
+            )}
 
             <div className="grid md:grid-cols-2 gap-4">
               <div>
@@ -499,6 +603,88 @@ export default function CheckoutPage() {
                   className="btn-outline w-full sm:w-auto mt-3 sm:mt-0"
                 >
                   Review Details
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Address Selection Modal */}
+      {showAddressModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+            <div
+              className="fixed inset-0 transition-opacity bg-primary-900/50 backdrop-blur-sm"
+              onClick={() => setShowAddressModal(false)}
+            />
+
+            <div className="relative inline-block w-full max-w-2xl px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:p-6 animate-scale-in">
+              <div className="absolute top-0 right-0 pt-4 pr-4">
+                <button
+                  onClick={() => setShowAddressModal(false)}
+                  className="text-neutral-400 hover:text-neutral-600 transition-colors"
+                  aria-label="Close address modal"
+                >
+                  <CloseIcon className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-primary-900 mb-2">
+                  Choose Delivery Address
+                </h3>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-neutral-600">
+                    Select an address or enter a new one
+                  </p>
+                  <Link
+                    to="/account/addresses"
+                    className="text-sm text-primary-600 hover:text-primary-800 font-medium"
+                    onClick={() => setShowAddressModal(false)}
+                  >
+                    Manage Addresses
+                  </Link>
+                </div>
+              </div>
+
+              <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                {savedAddresses.map((address) => (
+                  <label
+                    key={address.id}
+                    className="flex items-start gap-3 p-4 border border-neutral-200 rounded-lg cursor-pointer hover:border-primary-300 hover:bg-primary-50/50 transition-colors"
+                  >
+                    <input
+                      type="radio"
+                      name="savedAddress"
+                      checked={selectedSavedAddress?.id === address.id}
+                      onChange={() => handleSelectAddress(address)}
+                      className="mt-1 w-4 h-4 text-primary-600 border-neutral-300 focus:ring-primary-500"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-primary-900">{address.label}</span>
+                        {address.isDefault && (
+                          <span className="text-xs text-neutral-500">(Default)</span>
+                        )}
+                      </div>
+                      <p className="text-sm text-neutral-700">{address.address}</p>
+                      <p className="text-sm text-neutral-600">Barangay {address.barangay}</p>
+                      {address.landmarks && (
+                        <p className="text-xs text-neutral-500 mt-1">Near: {address.landmarks}</p>
+                      )}
+                    </div>
+                  </label>
+                ))}
+              </div>
+
+              <div className="mt-6 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowAddressModal(false)}
+                  className="btn-primary"
+                >
+                  Done
                 </button>
               </div>
             </div>
