@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { customerApi } from '../../services/api'
 import toast from 'react-hot-toast'
 import {
@@ -13,6 +13,7 @@ import {
 } from '../../components/icons'
 
 export default function SavedAddressesPage() {
+    const navigate = useNavigate()
     const [addresses, setAddresses] = useState([])
     const [loading, setLoading] = useState(true)
     const [showModal, setShowModal] = useState(false)
@@ -130,9 +131,12 @@ export default function SavedAddressesPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
             <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-4">
-                    <Link to="/account" className="p-2 hover:bg-neutral-100 rounded-lg transition-colors">
+                    <button 
+                        onClick={() => navigate(-1)} 
+                        className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
+                    >
                         <ArrowLeftIcon className="w-5 h-5 text-neutral-600" />
-                    </Link>
+                    </button>
                     <h1 className="text-3xl font-bold text-primary-900">Saved Addresses</h1>
                 </div>
                 <button onClick={openAddModal} className="btn-primary flex items-center gap-2">
