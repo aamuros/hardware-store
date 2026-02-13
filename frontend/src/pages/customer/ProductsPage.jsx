@@ -42,7 +42,7 @@ export default function ProductsPage() {
     if (!searchQuery.trim() && !searchParams.get('search')) {
       fetchProducts()
     }
-  }, [selectedCategory])
+  }, [selectedCategory, searchParams])
 
   // Debounced search effect
   useEffect(() => {
