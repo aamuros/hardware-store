@@ -150,6 +150,20 @@ export default function CustomerRegisterPage() {
                                     name="phone"
                                     value={formData.phone}
                                     onChange={handleChange}
+                                    onKeyDown={(e) => {
+                                      // Allow: backspace, delete, tab, escape, enter, +
+                                      if (['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', '+'].includes(e.key)) {
+                                        return;
+                                      }
+                                      // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                                      if ((e.ctrlKey || e.metaKey) && ['a', 'c', 'v', 'x'].includes(e.key.toLowerCase())) {
+                                        return;
+                                      }
+                                      // Prevent if not a number
+                                      if (!/^[0-9]$/.test(e.key)) {
+                                        e.preventDefault();
+                                      }
+                                    }}
                                     className={`input pl-10 ${errors.phone ? 'input-error' : ''}`}
                                     placeholder="09171234567"
                                     autoComplete="tel"

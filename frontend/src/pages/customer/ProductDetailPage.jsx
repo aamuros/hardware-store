@@ -357,6 +357,20 @@ export default function ProductDetailPage() {
                         const val = Math.max(1, parseInt(e.target.value) || 1)
                         setQuantity(Math.min(val, effectiveStock))
                       }}
+                      onKeyDown={(e) => {
+                        // Allow: backspace, delete, tab, escape, enter
+                        if (['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                          return;
+                        }
+                        // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                        if ((e.ctrlKey || e.metaKey) && ['a', 'c', 'v', 'x'].includes(e.key.toLowerCase())) {
+                          return;
+                        }
+                        // Prevent if not a number
+                        if (!/^[0-9]$/.test(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
                       className="w-16 text-center border-0 focus:ring-0"
                     />
                     <button

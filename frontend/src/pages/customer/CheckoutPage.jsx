@@ -163,6 +163,13 @@ export default function CheckoutPage() {
       return
     }
 
+    // Check if any item has 0 quantity
+    const itemsWithZeroQuantity = items.filter(item => !item.quantity || item.quantity <= 0)
+    if (itemsWithZeroQuantity.length > 0) {
+      toast.error('Cannot checkout with items that have 0 quantity. Please update your cart.')
+      return
+    }
+
     // Show confirmation modal
     setShowConfirmModal(true)
   }
@@ -369,6 +376,20 @@ export default function CheckoutPage() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
+                  onKeyDown={(e) => {
+                    // Allow: backspace, delete, tab, escape, enter, +
+                    if (['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', '+'].includes(e.key)) {
+                      return;
+                    }
+                    // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                    if ((e.ctrlKey || e.metaKey) && ['a', 'c', 'v', 'x'].includes(e.key.toLowerCase())) {
+                      return;
+                    }
+                    // Prevent if not a number
+                    if (!/^[0-9]$/.test(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
                   className={`input ${errors.phone ? 'input-error' : ''}`}
                   placeholder="09171234567"
                 />
