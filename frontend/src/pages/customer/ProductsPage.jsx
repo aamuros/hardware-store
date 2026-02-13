@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { SearchIcon, CategoryIcon } from '../../components/icons'
 import { productApi, categoryApi } from '../../services/api'
@@ -9,19 +9,40 @@ export default function ProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [initialLoading, setInitialLoading] = useState(true)
+  const [isSearching, setIsSearching] = useState(false)
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '')
   const debouncedSearch = useDebounce(searchQuery, 300)
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '')
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1 })
+  const prevSearchParam = useRef(searchParams.get('search') || '')
 
   useEffect(() => {
     fetchCategories()
   }, [])
 
+  // Sync search from URL params (handles navbar search, including re-navigation while on /products)
   useEffect(() => {
-    fetchProducts()
-  }, [selectedCategory, searchParams])
+    const searchFromUrl = searchParams.get('search') || ''
+    if (searchFromUrl && searchFromUrl !== prevSearchParam.current) {
+      prevSearchParam.current = searchFromUrl
+      setSearchQuery(searchFromUrl)
+      performSearch(searchFromUrl)
+    } else if (!searchFromUrl && prevSearchParam.current) {
+      // search param was removed (e.g., navigating to /products without ?search)
+      prevSearchParam.current = ''
+      if (!searchQuery.trim()) {
+        fetchProducts()
+      }
+    }
+  }, [searchParams])
+
+  useEffect(() => {
+    // Skip fetching all products if there's an active search query
+    if (!searchQuery.trim() && !searchParams.get('search')) {
+      fetchProducts()
+    }
+  }, [selectedCategory])
 
   // Debounced search effect
   useEffect(() => {
@@ -43,7 +64,12 @@ export default function ProductsPage() {
   }
 
   const fetchProducts = async () => {
-    setLoading(true)
+    const isFirstLoad = products.length === 0
+    if (isFirstLoad) {
+      setInitialLoading(true)
+    } else {
+      setIsSearching(true)
+    }
     try {
       const params = {
         page: searchParams.get('page') || 1,
@@ -61,7 +87,8 @@ export default function ProductsPage() {
     } catch (error) {
       console.error('Error fetching products:', error)
     } finally {
-      setLoading(false)
+      setInitialLoading(false)
+      setIsSearching(false)
     }
   }
 
@@ -75,15 +102,21 @@ export default function ProductsPage() {
   }
 
   const performSearch = async (query) => {
-    setLoading(true)
+    const isFirstLoad = products.length === 0
+    if (isFirstLoad) {
+      setInitialLoading(true)
+    } else {
+      setIsSearching(true)
+    }
     try {
-      const response = await productApi.search(query)
+      const response = await productApi.search(query, selectedCategory || undefined)
       setProducts(response.data.data)
       setPagination(response.data.pagination)
     } catch (error) {
       console.error('Error searching products:', error)
     } finally {
-      setLoading(false)
+      setInitialLoading(false)
+      setIsSearching(false)
     }
   }
 
@@ -95,6 +128,7 @@ export default function ProductsPage() {
       setSearchParams({})
     }
     setSearchQuery('')
+    prevSearchParam.current = ''
   }
 
   const handlePageChange = (newPage) => {
@@ -157,7 +191,7 @@ export default function ProductsPage() {
       </div>
 
       {/* Products Grid */}
-      {loading ? (
+      {initialLoading ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
             <div key={i} className="bg-white rounded-2xl shadow-soft overflow-hidden animate-pulse">
@@ -190,16 +224,25 @@ export default function ProductsPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {products.map((product, index) => (
-              <div 
-                key={product.id} 
-                className={`animate-fade-in-up opacity-0 stagger-${Math.min(index + 1, 12)}`}
-                style={{ animationFillMode: 'forwards' }}
-              >
-                <ProductCard product={product} />
+          <div className={`relative transition-opacity duration-200 ${isSearching ? 'opacity-50' : 'opacity-100'}`}>
+            {isSearching && (
+              <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl px-6 py-3 shadow-lg">
+                  <p className="text-sm text-primary-700 font-medium">Updating results...</p>
+                </div>
               </div>
-            ))}
+            )}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {products.map((product, index) => (
+                <div
+                  key={product.id}
+                  className={`animate-fade-in-up opacity-0 stagger-${Math.min(index + 1, 12)}`}
+                  style={{ animationFillMode: 'forwards' }}
+                >
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Pagination */}

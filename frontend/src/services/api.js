@@ -74,7 +74,7 @@ export default api
 export const productApi = {
   getAll: (params) => api.get('/products', { params }),
   getById: (id) => api.get(`/products/${id}`),
-  search: (query) => api.get('/products/search', { params: { q: query } }),
+  search: (query, category) => api.get('/products/search', { params: { q: query, ...(category && { category }) } }),
   getByCategory: (categoryId) => api.get(`/products/category/${categoryId}`),
   getVariants: (productId) => api.get(`/products/${productId}/variants`),
   getImages: (productId) => api.get(`/products/${productId}/images`),

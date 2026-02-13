@@ -29,10 +29,12 @@ export default function CustomerLayout() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
   const [searchLoading, setSearchLoading] = useState(false)
+  const [highlightedIndex, setHighlightedIndex] = useState(-1)
   const [cartPulse, setCartPulse] = useState(false)
   const [prevTotalItems, setPrevTotalItems] = useState(totalItems)
   const dropdownRef = useRef(null)
   const searchRef = useRef(null)
+  const searchInputRef = useRef(null)
   const navigate = useNavigate()
   const location = useLocation()
   const debouncedSearch = useDebounce(searchQuery, 300)
@@ -56,11 +58,17 @@ export default function CustomerLayout() {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setShowSearch(false)
         setSearchResults([])
+        setHighlightedIndex(-1)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  // Reset highlighted index when results change
+  useEffect(() => {
+    setHighlightedIndex(-1)
+  }, [searchResults])
 
   // Search products
   useEffect(() => {
@@ -83,12 +91,13 @@ export default function CustomerLayout() {
   }, [debouncedSearch])
 
   const handleSearchSubmit = (e) => {
-    e.preventDefault()
+    if (e) e.preventDefault()
     if (searchQuery.trim()) {
       navigate(`/products?search=${encodeURIComponent(searchQuery)}`)
       setShowSearch(false)
       setSearchQuery('')
       setSearchResults([])
+      setHighlightedIndex(-1)
     }
   }
 
@@ -97,6 +106,45 @@ export default function CustomerLayout() {
     setShowSearch(false)
     setSearchQuery('')
     setSearchResults([])
+    setHighlightedIndex(-1)
+  }
+
+  // Keyboard navigation for search dropdown
+  const handleSearchKeyDown = (e) => {
+    if (!showSearch || searchResults.length === 0) return
+
+    // Total items: search results + "View all results" button
+    const totalItems = searchResults.length + 1
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault()
+        setHighlightedIndex(prev => (prev + 1) % totalItems)
+        break
+      case 'ArrowUp':
+        e.preventDefault()
+        setHighlightedIndex(prev => (prev - 1 + totalItems) % totalItems)
+        break
+      case 'Enter':
+        if (highlightedIndex >= 0 && highlightedIndex < searchResults.length) {
+          e.preventDefault()
+          handleSearchResultClick(searchResults[highlightedIndex].id)
+        } else if (highlightedIndex === searchResults.length) {
+          // "View all results" button
+          e.preventDefault()
+          handleSearchSubmit()
+        }
+        // If highlightedIndex is -1, let the form submit naturally
+        break
+      case 'Escape':
+        e.preventDefault()
+        setShowSearch(false)
+        setHighlightedIndex(-1)
+        searchInputRef.current?.blur()
+        break
+      default:
+        break
+    }
   }
 
   const handleLogout = () => {
@@ -107,8 +155,8 @@ export default function CustomerLayout() {
   return (
     <div className="min-h-screen flex flex-col bg-neutral-50">
       {/* Skip to main content - Accessibility */}
-      <a 
-        href="#main-content" 
+      <a
+        href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary-800 focus:text-white focus:rounded-lg focus:shadow-lg"
       >
         Skip to main content
@@ -128,33 +176,30 @@ export default function CustomerLayout() {
 
             {/* Navigation */}
             <nav className="hidden md:flex items-center space-x-1">
-              <Link 
-                to="/" 
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                  location.pathname === '/' 
-                    ? 'text-primary-800 bg-primary-50' 
+              <Link
+                to="/"
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${location.pathname === '/'
+                    ? 'text-primary-800 bg-primary-50'
                     : 'text-neutral-600 hover:text-primary-800 hover:bg-neutral-50'
-                }`}
+                  }`}
               >
                 Home
               </Link>
-              <Link 
-                to="/products" 
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                  location.pathname.startsWith('/products') 
-                    ? 'text-primary-800 bg-primary-50' 
+              <Link
+                to="/products"
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${location.pathname.startsWith('/products')
+                    ? 'text-primary-800 bg-primary-50'
                     : 'text-neutral-600 hover:text-primary-800 hover:bg-neutral-50'
-                }`}
+                  }`}
               >
                 Products
               </Link>
-              <Link 
-                to="/track-order" 
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                  location.pathname === '/track-order' 
-                    ? 'text-primary-800 bg-primary-50' 
+              <Link
+                to="/track-order"
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${location.pathname === '/track-order'
+                    ? 'text-primary-800 bg-primary-50'
                     : 'text-neutral-600 hover:text-primary-800 hover:bg-neutral-50'
-                }`}
+                  }`}
               >
                 Track Order
               </Link>
@@ -165,17 +210,19 @@ export default function CustomerLayout() {
               <form onSubmit={handleSearchSubmit} className="relative">
                 <SearchIcon className="h-5 w-5 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
+                  ref={searchInputRef}
                   type="text"
                   placeholder="Search products..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setShowSearch(true)}
+                  onKeyDown={handleSearchKeyDown}
                   className="w-full pl-10 pr-4 py-2 bg-neutral-100 border-0 rounded-xl text-sm placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:bg-white transition-all"
                 />
                 {searchQuery && (
                   <button
                     type="button"
-                    onClick={() => { setSearchQuery(''); setSearchResults([]) }}
+                    onClick={() => { setSearchQuery(''); setSearchResults([]); setHighlightedIndex(-1) }}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
                   >
                     <CloseIcon className="h-4 w-4" />
@@ -191,11 +238,14 @@ export default function CustomerLayout() {
                       </div>
                     ) : (
                       <>
-                        {searchResults.map((product) => (
+                        {searchResults.map((product, index) => (
                           <button
                             key={product.id}
                             onClick={() => handleSearchResultClick(product.id)}
-                            className="w-full flex items-center gap-3 p-3 hover:bg-neutral-50 transition-colors text-left"
+                            className={`w-full flex items-center gap-3 p-3 transition-colors text-left ${highlightedIndex === index
+                                ? 'bg-primary-50 text-primary-900'
+                                : 'hover:bg-neutral-50'
+                              }`}
                           >
                             <div className="w-10 h-10 bg-neutral-100 rounded-lg overflow-hidden flex-shrink-0">
                               {product.imageUrl ? (
@@ -214,7 +264,10 @@ export default function CustomerLayout() {
                         ))}
                         <button
                           onClick={handleSearchSubmit}
-                          className="w-full p-3 text-sm text-primary-600 hover:bg-primary-50 font-medium border-t border-neutral-100"
+                          className={`w-full p-3 text-sm font-medium border-t border-neutral-100 transition-colors ${highlightedIndex === searchResults.length
+                              ? 'bg-primary-50 text-primary-800'
+                              : 'text-primary-600 hover:bg-primary-50'
+                            }`}
                         >
                           View all results for "{searchQuery}"
                         </button>
@@ -399,22 +452,22 @@ export default function CustomerLayout() {
       {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 z-50 mobile-nav-enter pb-safe">
         <div className="flex items-center justify-around py-2">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className={`flex flex-col items-center px-3 py-1 ${location.pathname === '/' ? 'text-primary-800' : 'text-neutral-500'}`}
           >
             <HomeIcon className="h-6 w-6" />
             <span className="text-xs mt-0.5 font-medium">Home</span>
           </Link>
-          <Link 
-            to="/products" 
+          <Link
+            to="/products"
             className={`flex flex-col items-center px-3 py-1 ${location.pathname.startsWith('/products') ? 'text-primary-800' : 'text-neutral-500'}`}
           >
             <WrenchIcon className="h-6 w-6" />
             <span className="text-xs mt-0.5 font-medium">Products</span>
           </Link>
-          <Link 
-            to="/cart" 
+          <Link
+            to="/cart"
             className={`flex flex-col items-center px-3 py-1 relative ${location.pathname === '/cart' ? 'text-primary-800' : 'text-neutral-500'}`}
           >
             <div className="relative">
@@ -428,16 +481,16 @@ export default function CustomerLayout() {
             <span className="text-xs mt-0.5 font-medium">Cart</span>
           </Link>
           {isAuthenticated() ? (
-            <Link 
-              to="/account" 
+            <Link
+              to="/account"
               className={`flex flex-col items-center px-3 py-1 ${location.pathname.startsWith('/account') ? 'text-primary-800' : 'text-neutral-500'}`}
             >
               <UserIcon className="h-6 w-6" />
               <span className="text-xs mt-0.5 font-medium">Account</span>
             </Link>
           ) : (
-            <Link 
-              to="/login" 
+            <Link
+              to="/login"
               className={`flex flex-col items-center px-3 py-1 ${location.pathname === '/login' ? 'text-primary-800' : 'text-neutral-500'}`}
             >
               <UserIcon className="h-6 w-6" />
