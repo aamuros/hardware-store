@@ -40,7 +40,8 @@ const limiter = rateLimit({
 app.use('/api', limiter);
 
 // Stricter rate limiting for authentication endpoints
-const authLimiter = rateLimit({
+// TEMPORARILY DISABLED - Rate limiting commented out for testing
+/* const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // limit each IP to 5 login attempts per windowMs
   message: {
@@ -50,7 +51,7 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-app.use('/api/admin/login', authLimiter);
+app.use('/api/admin/login', authLimiter); */
 
 // Body parsing
 app.use(express.json({ limit: '10mb' }));

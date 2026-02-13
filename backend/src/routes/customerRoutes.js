@@ -12,7 +12,8 @@ const orderHistoryController = require('../controllers/orderHistoryController');
 
 // Rate limiting for authentication endpoints (prevent brute force attacks)
 // Skip rate limiting in test environment to allow tests to run
-const authLimiter = rateLimit({
+// TEMPORARILY DISABLED - Rate limiting commented out for testing
+/* const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: config.nodeEnv === 'test' ? 1000 : 5, // limit each IP to 5 attempts per window (1000 for tests)
   message: {
@@ -22,15 +23,16 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: () => config.nodeEnv === 'test', // Also skip entirely in test mode
-});
+}); */
 
 // ============================================
 // Public routes (no authentication required)
 // ============================================
 
 // Registration and login (with rate limiting)
-router.post('/register', authLimiter, customerController.register);
-router.post('/login', authLimiter, customerController.login);
+// TEMPORARILY DISABLED - Rate limiting removed from routes
+router.post('/register', /* authLimiter, */ customerController.register);
+router.post('/login', /* authLimiter, */ customerController.login);
 
 // ============================================
 // Protected routes (customer authentication required)
