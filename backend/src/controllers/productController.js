@@ -72,7 +72,7 @@ const getAllProducts = async (req, res, next) => {
 // GET /api/products/search
 const searchProducts = async (req, res, next) => {
   try {
-    const { q, page = 1, limit = 20 } = req.query;
+    const { q, category, page = 1, limit = 20 } = req.query;
 
     if (!q || q.trim().length < 2) {
       return res.status(400).json({
@@ -97,6 +97,14 @@ const searchProducts = async (req, res, next) => {
       isAvailable: true,
       isDeleted: false,
     };
+
+    // Filter by category if provided
+    if (category) {
+      const categoryId = safeParseInt(category, null);
+      if (categoryId !== null) {
+        searchWhere.categoryId = categoryId;
+      }
+    }
 
     const [products, total] = await Promise.all([
       prisma.product.findMany({
