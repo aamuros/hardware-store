@@ -196,12 +196,23 @@ const getProductsByCategory = async (req, res, next) => {
     const { categoryId } = req.params;
     const { page = 1, limit = 20 } = req.query;
 
-    const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
+    const parsedCategoryId = parseInt(categoryId, 10);
+
+    if (isNaN(parsedCategoryId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid category ID format',
+      });
+    }
+
+    const parsedPage = safeParseInt(page, 1, 1);
+    const parsedLimit = safeParseInt(limit, 20, 1, 100);
+    const skip = (parsedPage - 1) * parsedLimit;
 
     const [products, total] = await Promise.all([
       prisma.product.findMany({
         where: {
-          categoryId: parseInt(categoryId, 10),
+          categoryId: parsedCategoryId,
           isAvailable: true,
           isDeleted: false,
         },
@@ -214,14 +225,14 @@ const getProductsByCategory = async (req, res, next) => {
           },
         },
         skip,
-        take: parseInt(limit, 10),
+        take: parsedLimit,
         orderBy: {
           name: 'asc',
         },
       }),
       prisma.product.count({
         where: {
-          categoryId: parseInt(categoryId, 10),
+          categoryId: parsedCategoryId,
           isAvailable: true,
           isDeleted: false,
         },
@@ -232,10 +243,10 @@ const getProductsByCategory = async (req, res, next) => {
       success: true,
       data: products,
       pagination: {
-        page: parseInt(page, 10),
-        limit: parseInt(limit, 10),
+        page: parsedPage,
+        limit: parsedLimit,
         total,
-        totalPages: Math.ceil(total / parseInt(limit, 10)),
+        totalPages: Math.ceil(total / parsedLimit),
       },
     });
   } catch (error) {
@@ -395,6 +406,18 @@ const toggleAvailability = async (req, res, next) => {
       return res.status(400).json({
         success: false,
         message: 'Invalid product ID format',
+      });
+    }
+
+    // Check if product exists
+    const existingProduct = await prisma.product.findUnique({
+      where: { id: parsedId },
+    });
+
+    if (!existingProduct || existingProduct.isDeleted) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found',
       });
     }
 

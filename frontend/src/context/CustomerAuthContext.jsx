@@ -15,10 +15,17 @@ export function CustomerAuthProvider({ children }) {
         const savedCustomer = localStorage.getItem('customer-user')
 
         if (savedToken && savedCustomer) {
-            setToken(savedToken)
-            setCustomer(JSON.parse(savedCustomer))
-            // Load wishlist IDs for quick checking
-            loadWishlistIds()
+            try {
+                const parsed = JSON.parse(savedCustomer)
+                setToken(savedToken)
+                setCustomer(parsed)
+                // Load wishlist IDs for quick checking
+                loadWishlistIds()
+            } catch (e) {
+                console.error('Failed to parse saved customer data:', e)
+                localStorage.removeItem('customer-token')
+                localStorage.removeItem('customer-user')
+            }
         }
 
         setLoading(false)

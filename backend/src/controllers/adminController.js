@@ -402,7 +402,18 @@ const updateUser = async (req, res, next) => {
     if (name) updateData.name = name;
     if (role) updateData.role = role;
     if (isActive !== undefined) updateData.isActive = isActive;
-    if (password) updateData.password = await bcrypt.hash(password, 10);
+    if (password) {
+      // Validate password strength before hashing
+      const passwordValidation = validatePasswordStrength(password);
+      if (!passwordValidation.isValid) {
+        return res.status(400).json({
+          success: false,
+          message: 'Password does not meet requirements',
+          errors: passwordValidation.errors,
+        });
+      }
+      updateData.password = await bcrypt.hash(password, 10);
+    }
 
     const user = await prisma.user.update({
       where: { id: parseInt(id, 10) },
