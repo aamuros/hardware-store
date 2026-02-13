@@ -291,6 +291,76 @@ async function main() {
   const allProducts = await prisma.product.findMany();
   const productMap = new Map(allProducts.map(p => [p.sku, p]));
 
+  // Create Bulk Pricing Tiers for selected products
+  const bulkPricingProducts = [
+    {
+      sku: 'CEMENT-PORT-40',
+      tiers: [
+        { minQuantity: 10, discountType: 'percentage', discountValue: 5 },   // 10+ bags: 5% off
+        { minQuantity: 50, discountType: 'percentage', discountValue: 10 },  // 50+ bags: 10% off
+        { minQuantity: 100, discountType: 'percentage', discountValue: 15 }, // 100+ bags: 15% off
+      ],
+    },
+    {
+      sku: 'BLOCK-HLW-4',
+      tiers: [
+        { minQuantity: 50, discountType: 'fixed', discountValue: 1 },    // 50+ pcs: ₱1 off each
+        { minQuantity: 100, discountType: 'fixed', discountValue: 2 },   // 100+ pcs: ₱2 off each
+        { minQuantity: 500, discountType: 'fixed', discountValue: 3 },   // 500+ pcs: ₱3 off each
+      ],
+    },
+    {
+      sku: 'NAIL-COM-2',
+      tiers: [
+        { minQuantity: 5, discountType: 'percentage', discountValue: 5 },   // 5+ kg: 5% off
+        { minQuantity: 20, discountType: 'percentage', discountValue: 10 },  // 20+ kg: 10% off
+        { minQuantity: 50, discountType: 'percentage', discountValue: 15 },  // 50+ kg: 15% off
+      ],
+    },
+    {
+      sku: 'STEEL-10MM',
+      tiers: [
+        { minQuantity: 10, discountType: 'fixed', discountValue: 10 },  // 10+ pcs: ₱10 off each
+        { minQuantity: 25, discountType: 'fixed', discountValue: 20 },  // 25+ pcs: ₱20 off each
+        { minQuantity: 50, discountType: 'fixed', discountValue: 30 },  // 50+ pcs: ₱30 off each
+      ],
+    },
+    {
+      sku: 'SCREW-W8-1',
+      tiers: [
+        { minQuantity: 10, discountType: 'percentage', discountValue: 8 },   // 10+ packs: 8% off
+        { minQuantity: 25, discountType: 'percentage', discountValue: 12 },  // 25+ packs: 12% off
+      ],
+    },
+  ];
+
+  for (const { sku, tiers } of bulkPricingProducts) {
+    const product = productMap.get(sku);
+    if (!product) {
+      console.warn(`Bulk pricing: Product with SKU ${sku} not found, skipping`);
+      continue;
+    }
+
+    // Enable hasBulkPricing on the product
+    await prisma.product.update({
+      where: { id: product.id },
+      data: { hasBulkPricing: true },
+    });
+
+    // Create tiers (delete existing first to avoid duplicates on re-seed)
+    await prisma.bulkPricingTier.deleteMany({ where: { productId: product.id } });
+
+    for (const tier of tiers) {
+      await prisma.bulkPricingTier.create({
+        data: {
+          productId: product.id,
+          ...tier,
+        },
+      });
+    }
+  }
+  console.log('✅ Bulk pricing tiers created for', bulkPricingProducts.length, 'products');
+
   // Helper to generate order number
   const generateOrderNumber = () => {
     const timestamp = Date.now().toString(36).toUpperCase();
