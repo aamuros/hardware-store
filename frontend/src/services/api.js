@@ -133,6 +133,11 @@ export const adminApi = {
   deleteVariant: (id) => api.delete(`/admin/variants/${id}`),
   updateVariantStock: (id, stockQuantity) => api.patch(`/admin/variants/${id}/stock`, { stockQuantity }),
 
+  // Bulk Pricing
+  createBulkPricingTier: (productId, data) => api.post(`/admin/products/${productId}/bulk-pricing`, data),
+  updateBulkPricingTier: (id, data) => api.patch(`/admin/bulk-pricing/${id}`, data),
+  deleteBulkPricingTier: (id) => api.delete(`/admin/bulk-pricing/${id}`),
+
   // Reports
   getSalesReport: (params) => api.get('/admin/reports/sales', { params }),
   getProductReport: () => api.get('/admin/reports/products'),

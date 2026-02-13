@@ -128,6 +128,109 @@ async function main() {
   }
   console.log('✅ Products created:', products.length);
 
+  // Create products with VARIANTS for testing variant selection
+  const variantProducts = [
+    {
+      product: {
+        name: 'Latex Paint Premium',
+        description: 'Premium quality latex paint for interior and exterior use. Available in multiple sizes.',
+        price: 280.00,
+        unit: 'can',
+        categoryId: categoryMap['Paint'],
+        sku: 'PAINT-LAT-PREM',
+        stockQuantity: 0, // Stock managed at variant level
+        lowStockThreshold: 5,
+        isAvailable: true,
+        hasVariants: true,
+      },
+      variants: [
+        { name: '1 Liter', sku: 'PAINT-LAT-PREM-1L', price: 280.00, stockQuantity: 45 },
+        { name: '4 Liters', sku: 'PAINT-LAT-PREM-4L', price: 950.00, stockQuantity: 30 },
+        { name: '16 Liters (1 Pail)', sku: 'PAINT-LAT-PREM-16L', price: 3200.00, stockQuantity: 12 },
+      ],
+    },
+    {
+      product: {
+        name: 'GI Pipe',
+        description: 'Galvanized iron pipe for plumbing and structural use. Available in different diameters.',
+        price: 185.00,
+        unit: 'piece',
+        categoryId: categoryMap['Plumbing'],
+        sku: 'GI-PIPE',
+        stockQuantity: 0,
+        lowStockThreshold: 10,
+        isAvailable: true,
+        hasVariants: true,
+      },
+      variants: [
+        { name: '1/2 inch (6ft)', sku: 'GI-PIPE-050', price: 185.00, stockQuantity: 80 },
+        { name: '3/4 inch (6ft)', sku: 'GI-PIPE-075', price: 265.00, stockQuantity: 55 },
+        { name: '1 inch (6ft)', sku: 'GI-PIPE-100', price: 380.00, stockQuantity: 40 },
+        { name: '1-1/2 inch (6ft)', sku: 'GI-PIPE-150', price: 520.00, stockQuantity: 25 },
+      ],
+    },
+    {
+      product: {
+        name: 'Marine Plywood',
+        description: 'High-quality marine plywood, 4x8 ft sheet. Available in different thicknesses.',
+        price: 650.00,
+        unit: 'sheet',
+        categoryId: categoryMap['Building Materials'],
+        sku: 'PLY-MARINE',
+        stockQuantity: 0,
+        lowStockThreshold: 5,
+        isAvailable: true,
+        hasVariants: true,
+      },
+      variants: [
+        { name: '1/4 inch (6mm)', sku: 'PLY-MARINE-025', price: 650.00, stockQuantity: 35 },
+        { name: '1/2 inch (12mm)', sku: 'PLY-MARINE-050', price: 1100.00, stockQuantity: 20 },
+        { name: '3/4 inch (18mm)', sku: 'PLY-MARINE-075', price: 1550.00, stockQuantity: 15 },
+      ],
+    },
+    {
+      product: {
+        name: 'Work Gloves Pro',
+        description: 'Professional work gloves available in multiple sizes for the perfect fit.',
+        price: 95.00,
+        unit: 'pair',
+        categoryId: categoryMap['Safety Equipment'],
+        sku: 'SAFE-GLOVE-PRO',
+        stockQuantity: 0,
+        lowStockThreshold: 10,
+        isAvailable: true,
+        hasVariants: true,
+      },
+      variants: [
+        { name: 'Small', sku: 'SAFE-GLOVE-PRO-S', price: 95.00, stockQuantity: 25 },
+        { name: 'Medium', sku: 'SAFE-GLOVE-PRO-M', price: 95.00, stockQuantity: 40 },
+        { name: 'Large', sku: 'SAFE-GLOVE-PRO-L', price: 95.00, stockQuantity: 35 },
+        { name: 'X-Large', sku: 'SAFE-GLOVE-PRO-XL', price: 105.00, stockQuantity: 20 },
+      ],
+    },
+  ];
+
+  for (const { product: prodData, variants } of variantProducts) {
+    const created = await prisma.product.upsert({
+      where: { sku: prodData.sku },
+      update: prodData,
+      create: prodData,
+    });
+
+    for (const variant of variants) {
+      await prisma.productVariant.upsert({
+        where: { sku: variant.sku },
+        update: { ...variant, productId: created.id },
+        create: {
+          ...variant,
+          productId: created.id,
+          isAvailable: true,
+        },
+      });
+    }
+  }
+  console.log('✅ Variant products created:', variantProducts.length, 'with', variantProducts.reduce((sum, p) => sum + p.variants.length, 0), 'variants');
+
   // Create sample customers
   const customerPassword = await bcrypt.hash('test123', 10);
 

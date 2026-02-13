@@ -1,5 +1,5 @@
 import { memo, useCallback, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { PlusIcon, BoxIcon } from './icons'
 import { useCart } from '../context/CartContext'
 import toast from 'react-hot-toast'
@@ -15,14 +15,23 @@ const formatPrice = (price) => {
 
 const ProductCard = memo(function ProductCard({ product }) {
   const { addToCart, getItemQuantity } = useCart()
+  const navigate = useNavigate()
   const quantity = getItemQuantity(product.id)
+
+  // Products with variants manage stock at the variant level, not the product level
+  const hasVariants = product.hasVariants
 
   // Memoize stock calculations
   const { isInStock, isLowStock } = useMemo(() => {
+    if (hasVariants) {
+      // For variant products, consider in-stock if the product is available
+      // (actual variant stock is checked on the detail page)
+      return { isInStock: product.isAvailable, isLowStock: false }
+    }
     const inStock = product.isAvailable && (product.stockQuantity ?? 0) > 0
     const lowStock = inStock && (product.stockQuantity ?? 0) <= (product.lowStockThreshold ?? 10)
     return { isInStock: inStock, isLowStock: lowStock }
-  }, [product.isAvailable, product.stockQuantity, product.lowStockThreshold])
+  }, [product.isAvailable, product.stockQuantity, product.lowStockThreshold, hasVariants])
 
   // Memoize formatted price
   const formattedPrice = useMemo(() => formatPrice(product.price), [product.price])
@@ -31,6 +40,12 @@ const ProductCard = memo(function ProductCard({ product }) {
     e.preventDefault()
     e.stopPropagation()
 
+    // Products with variants must be configured on the detail page
+    if (hasVariants) {
+      navigate(`/products/${product.id}`)
+      return
+    }
+
     if (!isInStock) {
       toast.error('This product is out of stock')
       return
@@ -38,7 +53,7 @@ const ProductCard = memo(function ProductCard({ product }) {
 
     addToCart(product, 1)
     toast.success(`${product.name} added to cart!`)
-  }, [isInStock, addToCart, product])
+  }, [isInStock, addToCart, product, hasVariants, navigate])
 
   return (
     <Link to={`/products/${product.id}`} className="card-hover group">
@@ -51,8 +66,8 @@ const ProductCard = memo(function ProductCard({ product }) {
           fallback={<BoxIcon className="h-16 w-16 text-neutral-300" />}
         />
 
-        {/* Out of Stock overlay */}
-        {!isInStock && (
+        {/* Out of Stock overlay - only for non-variant products */}
+        {!isInStock && !hasVariants && (
           <div className="absolute inset-0 bg-primary-900/40 backdrop-blur-[2px] flex items-center justify-center">
             <span className="bg-white text-primary-800 px-3 py-1.5 rounded-lg text-sm font-medium shadow-sm">
               Out of Stock
@@ -60,8 +75,15 @@ const ProductCard = memo(function ProductCard({ product }) {
           </div>
         )}
 
-        {/* Low Stock badge */}
-        {isLowStock && (
+        {/* Variants badge */}
+        {hasVariants && (
+          <div className="absolute top-3 left-3 bg-primary-700 text-white px-2 py-0.5 rounded text-xs font-medium">
+            Multiple Options
+          </div>
+        )}
+
+        {/* Low Stock badge - only for non-variant products */}
+        {isLowStock && !hasVariants && (
           <div className="absolute top-3 left-3 bg-amber-500 text-white px-2 py-0.5 rounded text-xs font-medium">
             Only {product.stockQuantity} left
           </div>
@@ -83,6 +105,9 @@ const ProductCard = memo(function ProductCard({ product }) {
         </h3>
         <div className="flex items-center justify-between mt-3">
           <div>
+            {hasVariants && (
+              <span className="text-xs text-neutral-500 mr-0.5">From </span>
+            )}
             <span className="text-lg font-bold text-primary-800">
               {formattedPrice}
             </span>
@@ -93,7 +118,8 @@ const ProductCard = memo(function ProductCard({ product }) {
             <button
               onClick={handleAddToCart}
               className="p-2.5 bg-primary-800 text-white rounded-xl hover:bg-primary-900 transition-all duration-200 hover:shadow-md active:scale-95"
-              aria-label="Add to cart"
+              aria-label={hasVariants ? 'View options' : 'Add to cart'}
+              title={hasVariants ? 'View options' : 'Add to cart'}
             >
               <PlusIcon className="h-5 w-5" />
             </button>

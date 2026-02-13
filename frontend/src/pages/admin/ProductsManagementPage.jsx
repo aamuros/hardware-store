@@ -52,6 +52,19 @@ export default function ProductsManagementPage() {
   const [savingVariant, setSavingVariant] = useState(false)
   const [deletingVariant, setDeletingVariant] = useState(null)
 
+  // Bulk pricing management state
+  const [showBulkPricingModal, setShowBulkPricingModal] = useState(false)
+  const [managingProductBulkPricing, setManagingProductBulkPricing] = useState(null)
+  const [bulkPricingTiers, setBulkPricingTiers] = useState([])
+  const [editingTier, setEditingTier] = useState(null)
+  const [tierFormData, setTierFormData] = useState({
+    minQuantity: '',
+    discountType: 'percentage',
+    discountValue: '',
+  })
+  const [savingTier, setSavingTier] = useState(false)
+  const [deletingTier, setDeletingTier] = useState(null)
+
   useEffect(() => {
     fetchCategories()
   }, [])
@@ -315,6 +328,101 @@ export default function ProductsManagementPage() {
     }
   }
 
+  // Bulk Pricing Management Functions
+  const openBulkPricingModal = async (product) => {
+    setManagingProductBulkPricing(product)
+    setShowBulkPricingModal(true)
+    await fetchBulkPricingTiers(product.id)
+  }
+
+  const closeBulkPricingModal = () => {
+    setShowBulkPricingModal(false)
+    setManagingProductBulkPricing(null)
+    setBulkPricingTiers([])
+    setEditingTier(null)
+    resetTierForm()
+  }
+
+  const fetchBulkPricingTiers = async (productId) => {
+    try {
+      const response = await productApi.getBulkPricing(productId)
+      setBulkPricingTiers(response.data.data || [])
+    } catch (error) {
+      console.error('Error fetching bulk pricing tiers:', error)
+      setBulkPricingTiers([])
+    }
+  }
+
+  const resetTierForm = () => {
+    setTierFormData({
+      minQuantity: '',
+      discountType: 'percentage',
+      discountValue: '',
+    })
+    setEditingTier(null)
+  }
+
+  const handleTierInputChange = (e) => {
+    const { name, value } = e.target
+    setTierFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  const handleEditTier = (tier) => {
+    setEditingTier(tier)
+    setTierFormData({
+      minQuantity: tier.minQuantity.toString(),
+      discountType: tier.discountType,
+      discountValue: tier.discountValue.toString(),
+    })
+  }
+
+  const handleTierSubmit = async (e) => {
+    e.preventDefault()
+    setSavingTier(true)
+
+    try {
+      const tierData = {
+        minQuantity: parseInt(tierFormData.minQuantity),
+        discountType: tierFormData.discountType,
+        discountValue: parseFloat(tierFormData.discountValue),
+      }
+
+      if (editingTier) {
+        await adminApi.updateBulkPricingTier(editingTier.id, tierData)
+      } else {
+        await adminApi.createBulkPricingTier(managingProductBulkPricing.id, tierData)
+      }
+
+      await fetchBulkPricingTiers(managingProductBulkPricing.id)
+      resetTierForm()
+      fetchProducts()
+    } catch (error) {
+      console.error('Error saving tier:', error)
+      alert('Failed to save pricing tier. Please try again.')
+    } finally {
+      setSavingTier(false)
+    }
+  }
+
+  const handleDeleteTier = async (tier) => {
+    if (!confirm(`Are you sure you want to delete this pricing tier (${tier.minQuantity}+ units)?`)) return
+
+    setDeletingTier(tier.id)
+    try {
+      await adminApi.deleteBulkPricingTier(tier.id)
+      await fetchBulkPricingTiers(managingProductBulkPricing.id)
+      fetchProducts()
+    } catch (error) {
+      console.error('Error deleting tier:', error)
+      alert('Failed to delete pricing tier.')
+    } finally {
+      setDeletingTier(null)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -464,6 +572,15 @@ export default function ProductsManagementPage() {
                           </svg>
                         </button>
                       )}
+                      <button
+                        onClick={() => openBulkPricingModal(product)}
+                        className="text-emerald-600 hover:text-emerald-700 mr-3"
+                        title="Manage Bulk Pricing"
+                      >
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </button>
                       <button
                         onClick={() => openModal(product)}
                         className="text-accent-600 hover:text-accent-700 mr-3"
@@ -897,6 +1014,167 @@ export default function ProductsManagementPage() {
                 <div className="flex justify-end mt-6 pt-4 border-t border-neutral-200">
                   <button
                     onClick={closeVariantModal}
+                    className="btn bg-neutral-200 text-neutral-700 hover:bg-neutral-300"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Pricing Management Modal */}
+      {showBulkPricingModal && managingProductBulkPricing && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4 py-8">
+            <div className="fixed inset-0 bg-primary-900/30 backdrop-blur-sm" onClick={closeBulkPricingModal} />
+            <div className="relative bg-white rounded-2xl shadow-soft-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 sticky top-0 bg-white z-10">
+                <div>
+                  <h3 className="text-lg font-semibold text-primary-900">
+                    Bulk Pricing - {managingProductBulkPricing.name}
+                  </h3>
+                  <p className="text-sm text-neutral-600">Set volume discount tiers (e.g., "10+ units: 5% off")</p>
+                </div>
+                <button onClick={closeBulkPricingModal} className="text-neutral-400 hover:text-neutral-600">
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div className="p-6">
+                {/* Tier Form */}
+                <form onSubmit={handleTierSubmit} className="mb-6 p-4 bg-emerald-50 rounded-xl">
+                  <h4 className="text-sm font-semibold text-primary-900 mb-3">
+                    {editingTier ? 'Edit Pricing Tier' : 'Add New Pricing Tier'}
+                  </h4>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-primary-700 mb-1">
+                        Min Quantity *
+                      </label>
+                      <input
+                        type="number"
+                        name="minQuantity"
+                        value={tierFormData.minQuantity}
+                        onChange={handleTierInputChange}
+                        required
+                        min="2"
+                        className="input w-full"
+                        placeholder="e.g., 10"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-primary-700 mb-1">
+                        Discount Type *
+                      </label>
+                      <select
+                        name="discountType"
+                        value={tierFormData.discountType}
+                        onChange={handleTierInputChange}
+                        className="input w-full"
+                      >
+                        <option value="percentage">Percentage (%)</option>
+                        <option value="fixed">Fixed Amount (₱)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-primary-700 mb-1">
+                        {tierFormData.discountType === 'percentage' ? 'Discount (%)' : 'Discount (₱)'} *
+                      </label>
+                      <input
+                        type="number"
+                        name="discountValue"
+                        value={tierFormData.discountValue}
+                        onChange={handleTierInputChange}
+                        required
+                        min="0"
+                        max={tierFormData.discountType === 'percentage' ? '100' : undefined}
+                        step="0.01"
+                        className="input w-full"
+                        placeholder={tierFormData.discountType === 'percentage' ? 'e.g., 5' : 'e.g., 50'}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-3 mt-4">
+                    {editingTier && (
+                      <button
+                        type="button"
+                        onClick={resetTierForm}
+                        className="btn bg-neutral-200 text-neutral-700 hover:bg-neutral-300"
+                      >
+                        Cancel Edit
+                      </button>
+                    )}
+                    <button type="submit" disabled={savingTier} className="btn btn-primary">
+                      {savingTier ? 'Saving...' : editingTier ? 'Update Tier' : 'Add Tier'}
+                    </button>
+                  </div>
+                </form>
+
+                {/* Tiers List */}
+                <div>
+                  <h4 className="text-sm font-semibold text-primary-900 mb-3">Current Pricing Tiers</h4>
+                  {bulkPricingTiers.length === 0 ? (
+                    <p className="text-sm text-neutral-500 text-center py-4">No pricing tiers yet. Add one above.</p>
+                  ) : (
+                    <div className="overflow-hidden rounded-lg border border-neutral-200">
+                      <table className="w-full text-sm">
+                        <thead className="bg-neutral-50">
+                          <tr>
+                            <th className="px-4 py-2 text-left text-neutral-700 font-medium">Min Quantity</th>
+                            <th className="px-4 py-2 text-left text-neutral-700 font-medium">Discount</th>
+                            <th className="px-4 py-2 text-right text-neutral-700 font-medium">Unit Price</th>
+                            <th className="px-4 py-2 text-right text-neutral-700 font-medium">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-neutral-100">
+                          {bulkPricingTiers.map((tier) => {
+                            const basePrice = managingProductBulkPricing.price
+                            const unitPrice = tier.discountType === 'percentage'
+                              ? basePrice * (1 - tier.discountValue / 100)
+                              : basePrice - tier.discountValue
+                            return (
+                              <tr key={tier.id} className="hover:bg-neutral-50">
+                                <td className="px-4 py-3 text-neutral-700">{tier.minQuantity}+ units</td>
+                                <td className="px-4 py-3 text-emerald-600 font-medium">
+                                  {tier.discountType === 'percentage'
+                                    ? `${tier.discountValue}% off`
+                                    : `₱${tier.discountValue.toLocaleString()} off`}
+                                </td>
+                                <td className="px-4 py-3 text-right font-medium text-primary-700">
+                                  ₱{Math.max(0, unitPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                  <button
+                                    onClick={() => handleEditTier(tier)}
+                                    className="text-accent-600 hover:text-accent-700 mr-2"
+                                    title="Edit"
+                                  >
+                                    <PencilIcon className="h-4 w-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteTier(tier)}
+                                    disabled={deletingTier === tier.id}
+                                    className="text-red-600 hover:text-red-700"
+                                    title="Delete"
+                                  >
+                                    <TrashIcon className="h-4 w-4" />
+                                  </button>
+                                </td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-end mt-6 pt-4 border-t border-neutral-200">
+                  <button
+                    onClick={closeBulkPricingModal}
                     className="btn bg-neutral-200 text-neutral-700 hover:bg-neutral-300"
                   >
                     Close

@@ -35,11 +35,36 @@ export default function ProductDetailPage() {
   // Auto-select first variant if product has variants
   useEffect(() => {
     if (product?.hasVariants && product?.variants?.length > 0) {
-      setSelectedVariant(product.variants[0])
+      const available = product.variants.filter(v => v.isAvailable && !v.isDeleted)
+      setSelectedVariant(available.length > 0 ? available[0] : null)
     } else {
       setSelectedVariant(null)
     }
   }, [product])
+
+  // Reset quantity when variant changes to avoid exceeding new variant's stock
+  useEffect(() => {
+    if (selectedVariant) {
+      setQuantity(prev => Math.min(prev, selectedVariant.stockQuantity || 1) || 1)
+    } else if (product) {
+      setQuantity(prev => Math.min(prev, product.stockQuantity || 1) || 1)
+    }
+  }, [selectedVariant])
+
+  // Calculate bulk discount for current quantity
+  const currentBulkTier = product?.hasBulkPricing && product?.bulkPricingTiers?.length > 0
+    ? [...product.bulkPricingTiers]
+        .sort((a, b) => b.minQuantity - a.minQuantity)
+        .find(tier => quantity >= tier.minQuantity)
+    : null
+
+  const bulkUnitPrice = currentBulkTier
+    ? currentBulkTier.discountType === 'percentage'
+      ? effectivePrice * (1 - currentBulkTier.discountValue / 100)
+      : effectivePrice - currentBulkTier.discountValue
+    : null
+
+  const displayUnitPrice = bulkUnitPrice !== null ? Math.max(0, bulkUnitPrice) : effectivePrice
 
   const fetchProduct = async () => {
     try {
@@ -369,7 +394,12 @@ export default function ProductDetailPage() {
                     </button>
                   </div>
                   <span className="text-neutral-600">
-                    = {formatPrice(effectivePrice * quantity)}
+                    = {formatPrice(displayUnitPrice * quantity)}
+                    {bulkUnitPrice !== null && (
+                      <span className="ml-2 text-emerald-600 text-sm font-medium">
+                        (Bulk discount applied!)
+                      </span>
+                    )}
                   </span>
                 </div>
                 {quantity >= effectiveStock && (
