@@ -82,7 +82,7 @@ const ProductCard = memo(function ProductCard({ product }) {
         <OptimizedImage
           src={product.imageUrl}
           alt={product.name}
-          className="group-hover:scale-[1.03] transition-transform duration-500 ease-out"
+          className="transition-transform duration-300 ease-out group-hover:scale-[1.02]"
           fallback={<BoxIcon className="h-16 w-16 text-neutral-300" />}
         />
 
