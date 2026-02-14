@@ -11,7 +11,7 @@ const safeParseInt = (value, defaultValue, min = 1, max = Infinity) => {
 // GET /api/products
 const getAllProducts = async (req, res, next) => {
   try {
-    const { category, available, page = 1, limit = 20 } = req.query;
+    const { category, available, page = 1, limit = 20, search } = req.query;
 
     const where = { isDeleted: false };
 
@@ -28,6 +28,15 @@ const getAllProducts = async (req, res, next) => {
 
     if (available !== undefined) {
       where.isAvailable = available === 'true';
+    }
+
+    if (search && search.trim().length > 0) {
+      const searchTerm = search.trim();
+      where.OR = [
+        { name: { contains: searchTerm } },
+        { description: { contains: searchTerm } },
+        { sku: { contains: searchTerm } },
+      ];
     }
 
     const parsedPage = safeParseInt(page, 1, 1);

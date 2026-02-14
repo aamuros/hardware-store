@@ -184,4 +184,5 @@ export const customerApi = {
   // Order history
   getOrders: (params) => api.get('/customers/orders', { params }),
   getOrder: (orderNumber) => api.get(`/customers/orders/${orderNumber}`),
+  cancelOrder: (orderNumber) => api.patch(`/customers/orders/${orderNumber}/cancel`),
 }

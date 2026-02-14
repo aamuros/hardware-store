@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { orderApi } from '../../services/api'
+import { orderApi, customerApi } from '../../services/api'
 import { 
   SearchIcon,
   StatusPendingIcon,
@@ -30,6 +30,8 @@ export default function TrackOrderPage() {
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [cancelling, setCancelling] = useState(false)
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
 
   useEffect(() => {
     if (searchParams.get('order')) {
@@ -80,6 +82,31 @@ export default function TrackOrderPage() {
 
   const statusInfo = order ? STATUS_INFO[order.status] || STATUS_INFO.pending : null
 
+  const getRejectionReason = () => {
+    if (!order?.statusHistory) return null
+    const rejectionEntry = order.statusHistory.find(
+      (h) => h.toStatus === 'rejected' || h.toStatus === 'cancelled'
+    )
+    return rejectionEntry?.notes || null
+  }
+
+  const isCustomerLoggedIn = !!localStorage.getItem('customer-token')
+
+  const handleCancelOrder = async () => {
+    setCancelling(true)
+    try {
+      await customerApi.cancelOrder(order.orderNumber)
+      setShowCancelConfirm(false)
+      // Refresh order data
+      const response = await orderApi.track(order.orderNumber)
+      setOrder(response.data.data)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to cancel order')
+    } finally {
+      setCancelling(false)
+    }
+  }
+
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
       <h1 className="text-3xl font-bold text-primary-900 mb-8 text-center">Track Your Order</h1>
@@ -129,6 +156,52 @@ export default function TrackOrderPage() {
                 <p className="font-medium text-primary-900">{formatDate(order.updatedAt)}</p>
               </div>
             </div>
+
+            {/* Rejection / Cancellation Reason */}
+            {(order.status === 'rejected' || order.status === 'cancelled') && getRejectionReason() && (
+              <div className={`mt-4 p-4 rounded-xl ${order.status === 'rejected' ? 'bg-red-50 border border-red-200' : 'bg-neutral-50 border border-neutral-200'}`}>
+                <p className={`text-sm font-medium ${order.status === 'rejected' ? 'text-red-800' : 'text-neutral-800'}`}>
+                  {order.status === 'rejected' ? 'Reason for Rejection' : 'Cancellation Note'}
+                </p>
+                <p className={`text-sm mt-1 ${order.status === 'rejected' ? 'text-red-700' : 'text-neutral-700'}`}>
+                  {getRejectionReason()}
+                </p>
+              </div>
+            )}
+
+            {/* Cancel Order Button */}
+            {order.status === 'pending' && isCustomerLoggedIn && (
+              <div className="mt-4">
+                {showCancelConfirm ? (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+                    <p className="text-sm text-red-800 font-medium mb-3">Are you sure you want to cancel this order?</p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleCancelOrder}
+                        disabled={cancelling}
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50"
+                      >
+                        {cancelling ? 'Cancelling...' : 'Yes, Cancel Order'}
+                      </button>
+                      <button
+                        onClick={() => setShowCancelConfirm(false)}
+                        disabled={cancelling}
+                        className="px-4 py-2 bg-white border border-neutral-300 rounded-lg text-sm font-medium hover:bg-neutral-50"
+                      >
+                        No, Keep Order
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowCancelConfirm(true)}
+                    className="px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors"
+                  >
+                    Cancel Order
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Status Timeline */}

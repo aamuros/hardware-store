@@ -66,5 +66,6 @@ router.delete('/wishlist/:productId', requireCustomer, wishlistController.remove
 // Order history
 router.get('/orders', requireCustomer, orderHistoryController.getOrderHistory);
 router.get('/orders/:orderNumber', requireCustomer, orderHistoryController.getOrderDetail);
+router.patch('/orders/:orderNumber/cancel', requireCustomer, orderHistoryController.cancelOrder);
 
 module.exports = router;

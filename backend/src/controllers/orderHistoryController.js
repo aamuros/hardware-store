@@ -96,7 +96,101 @@ const getOrderDetail = async (req, res, next) => {
     }
 };
 
+// PATCH /api/customers/orders/:orderNumber/cancel
+const cancelOrder = async (req, res, next) => {
+    try {
+        const { orderNumber } = req.params;
+
+        const order = await prisma.order.findFirst({
+            where: {
+                orderNumber,
+                customerId: req.customer.id,
+            },
+            include: {
+                items: true,
+            },
+        });
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: 'Order not found',
+            });
+        }
+
+        // Only allow cancellation of pending orders
+        if (order.status !== 'pending') {
+            return res.status(400).json({
+                success: false,
+                message: 'Only pending orders can be cancelled',
+            });
+        }
+
+        // Cancel the order and restore stock in a transaction
+        const updatedOrder = await prisma.$transaction(async (tx) => {
+            // Restore stock for each item
+            for (const item of order.items) {
+                if (item.variantId) {
+                    const variant = await tx.productVariant.findUnique({
+                        where: { id: item.variantId },
+                        select: { isDeleted: true },
+                    });
+                    if (variant && !variant.isDeleted) {
+                        await tx.productVariant.update({
+                            where: { id: item.variantId },
+                            data: {
+                                stockQuantity: { increment: item.quantity },
+                            },
+                        });
+                    }
+                } else {
+                    const product = await tx.product.findUnique({
+                        where: { id: item.productId },
+                        select: { isDeleted: true },
+                    });
+                    if (product && !product.isDeleted) {
+                        await tx.product.update({
+                            where: { id: item.productId },
+                            data: {
+                                stockQuantity: { increment: item.quantity },
+                            },
+                        });
+                    }
+                }
+            }
+
+            // Update order status
+            const updated = await tx.order.update({
+                where: { id: order.id },
+                data: { status: 'cancelled' },
+            });
+
+            // Create status history entry
+            await tx.orderStatusHistory.create({
+                data: {
+                    orderId: order.id,
+                    fromStatus: order.status,
+                    toStatus: 'cancelled',
+                    changedById: null,
+                    notes: 'Cancelled by customer',
+                },
+            });
+
+            return updated;
+        });
+
+        res.json({
+            success: true,
+            message: 'Order cancelled successfully',
+            data: updatedOrder,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     getOrderHistory,
     getOrderDetail,
+    cancelOrder,
 };

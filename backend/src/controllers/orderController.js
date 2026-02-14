@@ -337,6 +337,15 @@ const trackOrder = async (req, res, next) => {
             },
           },
         },
+        statusHistory: {
+          orderBy: { createdAt: 'desc' },
+          select: {
+            fromStatus: true,
+            toStatus: true,
+            notes: true,
+            createdAt: true,
+          },
+        },
       },
     });
 

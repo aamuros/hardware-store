@@ -21,16 +21,22 @@ const ProductCard = memo(function ProductCard({ product }) {
   // Products with variants manage stock at the variant level, not the product level
   const hasVariants = product.hasVariants
 
-  // Memoize stock calculations
-  const { isInStock, isLowStock } = useMemo(() => {
+  // Memoize stock calculations — distinguish "unavailable" vs "out of stock"
+  const { isInStock, isLowStock, isUnavailable, isOutOfStock } = useMemo(() => {
     if (hasVariants) {
-      // For variant products, consider in-stock if the product is available
-      // (actual variant stock is checked on the detail page)
-      return { isInStock: product.isAvailable, isLowStock: false }
+      return {
+        isInStock: product.isAvailable,
+        isLowStock: false,
+        isUnavailable: !product.isAvailable,
+        isOutOfStock: false,
+      }
     }
-    const inStock = product.isAvailable && (product.stockQuantity ?? 0) > 0
-    const lowStock = inStock && (product.stockQuantity ?? 0) <= (product.lowStockThreshold ?? 10)
-    return { isInStock: inStock, isLowStock: lowStock }
+    const stockQty = product.stockQuantity ?? 0
+    const unavailable = !product.isAvailable
+    const outOfStock = product.isAvailable && stockQty <= 0
+    const inStock = product.isAvailable && stockQty > 0
+    const lowStock = inStock && stockQty <= (product.lowStockThreshold ?? 10)
+    return { isInStock: inStock, isLowStock: lowStock, isUnavailable: unavailable, isOutOfStock: outOfStock }
   }, [product.isAvailable, product.stockQuantity, product.lowStockThreshold, hasVariants])
 
   // Memoize formatted price
@@ -66,10 +72,19 @@ const ProductCard = memo(function ProductCard({ product }) {
           fallback={<BoxIcon className="h-16 w-16 text-neutral-300" />}
         />
 
-        {/* Out of Stock overlay - only for non-variant products */}
-        {!isInStock && !hasVariants && (
-          <div className="absolute inset-0 bg-primary-900/40 backdrop-blur-[2px] flex items-center justify-center">
-            <span className="bg-white text-primary-800 px-3 py-1.5 rounded-lg text-sm font-medium shadow-sm">
+        {/* Unavailable overlay — admin disabled the product */}
+        {isUnavailable && !hasVariants && (
+          <div className="absolute inset-0 bg-neutral-900/50 backdrop-blur-[2px] flex items-center justify-center">
+            <span className="bg-white text-neutral-700 px-3 py-1.5 rounded-lg text-sm font-medium shadow-sm">
+              Currently Unavailable
+            </span>
+          </div>
+        )}
+
+        {/* Out of Stock overlay — has stock = 0 but is available */}
+        {isOutOfStock && !hasVariants && (
+          <div className="absolute inset-0 bg-red-900/30 backdrop-blur-[2px] flex items-center justify-center">
+            <span className="bg-white text-red-700 px-3 py-1.5 rounded-lg text-sm font-medium shadow-sm border border-red-200">
               Out of Stock
             </span>
           </div>
@@ -114,7 +129,7 @@ const ProductCard = memo(function ProductCard({ product }) {
             <span className="text-xs text-neutral-500 ml-1">/ {product.unit}</span>
           </div>
 
-          {isInStock && (
+          {isInStock ? (
             <button
               onClick={handleAddToCart}
               className="p-2.5 bg-primary-800 text-white rounded-xl hover:bg-primary-900 transition-all duration-200 hover:shadow-md active:scale-95"
@@ -123,7 +138,15 @@ const ProductCard = memo(function ProductCard({ product }) {
             >
               <PlusIcon className="h-5 w-5" />
             </button>
-          )}
+          ) : isUnavailable ? (
+            <span className="px-2 py-1 text-[10px] font-semibold text-neutral-500 bg-neutral-100 border border-neutral-200 rounded-lg uppercase tracking-wide">
+              Unavailable
+            </span>
+          ) : isOutOfStock ? (
+            <span className="px-2 py-1 text-[10px] font-semibold text-red-600 bg-red-50 border border-red-200 rounded-lg uppercase tracking-wide">
+              No Stock
+            </span>
+          ) : null}
         </div>
       </div>
     </Link>

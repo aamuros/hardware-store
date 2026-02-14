@@ -28,6 +28,8 @@ export default function ProductDetailPage() {
   const effectivePrice = selectedVariant?.price ?? product?.price ?? 0
   const effectiveStock = selectedVariant?.stockQuantity ?? product?.stockQuantity ?? 0
   const isInStock = product?.isAvailable && effectiveStock > 0
+  const isUnavailable = product && !product.isAvailable
+  const isOutOfStock = product?.isAvailable && effectiveStock <= 0
 
   useEffect(() => {
     fetchProduct()
@@ -333,12 +335,27 @@ export default function ProductDetailPage() {
               const stockQty = effectiveStock
               const isLowStock = isInStock && stockQty <= (product.lowStockThreshold ?? 10)
 
-              if (!isInStock) {
+              if (isUnavailable) {
                 return (
-                  <span className="inline-flex items-center text-red-600">
-                    <span className="h-2 w-2 bg-red-500 rounded-full mr-2"></span>
-                    Out of Stock
-                  </span>
+                  <div className="p-3 bg-neutral-100 border border-neutral-200 rounded-xl">
+                    <span className="inline-flex items-center text-neutral-600 font-medium">
+                      <span className="h-2 w-2 bg-neutral-400 rounded-full mr-2"></span>
+                      Currently Unavailable
+                    </span>
+                    <p className="text-xs text-neutral-500 mt-1 ml-4">This product is not available for ordering at this time. Please check back later.</p>
+                  </div>
+                )
+              }
+
+              if (isOutOfStock) {
+                return (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
+                    <span className="inline-flex items-center text-red-600 font-medium">
+                      <span className="h-2 w-2 bg-red-500 rounded-full mr-2"></span>
+                      Out of Stock
+                    </span>
+                    <p className="text-xs text-red-500 mt-1 ml-4">This product is currently out of stock. It may be restocked soon.</p>
+                  </div>
                 )
               }
 
