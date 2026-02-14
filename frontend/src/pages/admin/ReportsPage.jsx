@@ -101,7 +101,9 @@ export default function ReportsPage() {
   }
 
   const formatChartDate = (dateStr) => {
-    const d = new Date(dateStr)
+    // Parse YYYY-MM-DD as local date to avoid UTC timezone shift
+    const parts = dateStr.split('-').map(Number)
+    const d = new Date(parts[0], parts[1] - 1, parts[2])
     return d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })
   }
 

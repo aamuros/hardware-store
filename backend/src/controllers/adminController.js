@@ -149,7 +149,7 @@ const getSalesReport = async (req, res, next) => {
 
     if (days) {
       start = new Date();
-      start.setDate(start.getDate() - parseInt(days, 10));
+      start.setDate(start.getDate() - (parseInt(days, 10) - 1));
       start.setHours(0, 0, 0, 0);
     } else if (startDate) {
       start = new Date(startDate);
@@ -160,7 +160,7 @@ const getSalesReport = async (req, res, next) => {
       }
     } else {
       start = new Date();
-      start.setDate(start.getDate() - 30);
+      start.setDate(start.getDate() - 29);
       start.setHours(0, 0, 0, 0);
     }
 
@@ -203,28 +203,40 @@ const getSalesReport = async (req, res, next) => {
     }));
 
     // --- Daily breakdown for charts ---
+    // Use local date formatting to avoid UTC timezone shift
+    const toLocalDateKey = (d) => {
+      const dt = new Date(d);
+      return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+    };
+
     const dailyBreakdown = {};
     const daysInRange = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
 
     for (let i = 0; i < daysInRange; i++) {
       const date = new Date(start);
       date.setDate(date.getDate() + i);
-      const dateKey = date.toISOString().split('T')[0];
-      dailyBreakdown[dateKey] = { revenue: 0, orders: 0 };
+      const dateKey = toLocalDateKey(date);
+      dailyBreakdown[dateKey] = { revenue: 0, completedRevenue: 0, orders: 0, completedOrders: 0 };
     }
 
     allOrdersInRange.forEach(order => {
-      const dateKey = new Date(order.createdAt).toISOString().split('T')[0];
+      const dateKey = toLocalDateKey(order.createdAt);
       if (dailyBreakdown[dateKey]) {
         dailyBreakdown[dateKey].revenue += order.totalAmount;
         dailyBreakdown[dateKey].orders += 1;
+        if (completedStatuses.includes(order.status)) {
+          dailyBreakdown[dateKey].completedRevenue += order.totalAmount;
+          dailyBreakdown[dateKey].completedOrders += 1;
+        }
       }
     });
 
     const dailyData = Object.entries(dailyBreakdown).map(([date, data]) => ({
       date,
       revenue: Math.round(data.revenue * 100) / 100,
+      completedRevenue: Math.round(data.completedRevenue * 100) / 100,
       orders: data.orders,
+      completedOrders: data.completedOrders,
     }));
 
     // --- Growth comparison with previous period ---
@@ -288,7 +300,7 @@ const getProductReport = async (req, res, next) => {
     let dateFilter = {};
     if (days) {
       const start = new Date();
-      start.setDate(start.getDate() - parseInt(days, 10));
+      start.setDate(start.getDate() - (parseInt(days, 10) - 1));
       start.setHours(0, 0, 0, 0);
       dateFilter = {
         order: { createdAt: { gte: start } },
@@ -379,7 +391,7 @@ const exportReport = async (req, res, next) => {
   try {
     const { days } = req.query;
     let start = new Date();
-    start.setDate(start.getDate() - parseInt(days || '30', 10));
+    start.setDate(start.getDate() - (parseInt(days || '30', 10) - 1));
     start.setHours(0, 0, 0, 0);
 
     const orders = await prisma.order.findMany({

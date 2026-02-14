@@ -50,7 +50,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState(null)
   const [recentOrders, setRecentOrders] = useState([])
   const [lowStockProducts, setLowStockProducts] = useState([])
-  const [allOrders, setAllOrders] = useState([])
+  const [salesReport, setSalesReport] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -60,17 +60,17 @@ export default function DashboardPage() {
 
   const fetchDashboardData = async () => {
     try {
-      const [dashboardRes, lowStockRes, ordersRes] = await Promise.all([
+      const [dashboardRes, lowStockRes, salesRes] = await Promise.all([
         adminApi.getDashboard(),
         adminApi.getLowStockProducts(),
-        adminApi.getOrders({ limit: 100 }), // Get more orders for charts
+        adminApi.getSalesReport({ days: 7 }),
       ])
 
       const { stats: dashStats, recentOrders: orders } = dashboardRes.data.data
       setStats(dashStats)
       setRecentOrders(orders)
       setLowStockProducts(lowStockRes.data.data || [])
-      setAllOrders(ordersRes.data.data || [])
+      setSalesReport(salesRes.data.data || null)
     } catch (err) {
       setError('Failed to load dashboard data')
       console.error('Dashboard error:', err)
@@ -79,48 +79,35 @@ export default function DashboardPage() {
     }
   }
 
-  // Generate chart data from orders
+  // Get order status data from server-side report
   const getOrderStatusData = () => {
-    if (!allOrders.length) return []
+    if (!salesReport?.ordersByStatus?.length) return []
 
-    const statusCounts = allOrders.reduce((acc, order) => {
-      acc[order.status] = (acc[order.status] || 0) + 1
-      return acc
-    }, {})
-
-    return Object.entries(statusCounts).map(([status, count]) => ({
-      name: status.replace('_', ' '),
-      value: count,
-      color: CHART_COLORS[status] || '#94A3B8',
+    return salesReport.ordersByStatus.map((item) => ({
+      name: item.status.replace(/_/g, ' '),
+      value: item._count,
+      color: CHART_COLORS[item.status] || '#94A3B8',
     }))
   }
 
-  // Generate last 7 days revenue data
+  // Get revenue data from server-side daily breakdown
   const getRevenueData = () => {
-    const days = []
-    const today = new Date()
+    if (!salesReport?.dailyData?.length) return []
 
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today)
-      date.setDate(date.getDate() - i)
-      const dateStr = date.toISOString().split('T')[0]
-
-      const dayOrders = allOrders.filter(order => {
-        const orderDate = new Date(order.createdAt).toISOString().split('T')[0]
-        return orderDate === dateStr && ['delivered', 'completed'].includes(order.status)
-      })
-
-      const revenue = dayOrders.reduce((sum, order) => sum + order.totalAmount, 0)
-      const orderCount = dayOrders.length
-
-      days.push({
-        date: date.toLocaleDateString('en-PH', { weekday: 'short' }),
-        revenue,
-        orders: orderCount,
-      })
-    }
-
-    return days
+    return salesReport.dailyData.map((day) => {
+      // Parse YYYY-MM-DD as local date (avoid UTC shift)
+      const [y, m, d] = day.date.split('-').map(Number)
+      const localDate = new Date(y, m - 1, d)
+      const formattedDate = localDate.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })
+      return {
+        date: formattedDate,
+        fullDate: formattedDate,
+        rawDate: day.date,
+        revenue: day.completedRevenue ?? day.revenue,
+        totalRevenue: day.revenue,
+        orders: day.orders,
+      }
+    })
   }
 
   if (loading) {
@@ -139,82 +126,14 @@ export default function DashboardPage() {
     )
   }
 
-  // Calculate real trends by comparing today vs yesterday
-  const calculateTrends = () => {
-    const today = new Date()
-    const todayStr = today.toISOString().split('T')[0]
-
-    const yesterday = new Date(today)
-    yesterday.setDate(yesterday.getDate() - 1)
-    const yesterdayStr = yesterday.toISOString().split('T')[0]
-
-    // Today's orders
-    const todayOrders = allOrders.filter(order => {
-      const orderDate = new Date(order.createdAt).toISOString().split('T')[0]
-      return orderDate === todayStr
-    })
-
-    // Yesterday's orders
-    const yesterdayOrders = allOrders.filter(order => {
-      const orderDate = new Date(order.createdAt).toISOString().split('T')[0]
-      return orderDate === yesterdayStr
-    })
-
-    // Calculate order count trend
-    const todayOrderCount = todayOrders.length
-    const yesterdayOrderCount = yesterdayOrders.length
-    let orderTrend = '0%'
-    let orderTrendUp = true
-
-    if (yesterdayOrderCount > 0) {
-      const orderChange = ((todayOrderCount - yesterdayOrderCount) / yesterdayOrderCount * 100).toFixed(0)
-      orderTrend = `${orderChange >= 0 ? '+' : ''}${orderChange}% vs yesterday`
-      orderTrendUp = todayOrderCount >= yesterdayOrderCount
-    } else if (todayOrderCount > 0) {
-      orderTrend = '+100% vs yesterday'
-      orderTrendUp = true
-    } else {
-      orderTrend = 'No orders yesterday'
-      orderTrendUp = true
-    }
-
-    // Calculate revenue trend
-    const todayRevenue = todayOrders
-      .filter(o => ['delivered', 'completed'].includes(o.status))
-      .reduce((sum, o) => sum + o.totalAmount, 0)
-
-    const yesterdayRevenue = yesterdayOrders
-      .filter(o => ['delivered', 'completed'].includes(o.status))
-      .reduce((sum, o) => sum + o.totalAmount, 0)
-
-    let revenueTrend = '0%'
-    let revenueTrendUp = true
-
-    if (yesterdayRevenue > 0) {
-      const revenueChange = ((todayRevenue - yesterdayRevenue) / yesterdayRevenue * 100).toFixed(0)
-      revenueTrend = `${revenueChange >= 0 ? '+' : ''}${revenueChange}% vs yesterday`
-      revenueTrendUp = todayRevenue >= yesterdayRevenue
-    } else if (todayRevenue > 0) {
-      revenueTrend = 'First revenue today!'
-      revenueTrendUp = true
-    } else {
-      revenueTrend = 'No revenue yet'
-      revenueTrendUp = true
-    }
-
-    return { orderTrend, orderTrendUp, revenueTrend, revenueTrendUp }
-  }
-
-  const trends = calculateTrends()
-
-  const statCards = [
+  const todayStatCards = [
     {
       name: "Today's Orders",
       value: stats?.todayOrders || 0,
       icon: ShoppingBagIcon,
       color: 'bg-blue-500',
-      trend: trends.orderTrend,
-      trendUp: trends.orderTrendUp,
+      trend: stats?.todayOrders > 0 ? 'Active' : 'No orders yet',
+      trendUp: stats?.todayOrders > 0,
     },
     {
       name: 'Pending Orders',
@@ -229,8 +148,8 @@ export default function DashboardPage() {
       value: `₱${(stats?.todayRevenue || 0).toLocaleString()}`,
       icon: CurrencyDollarIcon,
       color: 'bg-emerald-500',
-      trend: trends.revenueTrend,
-      trendUp: trends.revenueTrendUp,
+      trend: 'Completed orders only',
+      trendUp: (stats?.todayRevenue || 0) > 0,
     },
     {
       name: 'Total Products',
@@ -239,6 +158,49 @@ export default function DashboardPage() {
       color: 'bg-violet-500',
       trend: `${lowStockProducts.length} low stock`,
       trendUp: lowStockProducts.length === 0,
+    },
+  ]
+
+  // Weekly summary cards derived from the 7-day sales report
+  const weeklyGrowth = salesReport?.growth
+  const weeklySummaryCards = [
+    {
+      name: 'Weekly Revenue',
+      value: `₱${(salesReport?.completedRevenue || 0).toLocaleString()}`,
+      icon: CurrencyDollarIcon,
+      bgColor: 'bg-blue-100',
+      iconColor: 'text-blue-600',
+      trend: weeklyGrowth ? `${weeklyGrowth.revenue >= 0 ? '+' : ''}${weeklyGrowth.revenue}% vs prev week` : 'No data',
+      trendUp: weeklyGrowth ? weeklyGrowth.revenue >= 0 : true,
+    },
+    {
+      name: 'Weekly Orders',
+      value: salesReport?.totalOrders || 0,
+      icon: ShoppingBagIcon,
+      bgColor: 'bg-violet-100',
+      iconColor: 'text-violet-600',
+      trend: weeklyGrowth ? `${weeklyGrowth.orders >= 0 ? '+' : ''}${weeklyGrowth.orders}% vs prev week` : 'No data',
+      trendUp: weeklyGrowth ? weeklyGrowth.orders >= 0 : true,
+    },
+    {
+      name: 'Completed',
+      value: salesReport?.completedOrders || 0,
+      icon: ArrowTrendingUpIcon,
+      bgColor: 'bg-emerald-100',
+      iconColor: 'text-emerald-600',
+      trend: salesReport?.totalOrders > 0
+        ? `${((salesReport.completedOrders / salesReport.totalOrders) * 100).toFixed(0)}% completion`
+        : 'No data',
+      trendUp: true,
+    },
+    {
+      name: 'Avg Order Value',
+      value: `₱${(salesReport?.averageOrderValue || 0).toLocaleString()}`,
+      icon: CurrencyDollarIcon,
+      bgColor: 'bg-indigo-100',
+      iconColor: 'text-indigo-600',
+      trend: salesReport?.totalOrders > 0 ? `${salesReport.totalOrders} orders` : 'No data',
+      trendUp: true,
     },
   ]
 
@@ -253,34 +215,72 @@ export default function DashboardPage() {
         <p className="text-neutral-600">Welcome back! Here&apos;s what&apos;s happening today.</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map((stat) => (
-          <div key={stat.name} className="bg-white rounded-2xl shadow-soft p-6 hover:shadow-soft-lg transition-shadow">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center">
-                <div className={`${stat.color} rounded-xl p-3`}>
-                  <stat.icon className="h-6 w-6 text-white" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-neutral-500">{stat.name}</p>
-                  <p className="text-2xl font-bold text-primary-900">{stat.value}</p>
+      {/* Today's Snapshot */}
+      <div>
+        <h2 className="text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-3">Today&apos;s Snapshot</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {todayStatCards.map((stat) => (
+            <div key={stat.name} className="bg-white rounded-2xl shadow-soft p-6 hover:shadow-soft-lg transition-shadow">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center">
+                  <div className={`${stat.color} rounded-xl p-3`}>
+                    <stat.icon className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-neutral-500">{stat.name}</p>
+                    <p className="text-2xl font-bold text-primary-900">{stat.value}</p>
+                  </div>
                 </div>
               </div>
+              {/* Trend indicator */}
+              <div className="mt-3 flex items-center">
+                {stat.trendUp ? (
+                  <ArrowTrendingUpIcon className="h-4 w-4 text-emerald-500 mr-1" />
+                ) : (
+                  <ArrowTrendingDownIcon className="h-4 w-4 text-amber-500 mr-1" />
+                )}
+                <span className={`text-xs font-medium ${stat.trendUp ? 'text-emerald-600' : 'text-amber-600'}`}>
+                  {stat.trend}
+                </span>
+              </div>
             </div>
-            {/* Trend indicator */}
-            <div className="mt-3 flex items-center">
-              {stat.trendUp ? (
-                <ArrowTrendingUpIcon className="h-4 w-4 text-emerald-500 mr-1" />
-              ) : (
-                <ArrowTrendingDownIcon className="h-4 w-4 text-amber-500 mr-1" />
-              )}
-              <span className={`text-xs font-medium ${stat.trendUp ? 'text-emerald-600' : 'text-amber-600'}`}>
-                {stat.trend}
-              </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Weekly Sales Overview */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-neutral-400 uppercase tracking-wider">Last 7 Days</h2>
+          <Link to="/admin/reports" className="text-xs font-medium text-accent-600 hover:text-accent-700">
+            View Full Report →
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {weeklySummaryCards.map((stat) => (
+            <div key={stat.name} className="bg-white rounded-2xl shadow-soft p-5 hover:shadow-soft-lg transition-shadow border border-neutral-100">
+              <div className="flex items-center">
+                <div className={`${stat.bgColor} rounded-xl p-2.5`}>
+                  <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
+                </div>
+                <div className="ml-3">
+                  <p className="text-xs font-medium text-neutral-500">{stat.name}</p>
+                  <p className="text-xl font-bold text-primary-900">{stat.value}</p>
+                </div>
+              </div>
+              <div className="mt-2 flex items-center">
+                {stat.trendUp ? (
+                  <ArrowTrendingUpIcon className="h-3.5 w-3.5 text-emerald-500 mr-1" />
+                ) : (
+                  <ArrowTrendingDownIcon className="h-3.5 w-3.5 text-amber-500 mr-1" />
+                )}
+                <span className={`text-xs font-medium ${stat.trendUp ? 'text-emerald-600' : 'text-amber-600'}`}>
+                  {stat.trend}
+                </span>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {/* Charts Row */}
@@ -289,8 +289,8 @@ export default function DashboardPage() {
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-soft p-6">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h2 className="text-lg font-semibold text-primary-900">Revenue Overview</h2>
-              <p className="text-sm text-neutral-500">Last 7 days performance</p>
+              <h2 className="text-lg font-semibold text-primary-900">Revenue Trend</h2>
+              <p className="text-sm text-neutral-500">Last 7 days • Completed: ₱{(salesReport?.completedRevenue || 0).toLocaleString()}</p>
             </div>
           </div>
           <div className="h-64">
@@ -312,6 +312,10 @@ export default function DashboardPage() {
                     borderRadius: '12px',
                     color: '#fff'
                   }}
+                  labelFormatter={(label, payload) => {
+                    const item = payload?.[0]?.payload
+                    return item?.fullDate || label
+                  }}
                   formatter={(value) => [`₱${value.toLocaleString()}`, 'Revenue']}
                 />
                 <Area
@@ -331,7 +335,7 @@ export default function DashboardPage() {
         <div className="bg-white rounded-2xl shadow-soft p-6">
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-primary-900">Order Status</h2>
-            <p className="text-sm text-neutral-500">Distribution of all orders</p>
+            <p className="text-sm text-neutral-500">Last 7 days • {salesReport?.totalOrders || 0} total orders</p>
           </div>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
