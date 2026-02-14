@@ -1,0 +1,207 @@
+[Company Logo]		Wena's Online Ordering Platform Test Script								
+Project Name		Wena's Online Ordering Platform								
+Project Manager		Muros, Adrian A.								
+Business Analyst										
+Testing Start Date										
+Testing End Date										
+Name of Tester:		Karl Evlan Robasto, Marc Niel Bides, Darelle Yuri, Soriano								
+Phase / Release Number: 		Version 1.0								
+ID#	Description	Preconditions / Data	Steps To Execute	Expected Behavior	Actual Behavior	Passed	Failed	Retest Date	Defect/Comments	
+"CUSTOMER PORTAL								"										
+1	Home Page – Load	User has access to the app URL.	"1) Open browser.
+2) Go to http://localhost:5173.
+3) Wait for page to load."	Home page loads with store name, featured products, categories, and navigation bar.						
+2	Browse by Category	User is on the home page. Categories exist.	"1) Click on a category (e.g., 'Tools').
+2) Observe products."	Products page shows only products from the selected category.						
+3	View All Products	Products exist in the database.	"1) Click 'Products' in the nav bar.
+2) Observe product listing."	Products displayed in a paginated grid with name, price, and image.						
+4	Search Products	User is on Products page.	"1) Type 'Hammer' in the search bar.
+2) Observe results."	Only products matching 'Hammer' are shown.						
+5	Filter by Category	User is on the Products page.	"1) Select a category filter (e.g., 'Electrical').
+2) Observe results."	Only products in the selected category are shown.						
+6	Product Detail Page	User is on the Products page.	"1) Click on a product card.
+2) Observe the detail page."	Detail page shows name, description, price, SKU, stock, images, variants, and bulk pricing.						
+7	Select Product Variant	Product with variants exists (e.g., sizes).	"1) Go to a product with variants.
+2) Select a variant (e.g., 'Large')."	Price and stock update to reflect the selected variant.						
+8	View Bulk Pricing	Product with bulk pricing tiers exists.	"1) Go to product detail.
+2) View bulk pricing section."	Pricing tiers shown (e.g., '10+ units: ₱300 each').						
+"SHOPPING CART								"										
+9	Add to Cart	User is on a product detail page.	"1) Set quantity to 2.
+2) Click 'Add to Cart'."	Success notification shown. Cart icon updates with item count.						
+10	View Cart	User has items in the cart.	1) Click the cart icon in the nav bar.	Cart page shows items with name, price, quantity, and total.						
+11	Update Cart Quantity	User is on the Cart page with at least one item.	"1) Change quantity from 2 to 5.
+2) Observe totals."	Subtotal and order total recalculate.						
+12	Remove Cart Item	User has items in the cart.	"1) Click 'Remove' on an item.
+2) Confirm if prompted."	Item removed. Total recalculates. Empty cart message if no items left.						
+13	Empty Cart – No Checkout	Cart is empty.	"1) Go to Cart page.
+2) Try to proceed to checkout."	Checkout button is disabled or shows 'cart is empty' message.						
+"CHECKOUT & ORDERS								"										
+14	Place Order (Guest)	Cart has items. User is NOT logged in.	"1) Click 'Proceed to Checkout'.
+2) Fill: Name, Phone (09171234567), Address, Barangay.
+3) Click 'Place Order'."	Order placed. Redirected to confirmation page with order number.						
+15	Checkout – Phone Validation	User is on checkout page.	"1) Enter invalid phone (e.g., '12345').
+2) Click 'Place Order'."	Validation error shown. Order NOT placed.						
+16	Checkout – Required Fields	User is on checkout page.	"1) Leave Name and Address blank.
+2) Click 'Place Order'."	Validation errors for all required fields. Order NOT placed.						
+17	Order with Variant	Product with variants exists.	"1) Select variant 'Red – 1 Liter'.
+2) Add to cart, checkout, place order."	Order shows correct variant name and variant-specific price.						
+18	Order with Bulk Pricing	Product has bulk pricing: 10+ = ₱300 each (normal ₱350).	"1) Add 15 units to cart.
+2) Checkout and place order."	Bulk price ₱300 applied. Total = ₱4,500.						
+19	Order with Multiple Items	Multiple products exist.	"1) Add Product A (qty 2), Product B (qty 1), Product C (qty 5).
+2) Checkout and place order."	Order contains all 3 items with correct quantities and totals.						
+20	Track Order – Valid Number	Order HW-20260212-0001 exists.	"1) Click 'Track Order'.
+2) Enter order number.
+3) Click 'Track'."	Order details shown: status, items, total, customer info.						
+21	Track Order – Invalid Number	User is on Track Order page.	"1) Enter 'INVALID-123'.
+2) Click 'Track'."	Error message: order not found.						
+"CUSTOMER ACCOUNTS								"										
+22	Customer Registration	No account with test email exists.	"1) Click 'Register'.
+2) Name: 'Juan Dela Cruz', Email: 'juan@example.com', Password: 'securepassword123'.
+3) Click 'Register'."	Account created. User logged in and redirected.						
+23	Registration – Duplicate Email	Account with 'juan@example.com' already exists.	"1) Try registering with same email.
+2) Click 'Register'."	Error: email already registered.						
+24	Customer Login	Account exists: juan@example.com / securepassword123.	"1) Click 'Login'.
+2) Enter email and password.
+3) Click 'Login'."	User logged in. Nav shows user name and account options.						
+25	Login – Invalid Credentials	User is on Login page.	"1) Enter email: 'juan@example.com'.
+2) Enter wrong password.
+3) Click 'Login'."	Error: invalid credentials. User NOT logged in.						
+26	View Profile	Customer is logged in.	1) Navigate to 'Account' page.	Profile shows name, email, and phone.						
+27	Update Profile	Customer is logged in.	"1) Change name to 'Juan D. Cruz'.
+2) Click 'Save'."	Profile updated. Changes persist on reload.						
+28	Change Password	Customer is logged in.	"1) Enter current password.
+2) Enter new password.
+3) Click 'Change Password'."	Password updated. Can log in with new password.						
+29	View Order History	Customer is logged in with past orders.	1) Navigate to 'Order History'.	List of past orders with order number, date, status, total.						
+30	Add Saved Address	Customer is logged in.	"1) Go to 'Saved Addresses'.
+2) Click 'Add'.
+3) Fill label, address, barangay.
+4) Click 'Save'."	Address saved and appears in list.						
+31	Delete Saved Address	Customer has a saved address.	"1) Click 'Delete' on an address.
+2) Confirm."	Address removed from the list.						
+32	Add to Wishlist	Customer is logged in.	"1) Go to a product page.
+2) Click 'Add to Wishlist'."	Product added. Heart icon becomes filled.						
+33	View Wishlist	Customer has wishlist items.	1) Navigate to 'Wishlist'.	Wishlist items shown with name, price, image.						
+34	Remove from Wishlist	Customer has wishlist items.	1) Click 'Remove' on a wishlist item.	Item removed from wishlist.						
+"PASSWORD RESET								"										
+35	Forgot Password – Request Reset	Customer account exists (juan@example.com). User is on login page.	"1) Click 'Forgot Password?' on the login page.
+2) Enter username: 'juan@example.com'.
+3) Click 'Send Reset Link'."	"Confirmation page shown with:
+- Title: 'Password Reset Requested'
+- Message: 'If an account exists with that username, we've sent a password reset link.'
+- 'The link will expire in 30 minutes.'
+- 'Reset Password Now' button
+- 'Try a different username' button
+- '← Back to Sign In' link"						
+36	Forgot Password – Empty Username	User is on Forgot Password page.	"1) Leave username blank.
+2) Click 'Send Reset Link'."	Validation error: 'Username is required'. Reset NOT requested.						
+37	Forgot Password – Invalid Email Format	User is on Forgot Password page.	"1) Enter 'not-an-email'.
+2) Click 'Send Reset Link'."	Validation error shown. Reset NOT requested.						
+38	Forgot Password – Non-existent Account	User is on Forgot Password page.	"1) Enter 'nonexistent@example.com'.
+2) Click 'Send Reset Link'."	"Same confirmation page shown (prevents username enumeration).
+'Reset Password Now' button NOT shown."						
+39	Forgot Password – Try Different Username	User is on confirmation page after submitting.	1) Click 'Try a different username'.	Returns to the forgot password form with username field cleared.						
+40	Forgot Password – Back to Sign In	User is on Forgot Password page.	1) Click '← Back to Sign In'.	Navigated back to the login page.						
+41	Reset Password – Valid Token	User clicked 'Reset Password Now' from confirmation page.	"1) Click 'Reset Password Now'.
+2) Wait for token verification."	"Reset password form shown with:
+- New Password field with strength indicator
+- Password requirements checklist
+- Confirm Password field"						
+42	Reset Password – Set New Password	User is on reset password form. Token is valid.	"1) Enter new password: 'NewSecure@123'.
+2) Confirm password: 'NewSecure@123'.
+3) Click 'Reset Password'."	"Success page: 'Password Reset Successful!'
+'Sign In Now' button shown."						
+43	Reset Password – Password Mismatch	User is on reset password form.	"1) Enter password: 'NewSecure@123'.
+2) Enter confirm: 'Different@123'.
+3) Click 'Reset Password'."	Validation error: 'Passwords do not match'. Password NOT reset.						
+44	Reset Password – Weak Password	User is on reset password form.	"1) Enter password: '123'.
+2) Observe requirements checklist."	"Requirements checklist shows unmet items.
+Submit button disabled until all requirements met."						
+45	Reset Password – Expired Token	Reset token older than 30 minutes.	1) Try to access reset password page with expired token.	"Error page: 'Invalid Reset Link'
+'Request New Reset Link' button shown."						
+46	Reset Password – Already Used Token	Token has already been used to reset password.	1) Try to access reset password page with used token.	"Error page: 'Invalid Reset Link' — 'This reset link has already been used.'
+'Request New Reset Link' button shown."						
+47	Login After Reset	Password was successfully reset in test #42.	"1) Go to login page.
+2) Enter email: 'juan@example.com'.
+3) Enter new password: 'NewSecure@123'.
+4) Click 'Login'."	User logged in successfully with the new password.						
+"ADMIN – LOGIN & DASHBOARD								"										
+48	Admin Login	Admin account: admin / admin123.	"1) Go to /admin/login.
+2) Enter username and password.
+3) Click 'Login'."	Admin logged in. Redirected to Dashboard.						
+49	Admin Login – Invalid	User is on admin login page.	"1) Enter wrong password.
+2) Click 'Login'."	Error: invalid credentials.						
+50	Admin – Protected Routes	Admin is NOT logged in.	1) Go to /admin directly.	Redirected to admin login page.						
+51	Dashboard – Statistics	Admin is logged in. Orders exist.	1) View the Dashboard page.	Shows total orders, revenue, pending orders, recent orders.						
+52	Admin Logout	Admin is logged in.	1) Click 'Logout'.	Admin logged out. Redirected to login page.						
+"ADMIN – ORDER MANAGEMENT								"										
+53	View All Orders	Admin is logged in. Orders exist.	1) Click 'Orders' in sidebar.	Orders listed with order number, customer, status, total, date.						
+54	View Order Details	Admin is on Orders page.	1) Click on an order.	Full order details: customer info, items, total, status history.						
+55	Accept Order	A 'pending' order exists.	"1) Open a pending order.
+2) Click 'Accept'."	Status changes to 'accepted'. History updated.						
+56	Reject Order	A 'pending' order exists.	"1) Open a pending order.
+2) Click 'Reject'."	Status changes to 'rejected'. History updated.						
+57	Full Status Workflow	An 'accepted' order exists.	"1) Change to 'Preparing'.
+2) Then 'Out for Delivery'.
+3) Then 'Delivered'.
+4) Then 'Completed'."	Each status transition succeeds. History logs each change.						
+58	Cancel Order	A pending or accepted order exists.	"1) Open the order.
+2) Click 'Cancel'.
+3) Confirm."	Status changes to 'cancelled'.						
+"ADMIN – PRODUCT MANAGEMENT								"										
+59	View Products List	Admin is logged in.	1) Click 'Products' in sidebar.	Products listed with name, SKU, category, price, stock, status.						
+60	Create Product	Admin is logged in. A category exists.	"1) Click 'Add Product'.
+2) Fill: Name, SKU, Price, Category, Stock.
+3) Click 'Save'."	Product created. Appears in product list.						
+61	Edit Product	A product exists.	"1) Click 'Edit' on a product.
+2) Change the price.
+3) Click 'Save'."	Product updated. New price reflected.						
+62	Delete Product	A product exists with no pending orders.	"1) Click 'Delete' on a product.
+2) Confirm."	Product soft-deleted. Hidden from storefront.						
+63	Toggle Availability	A product is currently available.	1) Click the availability toggle.	Product availability toggled off. Not purchasable.						
+64	Add Product Variant	A product exists.	"1) Edit product.
+2) Add variant: Name, SKU, Price, Stock.
+3) Save."	Variant created. Customers can select it.						
+65	Add Bulk Pricing Tier	A product exists.	"1) Edit product.
+2) Add tier: Min Qty 10, Price 300.
+3) Save."	Bulk pricing tier saved and shown on product page.						
+66	Upload Product Image	A product exists.	"1) Edit product.
+2) Upload a JPG/PNG image.
+3) Save."	Image uploaded. Shown on product page.						
+"ADMIN – CATEGORY MANAGEMENT								"										
+67	View Categories	Admin is logged in.	1) Click 'Categories' in sidebar.	Categories listed with name, description, product count.						
+68	Create Category	Admin is logged in.	"1) Click 'Add Category'.
+2) Enter name and description.
+3) Save."	Category created. Available in product dropdowns.						
+69	Edit Category	A category exists.	"1) Click 'Edit'.
+2) Change description.
+3) Save."	Category updated.						
+70	Delete Category	A category with no products exists.	"1) Click 'Delete'.
+2) Confirm."	Category deleted. No longer in dropdowns.						
+"ADMIN – REPORTS & STAFF								"										
+71	View Reports	Admin is logged in. Sales data exists.	1) Click 'Reports' in sidebar.	Reports page shows sales charts and analytics.						
+72	Create Staff User	Admin is logged in with 'admin' role.	"1) Go to user management.
+2) Add user: username, name, password, role 'staff'.
+3) Save."	Staff account created. Can log in to admin panel.						
+"SMS NOTIFICATIONS								"										
+73	SMS – Order Confirmation	SMS_ENABLED=true. Semaphore API configured.	"1) Place a new order with a valid phone.
+2) Check SMS logs."	SMS sent to customer with order number and summary.						
+74	SMS – Order Accepted	SMS enabled. Pending order exists.	"1) Admin accepts order.
+2) Check SMS logs."	SMS sent notifying customer order was accepted.						
+75	SMS – Order Rejected	SMS enabled. Pending order exists.	"1) Admin rejects order.
+2) Check SMS logs."	SMS sent notifying customer order was rejected.						
+76	SMS – Out for Delivery	SMS enabled. Order in 'preparing' status.	"1) Admin changes status to 'Out for Delivery'.
+2) Check SMS logs."	SMS sent notifying customer order is on the way.						
+77	SMS – Delivered	SMS enabled. Order in 'out_for_delivery' status.	"1) Admin changes status to 'Delivered'.
+2) Check SMS logs."	SMS sent confirming delivery.						
+78	SMS – Admin New Order Alert	SMS enabled. Admin notification configured.	"1) Customer places a new order.
+2) Check admin SMS logs."	SMS alert sent to admin about new order.						
+79	SMS – Disabled Mode	SMS_ENABLED=false in .env.	"1) Place a new order.
+2) Check SMS logs."	No SMS sent. Order placed without errors.						
+80	SMS – Phone Format Handling	SMS enabled.	1) Place orders with: '09171234567', '+639171234567', '9171234567'.	All phone formats accepted and normalized. SMS sent for each.						
+"UI / UX								"										
+81	Responsive Layout	User has access to the app.	"1) Open app on desktop.
+2) Resize to mobile width (< 768px)."	Layout adjusts. Nav becomes hamburger menu. All features accessible.						
+82	404 Page	User has access to the app.	1) Navigate to /nonexistent.	404 page shown with link back to home.						
+83	Loading States	User has access to the app.	"1) Navigate between pages.
+2) Observe loading indicators."	Loading spinner or skeleton shown while content loads.						
