@@ -14,7 +14,7 @@ import {
 
 export default function WishlistPage() {
     const { removeFromWishlist } = useCustomerAuth()
-    const { addToCart } = useCart()
+    const { addToCart, getItemQuantity } = useCart()
     const [wishlistItems, setWishlistItems] = useState([])
     const [loading, setLoading] = useState(true)
 
@@ -53,8 +53,18 @@ export default function WishlistPage() {
     }
 
     const handleAddToCart = (product) => {
-        addToCart(product)
-        toast.success('Added to cart')
+        const currentQty = getItemQuantity(product.id)
+        const maxStock = product.stockQuantity ?? 999
+        if (currentQty >= maxStock) {
+            toast.error(`Maximum stock reached (${maxStock} in cart)`)
+            return
+        }
+        addToCart(product, 1)
+        if (currentQty > 0) {
+            toast.success(`${product.name} — quantity updated to ${Math.min(currentQty + 1, maxStock)}`)
+        } else {
+            toast.success(`${product.name} added to cart!`)
+        }
     }
 
     if (loading) {

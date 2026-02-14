@@ -82,9 +82,29 @@ export default function ProductDetailPage() {
       toast.error('Please select an option')
       return
     }
-    addToCart(product, quantity, selectedVariant)
+
+    // Check if already at max stock before adding
+    const currentQty = getItemQuantity(product.id, selectedVariant?.id)
+    const maxStock = selectedVariant ? selectedVariant.stockQuantity : (product.stockQuantity ?? 999)
+    if (currentQty >= maxStock) {
+      toast.error(`Maximum stock reached (${maxStock} already in cart)`)
+      return
+    }
+
+    // Clamp quantity to not exceed stock
+    const addableQty = Math.min(quantity, maxStock - currentQty)
+    if (addableQty < quantity) {
+      toast.error(`Only ${addableQty} more can be added (${maxStock} total in stock)`)
+    }
+
+    addToCart(product, addableQty, selectedVariant)
     const variantInfo = selectedVariant ? ` (${selectedVariant.name})` : ''
-    toast.success(`${quantity} ${product.unit}(s) of ${product.name}${variantInfo} added to cart!`)
+    if (currentQty > 0) {
+      const newQty = Math.min(currentQty + addableQty, maxStock)
+      toast.success(`${product.name}${variantInfo} — quantity updated to ${newQty}`)
+    } else {
+      toast.success(`${addableQty} ${product.unit}(s) of ${product.name}${variantInfo} added to cart!`)
+    }
     setQuantity(1)
   }
 

@@ -57,9 +57,23 @@ const ProductCard = memo(function ProductCard({ product }) {
       return
     }
 
+    // Check if already at max stock
+    const currentQty = getItemQuantity(product.id)
+    const maxStock = product.stockQuantity ?? 999
+    if (currentQty >= maxStock) {
+      toast.error(`Maximum stock reached (${maxStock} in cart)`)
+      return
+    }
+
     addToCart(product, 1)
-    toast.success(`${product.name} added to cart!`)
-  }, [isInStock, addToCart, product, hasVariants, navigate])
+
+    if (currentQty > 0) {
+      const newQty = Math.min(currentQty + 1, maxStock)
+      toast.success(`${product.name} — quantity updated to ${newQty}`)
+    } else {
+      toast.success(`${product.name} added to cart!`)
+    }
+  }, [isInStock, addToCart, product, hasVariants, navigate, getItemQuantity])
 
   return (
     <Link to={`/products/${product.id}`} className="card-hover group">
@@ -106,8 +120,8 @@ const ProductCard = memo(function ProductCard({ product }) {
 
         {/* Cart quantity badge */}
         {quantity > 0 && (
-          <div className="absolute top-3 right-3 bg-accent-500 text-white rounded-lg h-6 w-6 flex items-center justify-center text-xs font-bold shadow-sm">
-            {quantity}
+          <div className={`absolute top-3 right-3 bg-accent-500 text-white rounded-lg h-6 flex items-center justify-center text-xs font-bold shadow-sm ${quantity > 99 ? 'min-w-6 px-1' : 'w-6'}`}>
+            {quantity > 99 ? '99+' : quantity}
           </div>
         )}
       </div>

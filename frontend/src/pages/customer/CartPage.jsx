@@ -68,6 +68,40 @@ function RemoveItemModal({ item, onConfirm, onCancel }) {
   )
 }
 
+// Clear Cart Confirmation Modal
+function ClearCartModal({ itemCount, onConfirm, onCancel }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
+      {/* Modal */}
+      <div className="relative bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 animate-fade-in">
+        <div className="w-12 h-12 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+          <TrashIcon className="h-6 w-6 text-red-600" />
+        </div>
+        <h3 className="text-lg font-bold text-primary-900 mb-2 text-center">Clear Entire Cart?</h3>
+        <p className="text-neutral-600 text-center">
+          This will remove all <strong>{itemCount}</strong> {itemCount === 1 ? 'item' : 'items'} from your cart. This action cannot be undone.
+        </p>
+        <div className="flex gap-3 mt-6">
+          <button
+            onClick={onCancel}
+            className="flex-1 px-4 py-2.5 border border-neutral-300 text-neutral-700 rounded-xl font-medium hover:bg-neutral-50 transition-colors"
+          >
+            Keep Items
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors"
+          >
+            Clear All
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Editable Quantity Input Component
 function QuantityInput({ item, updateQuantity, onRequestRemove }) {
   const [editValue, setEditValue] = useState(null) // null = not editing
@@ -178,6 +212,7 @@ function QuantityInput({ item, updateQuantity, onRequestRemove }) {
 export default function CartPage() {
   const { items, totalItems, totalAmount, updateQuantity, removeFromCart, clearCart, refreshStockLevels } = useCart()
   const [itemToRemove, setItemToRemove] = useState(null)
+  const [showClearCartModal, setShowClearCartModal] = useState(false)
 
   // Refresh stock levels from the server when the cart page loads
   useEffect(() => {
@@ -237,7 +272,7 @@ export default function CartPage() {
 
       <div className="flex items-center justify-end mb-4">
         <button
-          onClick={clearCart}
+          onClick={() => setShowClearCartModal(true)}
           className="text-red-600 hover:text-red-700 text-sm font-medium"
         >
           Clear Cart
@@ -379,6 +414,19 @@ export default function CartPage() {
           item={itemToRemove}
           onConfirm={handleConfirmRemove}
           onCancel={handleCancelRemove}
+        />
+      )}
+
+      {/* Clear Cart Confirmation Modal */}
+      {showClearCartModal && (
+        <ClearCartModal
+          itemCount={items.length}
+          onConfirm={() => {
+            clearCart()
+            setShowClearCartModal(false)
+            toast.success('Cart cleared')
+          }}
+          onCancel={() => setShowClearCartModal(false)}
         />
       )}
     </div>

@@ -285,7 +285,7 @@ export default function CustomerLayout() {
                 <Link to="/account/wishlist" className="relative p-2 text-neutral-600 hover:text-pink-500 transition-all hover:scale-110">
                   <HeartIcon className="h-6 w-6" />
                   {wishlistIds.size > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                    <span className={`absolute -top-1 -right-1 bg-pink-500 text-white text-xs rounded-full h-5 flex items-center justify-center font-medium ${wishlistIds.size > 99 ? 'min-w-5 px-1' : 'w-5'}`}>
                       {wishlistIds.size > 99 ? '99+' : wishlistIds.size}
                     </span>
                   )}
@@ -296,7 +296,7 @@ export default function CustomerLayout() {
               <Link to="/cart" className="relative p-2 text-neutral-600 hover:text-primary-800 transition-all hover:scale-110">
                 <CartIcon className="h-6 w-6" />
                 {totalItems > 0 && (
-                  <span className={`absolute -top-1 -right-1 bg-accent-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium ${cartPulse ? 'cart-badge-pulse' : ''}`}>
+                  <span className={`absolute -top-1 -right-1 bg-accent-500 text-white text-xs rounded-full h-5 flex items-center justify-center font-medium ${totalItems > 99 ? 'min-w-5 px-1' : 'w-5'} ${cartPulse ? 'cart-badge-pulse' : ''}`}>
                     {totalItems > 99 ? '99+' : totalItems}
                   </span>
                 )}
@@ -473,7 +473,7 @@ export default function CustomerLayout() {
             <div className="relative">
               <CartIcon className="h-6 w-6" />
               {totalItems > 0 && (
-                <span className={`absolute -top-2 -right-2 bg-accent-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium ${cartPulse ? 'cart-badge-pulse' : ''}`}>
+                <span className={`absolute -top-2 -right-2 bg-accent-500 text-white text-xs rounded-full h-5 flex items-center justify-center font-medium ${totalItems > 99 ? 'min-w-5 px-1' : 'w-5'} ${cartPulse ? 'cart-badge-pulse' : ''}`}>
                   {totalItems > 99 ? '99+' : totalItems}
                 </span>
               )}
