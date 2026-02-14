@@ -232,7 +232,7 @@ async function main() {
   console.log('✅ Variant products created:', variantProducts.length, 'with', variantProducts.reduce((sum, p) => sum + p.variants.length, 0), 'variants');
 
   // Create sample customers
-  const customerPassword = await bcrypt.hash('test123', 10);
+  const customerPassword = await bcrypt.hash('Test1234!', 10);
 
   const customer1 = await prisma.customer.upsert({
     where: { email: 'test@example.com' },
@@ -709,8 +709,8 @@ async function main() {
   console.log('\n📝 Default login credentials:');
   console.log('   Admin: username="admin", password="admin123"');
   console.log('   Staff: username="staff", password="staff123"');
-  console.log('   Customer 1: email="test@example.com", password="test123"');
-  console.log('   Customer 2: email="customer@hardware.ph", password="test123"');
+  console.log('   Customer 1: email="test@example.com", password="Test1234!"');
+  console.log('   Customer 2: email="customer@hardware.ph", password="Test1234!"');
 }
 
 main()

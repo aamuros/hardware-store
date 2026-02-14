@@ -172,12 +172,8 @@ const login = async (req, res, next) => {
             { expiresIn: config.jwt.expiresIn }
         );
 
-        // Update last login
-        await prisma.customer.update({
-            where: { id: customer.id },
-            data: { lastLogin: new Date() },
-        });
-
+        // Send login response immediately so transient DB errors
+        // (e.g. lock contention) on the lastLogin update don't block the user
         res.json({
             success: true,
             message: 'Login successful',
@@ -190,6 +186,14 @@ const login = async (req, res, next) => {
                     phone: customer.phone,
                 },
             },
+        });
+
+        // Update last login (fire-and-forget – must not prevent login)
+        prisma.customer.update({
+            where: { id: customer.id },
+            data: { lastLogin: new Date() },
+        }).catch(err => {
+            console.error('Failed to update lastLogin for customer', customer.id, err);
         });
     } catch (error) {
         next(error);

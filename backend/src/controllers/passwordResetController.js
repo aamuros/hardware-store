@@ -11,12 +11,13 @@ const { validatePasswordStrength } = require('../middleware/sanitizer');
  */
 const forgotPassword = async (req, res, next) => {
     try {
-        const { email } = req.body;
+        // Accept either 'username' or 'email' field for backwards compatibility
+        const email = req.body.username || req.body.email;
 
         if (!email) {
             return res.status(400).json({
                 success: false,
-                message: 'Email address is required',
+                message: 'Username is required',
             });
         }
 
@@ -25,7 +26,7 @@ const forgotPassword = async (req, res, next) => {
         if (!emailRegex.test(email)) {
             return res.status(400).json({
                 success: false,
-                message: 'Please enter a valid email address',
+                message: 'Please enter a valid username (email address)',
             });
         }
 
@@ -77,12 +78,11 @@ const forgotPassword = async (req, res, next) => {
         // Always return success to prevent email enumeration
         const response = {
             success: true,
-            message: 'If an account with that email exists, we have sent a password reset link. Please check your inbox and spam folder.',
+            message: 'If an account with that username exists, we have sent a password reset link. Please check your inbox and spam folder.',
         };
 
         // Include dev helper in development test mode only
         if (devResetLink) {
-            response.message += ' (DEV MODE: Check the server console for the reset link, or use the link below)';
             response.devResetLink = devResetLink;
         }
 

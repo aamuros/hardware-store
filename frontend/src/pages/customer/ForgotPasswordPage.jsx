@@ -2,22 +2,22 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { customerApi } from '../../services/api'
 import toast from 'react-hot-toast'
-import { EmailIcon } from '../../components/icons'
+import { UserIcon } from '../../components/icons'
 
 export default function ForgotPasswordPage() {
     const [loading, setLoading] = useState(false)
-    const [email, setEmail] = useState('')
+    const [username, setUsername] = useState('')
     const [submitted, setSubmitted] = useState(false)
     const [error, setError] = useState('')
     const [devResetLink, setDevResetLink] = useState(null)
 
-    const validateEmail = () => {
-        if (!email.trim()) {
-            setError('Email address is required')
+    const validateUsername = () => {
+        if (!username.trim()) {
+            setError('Username is required')
             return false
         }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            setError('Please enter a valid email address')
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username)) {
+            setError('Please enter a valid username')
             return false
         }
         setError('')
@@ -26,17 +26,17 @@ export default function ForgotPasswordPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault()
-        if (!validateEmail()) return
+        if (!validateUsername()) return
 
         setLoading(true)
         try {
-            const response = await customerApi.forgotPassword({ email: email.trim() })
+            const response = await customerApi.forgotPassword({ username: username.trim() })
             setSubmitted(true)
             // In dev test mode, the server includes the reset link directly
             if (response.data?.devResetLink) {
                 setDevResetLink(response.data.devResetLink)
             }
-            toast.success('Reset link sent! Check your email.')
+            toast.success('Reset link sent!')
         } catch (err) {
             const message = err.response?.data?.message || 'Something went wrong. Please try again.'
             toast.error(message)
@@ -54,41 +54,36 @@ export default function ForgotPasswordPage() {
                         {/* Success Icon */}
                         <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
                             <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                             </svg>
                         </div>
 
-                        <h1 className="text-2xl font-bold text-primary-900 mb-3">Check Your Email</h1>
+                        <h1 className="text-2xl font-bold text-primary-900 mb-3">Password Reset Requested</h1>
                         <p className="text-neutral-600 mb-2">
-                            If an account exists with <strong className="text-primary-700">{email}</strong>, 
-                            we've sent a password reset link.
+                            If an account exists with that username, we've sent a password reset link.
                         </p>
                         <p className="text-neutral-500 text-sm mb-6">
-                            The link will expire in 30 minutes. Don't forget to check your spam/junk folder.
+                            The link will expire in 30 minutes.
                         </p>
 
                         {/* Dev mode: show direct reset link */}
                         {devResetLink && (
-                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 text-left">
-                                <p className="text-yellow-800 text-xs font-semibold mb-1">DEV MODE — Email not configured</p>
-                                <p className="text-yellow-700 text-xs mb-2">
-                                    No SMTP credentials set. Use this direct link to reset your password:
-                                </p>
+                            <div className="bg-accent-50 border border-accent-200 rounded-lg p-4 mb-4">
                                 <a
                                     href={devResetLink}
-                                    className="text-accent-600 hover:text-accent-700 text-xs font-medium break-all underline"
+                                    className="btn-primary inline-block w-full text-center"
                                 >
-                                    Click here to reset password
+                                    Reset Password Now
                                 </a>
                             </div>
                         )}
 
                         <div className="space-y-3">
                             <button
-                                onClick={() => { setSubmitted(false); setEmail(''); }}
+                                onClick={() => { setSubmitted(false); setUsername(''); }}
                                 className="btn-outline w-full"
                             >
-                                Try a different email
+                                Try a different username
                             </button>
                             <Link
                                 to="/login"
@@ -109,29 +104,29 @@ export default function ForgotPasswordPage() {
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold text-primary-900">Forgot Password?</h1>
                     <p className="text-neutral-600 mt-2">
-                        Enter the email address you used to create your account and we'll send you a link to reset your password.
+                        Enter your username and we'll send you a link to reset your password.
                     </p>
                 </div>
 
                 <div className="card p-8">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label htmlFor="email" className="label">
-                                Email Address
+                            <label htmlFor="username" className="label">
+                                Username
                             </label>
                             <div className="relative">
-                                <EmailIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                                <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                                 <input
-                                    type="email"
-                                    id="email"
-                                    value={email}
+                                    type="text"
+                                    id="username"
+                                    value={username}
                                     onChange={(e) => {
-                                        setEmail(e.target.value)
+                                        setUsername(e.target.value)
                                         if (error) setError('')
                                     }}
                                     className={`input pl-10 ${error ? 'input-error' : ''}`}
-                                    placeholder="you@example.com"
-                                    autoComplete="email"
+                                    placeholder="Enter your username"
+                                    autoComplete="username"
                                     autoFocus
                                 />
                             </div>

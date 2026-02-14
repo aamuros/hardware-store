@@ -35,12 +35,9 @@ export default function ProductDetailPage() {
     fetchProduct()
   }, [id])
 
-  // Auto-select first variant if product has variants
+  // Don't auto-select variant - let user choose
   useEffect(() => {
-    if (product?.hasVariants && product?.variants?.length > 0) {
-      const available = product.variants.filter(v => v.isAvailable && !v.isDeleted)
-      setSelectedVariant(available.length > 0 ? available[0] : null)
-    } else {
+    if (!product?.hasVariants) {
       setSelectedVariant(null)
     }
   }, [product])
@@ -251,24 +248,24 @@ export default function ProductDetailPage() {
           {/* Variant Selector */}
           {product.hasVariants && product.variants?.length > 0 && (
             <div className="mb-6">
-              <label className="label">Options</label>
+              <label className="label">
+                Options {!selectedVariant && <span className="text-red-500">*</span>}
+              </label>
+              {!selectedVariant && (
+                <p className="text-sm text-neutral-500 mb-2">Please select an option to see price and availability</p>
+              )}
               <div className="flex flex-wrap gap-2">
                 {product.variants.filter(v => v.isAvailable && !v.isDeleted).map((variant) => (
                   <button
                     key={variant.id}
                     onClick={() => setSelectedVariant(variant)}
                     className={`px-4 py-2.5 rounded-xl border-2 transition-all font-medium ${selectedVariant?.id === variant.id
-                      ? 'border-primary-600 bg-primary-50 text-primary-700'
-                      : 'border-neutral-200 hover:border-primary-300 text-neutral-700'
+                      ? 'border-primary-600 bg-primary-50 text-primary-700 shadow-md'
+                      : 'border-neutral-200 hover:border-primary-400 hover:bg-primary-50/30 text-neutral-700'
                       } ${variant.stockQuantity <= 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
                     disabled={variant.stockQuantity <= 0}
                   >
                     <span>{variant.name}</span>
-                    {variant.price !== product.price && (
-                      <span className="ml-2 text-sm text-primary-600">
-                        {formatPrice(variant.price)}
-                      </span>
-                    )}
                     {variant.stockQuantity <= 0 && (
                       <span className="ml-2 text-xs text-red-500">(Out of stock)</span>
                     )}
@@ -331,53 +328,62 @@ export default function ProductDetailPage() {
 
           {/* Availability */}
           <div className="mb-6">
-            {(() => {
-              const stockQty = effectiveStock
-              const isLowStock = isInStock && stockQty <= (product.lowStockThreshold ?? 10)
+            {product.hasVariants && !selectedVariant ? (
+              <div className="p-3 bg-neutral-50 border border-neutral-200 rounded-xl">
+                <span className="inline-flex items-center text-neutral-600 font-medium">
+                  <span className="h-2 w-2 bg-neutral-400 rounded-full mr-2"></span>
+                  Select an option to check availability
+                </span>
+              </div>
+            ) : (
+              (() => {
+                const stockQty = effectiveStock
+                const isLowStock = isInStock && stockQty <= (product.lowStockThreshold ?? 10)
 
-              if (isUnavailable) {
-                return (
-                  <div className="p-3 bg-neutral-100 border border-neutral-200 rounded-xl">
-                    <span className="inline-flex items-center text-neutral-600 font-medium">
-                      <span className="h-2 w-2 bg-neutral-400 rounded-full mr-2"></span>
-                      Currently Unavailable
+                if (isUnavailable) {
+                  return (
+                    <div className="p-3 bg-neutral-100 border border-neutral-200 rounded-xl">
+                      <span className="inline-flex items-center text-neutral-600 font-medium">
+                        <span className="h-2 w-2 bg-neutral-400 rounded-full mr-2"></span>
+                        Currently Unavailable
+                      </span>
+                      <p className="text-xs text-neutral-500 mt-1 ml-4">This product is not available for ordering at this time. Please check back later.</p>
+                    </div>
+                  )
+                }
+
+                if (isOutOfStock) {
+                  return (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
+                      <span className="inline-flex items-center text-red-600 font-medium">
+                        <span className="h-2 w-2 bg-red-500 rounded-full mr-2"></span>
+                        Out of Stock
+                      </span>
+                      <p className="text-xs text-red-500 mt-1 ml-4">This product is currently out of stock. It may be restocked soon.</p>
+                    </div>
+                  )
+                }
+
+                if (isLowStock) {
+                  return (
+                    <span className="inline-flex items-center text-amber-600">
+                      <span className="h-2 w-2 bg-amber-500 rounded-full mr-2"></span>
+                      Only {stockQty} left in stock
                     </span>
-                    <p className="text-xs text-neutral-500 mt-1 ml-4">This product is not available for ordering at this time. Please check back later.</p>
-                  </div>
-                )
-              }
+                  )
+                }
 
-              if (isOutOfStock) {
                 return (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
-                    <span className="inline-flex items-center text-red-600 font-medium">
-                      <span className="h-2 w-2 bg-red-500 rounded-full mr-2"></span>
-                      Out of Stock
-                    </span>
-                    <p className="text-xs text-red-500 mt-1 ml-4">This product is currently out of stock. It may be restocked soon.</p>
-                  </div>
-                )
-              }
-
-              if (isLowStock) {
-                return (
-                  <span className="inline-flex items-center text-amber-600">
-                    <span className="h-2 w-2 bg-amber-500 rounded-full mr-2"></span>
-                    Only {stockQty} left in stock
+                  <span className="inline-flex items-center text-emerald-600">
+                    <span className="h-2 w-2 bg-emerald-500 rounded-full mr-2"></span>
+                    In Stock ({stockQty} available)
                   </span>
                 )
-              }
-
-              return (
-                <span className="inline-flex items-center text-emerald-600">
-                  <span className="h-2 w-2 bg-emerald-500 rounded-full mr-2"></span>
-                  In Stock ({stockQty} available)
-                </span>
-              )
-            })()}
+              })()
+            )}
           </div>
 
-          {isInStock && (
+          {isInStock && (!product.hasVariants || selectedVariant) && (
             <>
               {/* Quantity Selector */}
               <div className="mb-6">
@@ -468,6 +474,15 @@ export default function ProductDetailPage() {
                 </p>
               )}
             </>
+          )}
+
+          {/* Message when variant not selected */}
+          {product.hasVariants && !selectedVariant && (
+            <div className="p-4 bg-primary-50 border-2 border-primary-200 rounded-xl text-center">
+              <p className="text-primary-700 font-medium">
+                Please select an option above to continue
+              </p>
+            </div>
           )}
 
           {/* Back Link */}
