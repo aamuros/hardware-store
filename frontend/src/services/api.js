@@ -94,6 +94,10 @@ export const orderApi = {
   validateCart: (items) => api.post('/orders/validate-cart', { items }),
 }
 
+export const statsApi = {
+  getPublicStats: () => api.get('/stats'),
+}
+
 export const adminApi = {
   login: (credentials) => api.post('/admin/login', credentials),
   getDashboard: () => api.get('/admin/dashboard'),

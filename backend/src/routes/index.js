@@ -10,11 +10,13 @@ const customerRoutes = require('./customerRoutes');
 const variantRoutes = require('./variantRoutes');
 const imageRoutes = require('./imageRoutes');
 const bulkPricingRoutes = require('./bulkPricingRoutes');
+const statsRoutes = require('./statsRoutes');
 
 // Public routes
 router.use('/products', productRoutes);
 router.use('/categories', categoryRoutes);
 router.use('/orders', orderRoutes);
+router.use('/stats', statsRoutes);
 
 // Variant routes (public GET, admin POST/PATCH/DELETE)
 router.use('/', variantRoutes);
@@ -43,6 +45,7 @@ router.get('/', (req, res) => {
       orders: '/api/orders',
       admin: '/api/admin',
       customers: '/api/customers',
+      stats: '/api/stats',
     },
   });
 });

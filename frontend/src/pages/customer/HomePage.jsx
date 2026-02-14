@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useMemo, useCallback, memo } from 'react'
+import { useState, useEffect, useMemo, useCallback, memo } from 'react'
 import { Link } from 'react-router-dom'
-import { categoryApi, productApi } from '../../services/api'
+import { categoryApi, productApi, statsApi } from '../../services/api'
 import ProductCard from '../../components/ProductCard'
 import {
   TruckIcon,
@@ -20,65 +20,81 @@ import {
 } from '../../components/icons'
 
 // Animated counter hook
-function useCountUp(end, duration = 2000, startOnView = true) {
+function useCountUp(end, duration = 2000, started = false) {
   const [count, setCount] = useState(0)
-  const [hasStarted, setHasStarted] = useState(!startOnView)
-  const ref = useRef(null)
 
   useEffect(() => {
-    if (!startOnView) return
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !hasStarted) {
-          setHasStarted(true)
-        }
-      },
-      { threshold: 0.1 }
-    )
-
-    if (ref.current) {
-      observer.observe(ref.current)
-    }
-
-    return () => observer.disconnect()
-  }, [startOnView, hasStarted])
-
-  useEffect(() => {
-    if (!hasStarted) return
+    if (!started || end === 0) return
 
     let startTime
+    let animationId
     const animate = (currentTime) => {
       if (!startTime) startTime = currentTime
       const progress = Math.min((currentTime - startTime) / duration, 1)
       setCount(Math.floor(progress * end))
       if (progress < 1) {
-        requestAnimationFrame(animate)
+        animationId = requestAnimationFrame(animate)
       }
     }
-    requestAnimationFrame(animate)
-  }, [end, duration, hasStarted])
+    animationId = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(animationId)
+  }, [end, duration, started])
 
-  return { count, ref }
+  return count
+}
+
+// Hook to detect when an element is visible in viewport
+function useInView() {
+  const [isInView, setIsInView] = useState(false)
+  const [node, setNode] = useState(null)
+  const ref = useCallback((el) => setNode(el), [])
+
+  useEffect(() => {
+    if (!node) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true)
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.1 }
+    )
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [node])
+
+  return { ref, isInView }
 }
 
 export default function HomePage() {
   const [categories, setCategories] = useState([])
   const [featuredProducts, setFeaturedProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState({ totalProducts: 0, deliveredOrders: 0, totalCustomers: 0 })
 
-  // Animated stats
-  const productsCount = useCountUp(500, 2000)
-  const ordersCount = useCountUp(1200, 2000)
-  const customersCount = useCountUp(850, 2000)
+  // Single visibility observer for the stats container
+  const statsInView = useInView()
+  const statsReady = statsInView.isInView && stats.totalProducts > 0
+
+  // Animated stats - all driven by the same visibility trigger
+  const productsCount = useCountUp(stats.totalProducts, 2000, statsReady)
+  const ordersCount = useCountUp(stats.deliveredOrders, 2000, statsReady)
+  const customersCount = useCountUp(stats.totalCustomers, 2000, statsReady)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [categoriesRes, productsRes] = await Promise.all([
+        const [categoriesRes, productsRes, statsRes] = await Promise.all([
           categoryApi.getAll(),
           productApi.getAll({ limit: 24, available: true }),
+          statsApi.getPublicStats().catch(() => ({ data: { data: {} } })),
         ])
+
+        // Set real stats from the database
+        if (statsRes.data?.data) {
+          setStats(statsRes.data.data)
+        }
         setCategories(categoriesRes.data.data)
 
         // Curate featured products: prioritize in-stock, diverse categories
@@ -204,20 +220,20 @@ export default function HomePage() {
             {/* Right Content - Stats */}
             <div className="hidden lg:block">
               <div
-                ref={productsCount.ref}
+                ref={statsInView.ref}
                 className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 shadow-2xl shadow-black/10"
               >
                 <div className="grid grid-cols-3 gap-6 text-center">
                   <div className="space-y-1">
-                    <div className="text-4xl font-bold text-white">{productsCount.count}+</div>
+                    <div className="text-4xl font-bold text-white">{productsCount}+</div>
                     <div className="text-primary-300 text-sm font-medium">Products</div>
                   </div>
                   <div className="space-y-1">
-                    <div className="text-4xl font-bold text-white">{ordersCount.count}+</div>
+                    <div className="text-4xl font-bold text-white">{ordersCount}+</div>
                     <div className="text-primary-300 text-sm font-medium">Orders Delivered</div>
                   </div>
                   <div className="space-y-1">
-                    <div className="text-4xl font-bold text-white">{customersCount.count}+</div>
+                    <div className="text-4xl font-bold text-white">{customersCount}+</div>
                     <div className="text-primary-300 text-sm font-medium">Happy Customers</div>
                   </div>
                 </div>
@@ -244,15 +260,15 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-              <div className="text-2xl font-bold text-primary-800">500+</div>
+              <div className="text-2xl font-bold text-primary-800">{stats.totalProducts.toLocaleString()}+</div>
               <div className="text-neutral-500 text-xs">Products</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-primary-800">1200+</div>
+              <div className="text-2xl font-bold text-primary-800">{stats.deliveredOrders.toLocaleString()}+</div>
               <div className="text-neutral-500 text-xs">Orders</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-primary-800">850+</div>
+              <div className="text-2xl font-bold text-primary-800">{stats.totalCustomers.toLocaleString()}+</div>
               <div className="text-neutral-500 text-xs">Customers</div>
             </div>
           </div>
