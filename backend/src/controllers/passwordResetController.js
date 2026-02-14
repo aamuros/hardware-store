@@ -31,6 +31,7 @@ const forgotPassword = async (req, res, next) => {
 
         // Always respond with success to prevent email enumeration attacks
         // But only actually send the email if the account exists
+        let devResetLink = null;
         const customer = await prisma.customer.findUnique({
             where: { email: email.toLowerCase() },
         });
@@ -63,14 +64,29 @@ const forgotPassword = async (req, res, next) => {
             });
 
             // Send the reset email
-            await sendPasswordResetEmail(email, resetToken, customer.name);
+            const emailResult = await sendPasswordResetEmail(email, resetToken, customer.name);
+
+            // In development with test mode, include the reset link in the response
+            // so developers can test the flow without real email
+            if (config.email.testMode && config.nodeEnv === 'development') {
+                const frontendUrl = config.cors.origin || 'http://localhost:5173';
+                devResetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
+            }
         }
 
         // Always return success to prevent email enumeration
-        res.json({
+        const response = {
             success: true,
             message: 'If an account with that email exists, we have sent a password reset link. Please check your inbox and spam folder.',
-        });
+        };
+
+        // Include dev helper in development test mode only
+        if (devResetLink) {
+            response.message += ' (DEV MODE: Check the server console for the reset link, or use the link below)';
+            response.devResetLink = devResetLink;
+        }
+
+        res.json(response);
     } catch (error) {
         next(error);
     }

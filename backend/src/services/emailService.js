@@ -14,21 +14,30 @@ const getTransporter = () => {
     if (transporter) return transporter;
 
     if (config.email.testMode) {
-        // In test mode, create an Ethereal test account or just use a stub
-        console.log('[Email Service] Running in TEST MODE - emails will be logged, not sent');
+        const hasCredentials = config.email.user && config.email.password;
+        if (!hasCredentials) {
+            console.warn('\n⚠️  [Email Service] TEST MODE — No email credentials configured.');
+            console.warn('   Emails will be logged to the console but NOT actually sent.');
+            console.warn('   To send real emails, add EMAIL_USER and EMAIL_PASSWORD to your .env file.');
+            console.warn('   For Gmail, use an App Password: https://myaccount.google.com/apppasswords\n');
+        } else {
+            console.log('[Email Service] Running in TEST MODE (EMAIL_TEST_MODE=true) — emails will be logged, not sent.');
+        }
         transporter = {
             sendMail: async (mailOptions) => {
-                console.log('=== EMAIL (TEST MODE) ===');
-                console.log(`To: ${mailOptions.to}`);
-                console.log(`Subject: ${mailOptions.subject}`);
-                console.log(`Body: ${mailOptions.text || '(HTML only)'}`);
-                console.log('=========================');
+                console.log('\n📧 === EMAIL (TEST MODE — not actually sent) ===');
+                console.log(`   To:      ${mailOptions.to}`);
+                console.log(`   Subject: ${mailOptions.subject}`);
+                console.log(`   Body:    ${mailOptions.text ? mailOptions.text.substring(0, 200) + '...' : '(HTML only)'}`);
+                console.log('   ================================================\n');
                 return { messageId: `test-${Date.now()}`, testMode: true };
             },
         };
         return transporter;
     }
 
+    // Real email transport
+    console.log(`[Email Service] Configured to send real emails via ${config.email.host}:${config.email.port}`);
     transporter = nodemailer.createTransport({
         host: config.email.host,
         port: config.email.port,

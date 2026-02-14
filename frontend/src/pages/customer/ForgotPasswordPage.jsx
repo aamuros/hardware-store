@@ -9,6 +9,7 @@ export default function ForgotPasswordPage() {
     const [email, setEmail] = useState('')
     const [submitted, setSubmitted] = useState(false)
     const [error, setError] = useState('')
+    const [devResetLink, setDevResetLink] = useState(null)
 
     const validateEmail = () => {
         if (!email.trim()) {
@@ -31,6 +32,10 @@ export default function ForgotPasswordPage() {
         try {
             const response = await customerApi.forgotPassword({ email: email.trim() })
             setSubmitted(true)
+            // In dev test mode, the server includes the reset link directly
+            if (response.data?.devResetLink) {
+                setDevResetLink(response.data.devResetLink)
+            }
             toast.success('Reset link sent! Check your email.')
         } catch (err) {
             const message = err.response?.data?.message || 'Something went wrong. Please try again.'
@@ -61,6 +66,22 @@ export default function ForgotPasswordPage() {
                         <p className="text-neutral-500 text-sm mb-6">
                             The link will expire in 30 minutes. Don't forget to check your spam/junk folder.
                         </p>
+
+                        {/* Dev mode: show direct reset link */}
+                        {devResetLink && (
+                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 text-left">
+                                <p className="text-yellow-800 text-xs font-semibold mb-1">DEV MODE — Email not configured</p>
+                                <p className="text-yellow-700 text-xs mb-2">
+                                    No SMTP credentials set. Use this direct link to reset your password:
+                                </p>
+                                <a
+                                    href={devResetLink}
+                                    className="text-accent-600 hover:text-accent-700 text-xs font-medium break-all underline"
+                                >
+                                    Click here to reset password
+                                </a>
+                            </div>
+                        )}
 
                         <div className="space-y-3">
                             <button

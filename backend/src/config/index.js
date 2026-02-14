@@ -60,8 +60,12 @@ const config = {
     user: process.env.EMAIL_USER || '',
     password: process.env.EMAIL_PASSWORD || '',
     from: process.env.EMAIL_FROM || process.env.EMAIL_USER || 'noreply@hardwarestore.com',
-    // Test mode - logs emails but doesn't send
-    testMode: process.env.EMAIL_TEST_MODE !== 'false', // defaults to true for safety
+    // Smart auto-detect: test mode ON if no credentials are configured
+    // Set EMAIL_TEST_MODE=true to force test mode even with credentials
+    // Set EMAIL_TEST_MODE=false to force real emails (will fail without credentials)
+    testMode: process.env.EMAIL_TEST_MODE
+      ? process.env.EMAIL_TEST_MODE === 'true'
+      : !(process.env.EMAIL_USER && process.env.EMAIL_PASSWORD),
   },
 
   // Password Reset
