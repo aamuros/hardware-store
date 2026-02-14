@@ -65,9 +65,11 @@ temp/
 prisma/*.db
 prisma/*.db-journal
 
-# Uploads
-uploads/
-!uploads/.gitkeep
+# Uploads (track seed product images)
+backend/uploads/
+!backend/uploads/.gitkeep
+!backend/uploads/*.jpg
+!backend/uploads/*.png
 
 # Misc
 *.pem
