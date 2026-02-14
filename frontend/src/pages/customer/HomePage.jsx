@@ -77,7 +77,7 @@ export default function HomePage() {
       try {
         const [categoriesRes, productsRes] = await Promise.all([
           categoryApi.getAll(),
-          productApi.getAll({ limit: 8 }),
+          productApi.getAll({ limit: 8, available: true }),
         ])
         setCategories(categoriesRes.data.data)
         setFeaturedProducts(productsRes.data.data)

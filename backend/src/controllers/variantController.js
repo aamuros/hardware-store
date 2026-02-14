@@ -205,6 +205,30 @@ const deleteVariant = async (req, res, next) => {
             });
         }
 
+        // Check for active orders containing this variant
+        const activeOrderStatuses = ['pending', 'accepted', 'preparing', 'out_for_delivery'];
+        const activeOrderItems = await prisma.orderItem.findMany({
+            where: {
+                variantId: parsedId,
+                order: {
+                    status: { in: activeOrderStatuses },
+                },
+            },
+            include: {
+                order: {
+                    select: { orderNumber: true, status: true },
+                },
+            },
+        });
+
+        if (activeOrderItems.length > 0) {
+            const orderNumbers = [...new Set(activeOrderItems.map(item => item.order.orderNumber))];
+            return res.status(400).json({
+                success: false,
+                message: `Cannot delete this variant. It is part of ${orderNumbers.length} active order(s): ${orderNumbers.join(', ')}. Please complete or cancel these orders first.`,
+            });
+        }
+
         // Soft delete
         await prisma.productVariant.update({
             where: { id: parsedId },

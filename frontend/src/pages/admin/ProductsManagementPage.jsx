@@ -210,7 +210,8 @@ export default function ProductsManagementPage() {
       fetchProducts()
     } catch (error) {
       console.error('Error deleting product:', error)
-      alert('Failed to delete product. It may be referenced by existing orders.')
+      const message = error.response?.data?.message || 'Failed to delete product. Please try again.'
+      alert(message)
     } finally {
       setDeleting(null)
     }
