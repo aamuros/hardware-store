@@ -2,12 +2,11 @@ const crypto = require('crypto');
 const prisma = require('../utils/prismaClient');
 const bcrypt = require('bcryptjs');
 const config = require('../config');
-const { sendPasswordResetEmail } = require('../services/emailService');
 const { validatePasswordStrength } = require('../middleware/sanitizer');
 
 /**
  * POST /api/customers/forgot-password
- * Request a password reset link sent to email
+ * Request a password reset link (no email — link returned directly)
  */
 const forgotPassword = async (req, res, next) => {
     try {
@@ -30,9 +29,8 @@ const forgotPassword = async (req, res, next) => {
             });
         }
 
-        // Always respond with success to prevent email enumeration attacks
-        // But only actually send the email if the account exists
-        let devResetLink = null;
+        // Always respond with success to prevent username enumeration attacks
+        let resetLink = null;
         const customer = await prisma.customer.findUnique({
             where: { email: email.toLowerCase() },
         });
@@ -64,26 +62,20 @@ const forgotPassword = async (req, res, next) => {
                 },
             });
 
-            // Send the reset email
-            const emailResult = await sendPasswordResetEmail(email, resetToken, customer.name);
-
-            // In development with test mode, include the reset link in the response
-            // so developers can test the flow without real email
-            if (config.email.testMode && config.nodeEnv === 'development') {
-                const frontendUrl = config.cors.origin || 'http://localhost:5173';
-                devResetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
-            }
+            // Build the reset link (returned directly — no email integration)
+            const frontendUrl = config.cors.origin || 'http://localhost:5173';
+            resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
         }
 
-        // Always return success to prevent email enumeration
+        // Always return success to prevent username enumeration
         const response = {
             success: true,
-            message: 'If an account with that username exists, we have sent a password reset link. Please check your inbox and spam folder.',
+            message: 'If an account exists with that username, we\'ve sent a password reset link.',
         };
 
-        // Include dev helper in development test mode only
-        if (devResetLink) {
-            response.devResetLink = devResetLink;
+        // Include the reset link so the frontend can navigate directly
+        if (resetLink) {
+            response.resetLink = resetLink;
         }
 
         res.json(response);

@@ -9,7 +9,7 @@ export default function ForgotPasswordPage() {
     const [username, setUsername] = useState('')
     const [submitted, setSubmitted] = useState(false)
     const [error, setError] = useState('')
-    const [devResetLink, setDevResetLink] = useState(null)
+    const [resetLink, setResetLink] = useState(null)
 
     const validateUsername = () => {
         if (!username.trim()) {
@@ -32,11 +32,10 @@ export default function ForgotPasswordPage() {
         try {
             const response = await customerApi.forgotPassword({ username: username.trim() })
             setSubmitted(true)
-            // In dev test mode, the server includes the reset link directly
-            if (response.data?.devResetLink) {
-                setDevResetLink(response.data.devResetLink)
+            if (response.data?.resetLink) {
+                setResetLink(response.data.resetLink)
             }
-            toast.success('Reset link sent!')
+            toast.success('Reset link generated!')
         } catch (err) {
             const message = err.response?.data?.message || 'Something went wrong. Please try again.'
             toast.error(message)
@@ -66,11 +65,10 @@ export default function ForgotPasswordPage() {
                             The link will expire in 30 minutes.
                         </p>
 
-                        {/* Dev mode: show direct reset link */}
-                        {devResetLink && (
-                            <div className="bg-accent-50 border border-accent-200 rounded-lg p-4 mb-4">
+                        {resetLink && (
+                            <div className="mb-4">
                                 <a
-                                    href={devResetLink}
+                                    href={resetLink}
                                     className="btn-primary inline-block w-full text-center"
                                 >
                                     Reset Password Now
