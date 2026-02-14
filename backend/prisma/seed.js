@@ -368,9 +368,37 @@ async function main() {
     return `HD-${timestamp}-${random}`;
   };
 
-  // Create sample orders
+  // Helper functions for realistic data generation
+  const randomItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+  const randomDate = (daysBack) => {
+    const now = new Date();
+    const past = new Date(now.getTime() - daysBack * 24 * 60 * 60 * 1000);
+    return new Date(past.getTime() + Math.random() * (now.getTime() - past.getTime()));
+  };
+
+  // Guest customer profiles for realistic orders
+  const guestCustomers = [
+    { name: 'Juan Dela Cruz', phone: '09171234567', address: '123 Rizal Street', barangay: 'Barangay San Jose', landmarks: 'Near the public market' },
+    { name: 'Maria Santos', phone: '09281234567', address: '789 Mabini Street', barangay: 'Barangay Poblacion', landmarks: 'Near the church' },
+    { name: 'Pedro Reyes', phone: '09391234567', address: '321 Aguinaldo Highway', barangay: 'Barangay Tejeros', landmarks: 'Beside 7-Eleven' },
+    { name: 'Ana Gonzales', phone: '09451234567', address: '555 Quezon Boulevard', barangay: 'Barangay Magsaysay', landmarks: 'Across from the plaza' },
+    { name: 'Carlos Mendoza', phone: '09175556666', address: '777 Commonwealth Ave', barangay: 'Batasan Hills', landmarks: 'Beside Jollibee' },
+    { name: 'Sofia Cruz', phone: '09187778888', address: '888 Shaw Blvd', barangay: 'Pleasant Hills', landmarks: 'Near Starmall' },
+    { name: 'Roberto Villanueva', phone: '09199990000', address: '999 Ortigas Ave', barangay: 'San Antonio', landmarks: 'Across Robinson' },
+    { name: 'Elena Fernandez', phone: '09161231234', address: '111 C5 Road', barangay: 'Signal Village', landmarks: 'Near Gate 1' },
+    { name: 'Miguel Tan', phone: '09174564567', address: '222 Macapagal Blvd', barangay: 'Baclaran', landmarks: 'Near MOA' },
+    { name: 'Patricia Lim', phone: '09187897890', address: '333 Taft Ave', barangay: 'Ermita', landmarks: 'Near university' },
+    { name: 'Antonio Bautista', phone: '09203213210', address: '444 Espana Blvd', barangay: 'Sampaloc', landmarks: 'Near UST' },
+    { name: 'Rosa Garcia', phone: '09176546543', address: '555 Aurora Blvd', barangay: 'Project 4', landmarks: 'Behind Gateway Mall' },
+    { name: 'Fernando Castro', phone: '09189879876', address: '666 Quirino Hwy', barangay: 'Novaliches', landmarks: 'Near SM Nova' },
+    { name: 'Carmen Aquino', phone: '09161011010', address: '777 Congressional Ave', barangay: 'Project 8', landmarks: 'Near Savemore' },
+    { name: 'Ricardo Torres', phone: '09172022020', address: '888 Mindanao Ave', barangay: 'Talipapa', landmarks: 'Near Puregold' },
+  ];
+
+  // Create sample orders (original 5 + 80 new = 85 total)
   const sampleOrders = [
-    // Pending order - customer 1
+    // Original 5 seed orders
     {
       orderNumber: generateOrderNumber(),
       customerId: customer1.id,
@@ -387,7 +415,6 @@ async function main() {
         { sku: 'TAPE-TEFLON', quantity: 5 },
       ],
     },
-    // Preparing order - customer 2
     {
       orderNumber: generateOrderNumber(),
       customerId: customer2.id,
@@ -404,7 +431,6 @@ async function main() {
         { sku: 'SCREW-W8-1', quantity: 3 },
       ],
     },
-    // Completed order - guest customer
     {
       orderNumber: generateOrderNumber(),
       customerId: null,
@@ -421,7 +447,6 @@ async function main() {
         { sku: 'WIRE-TIE-16', quantity: 10 },
       ],
     },
-    // Delivered order - customer 1
     {
       orderNumber: generateOrderNumber(),
       customerId: customer1.id,
@@ -438,7 +463,6 @@ async function main() {
         { sku: 'WIRE-THHN-14', quantity: 100 },
       ],
     },
-    // Another pending order - guest
     {
       orderNumber: generateOrderNumber(),
       customerId: null,
@@ -458,8 +482,8 @@ async function main() {
     },
   ];
 
+  // Create the original 5 orders
   for (const orderData of sampleOrders) {
-    // Calculate order items and total
     const orderItems = orderData.items.map(item => {
       const product = productMap.get(item.sku);
       if (!product) {
@@ -502,6 +526,162 @@ async function main() {
     });
   }
   console.log('✅ Sample orders created:', sampleOrders.length);
+
+  // -------------------------------------------------------
+  // Generate 300+ orders spanning 18 months (Aug 2024 – Feb 2026)
+  // with seasonal trends and month-over-month growth
+  // -------------------------------------------------------
+  const productSkus = allProducts.map(p => p.sku).filter(Boolean);
+
+  // Monthly order targets — simulates growth + seasonal variation
+  // Construction season peaks May-Oct, holiday spike Dec
+  const monthlyPlan = [
+    // 2024
+    { year: 2024, month: 7, count: 8 },  // Aug 2024 — store just opened
+    { year: 2024, month: 8, count: 10 },  // Sep
+    { year: 2024, month: 9, count: 12 },  // Oct — end of construction peak
+    { year: 2024, month: 10, count: 10 },  // Nov — cooler season
+    { year: 2024, month: 11, count: 18 },  // Dec — holiday rush
+    // 2025
+    { year: 2025, month: 0, count: 12 },  // Jan — post-holiday dip
+    { year: 2025, month: 1, count: 14 },  // Feb
+    { year: 2025, month: 2, count: 16 },  // Mar — spring projects
+    { year: 2025, month: 3, count: 18 },  // Apr
+    { year: 2025, month: 4, count: 24 },  // May — construction peak starts
+    { year: 2025, month: 5, count: 28 },  // Jun — peak
+    { year: 2025, month: 6, count: 30 },  // Jul — peak
+    { year: 2025, month: 7, count: 28 },  // Aug — peak
+    { year: 2025, month: 8, count: 24 },  // Sep — peak tapering
+    { year: 2025, month: 9, count: 20 },  // Oct — end peak
+    { year: 2025, month: 10, count: 16 },  // Nov
+    { year: 2025, month: 11, count: 25 },  // Dec — holiday rush
+    // 2026
+    { year: 2026, month: 0, count: 14 },  // Jan
+    { year: 2026, month: 1, count: 8 },  // Feb (partial month — up to today)
+  ];
+
+  const totalPlanned = monthlyPlan.reduce((s, m) => s + m.count, 0);
+  console.log(`🔄 Creating ${totalPlanned} historical orders across 18 months...`);
+
+  const statusFlow = {
+    'pending': ['pending'],
+    'accepted': ['pending', 'accepted'],
+    'rejected': ['pending', 'rejected'],
+    'preparing': ['pending', 'accepted', 'preparing'],
+    'out_for_delivery': ['pending', 'accepted', 'preparing', 'out_for_delivery'],
+    'delivered': ['pending', 'accepted', 'preparing', 'out_for_delivery', 'delivered'],
+    'completed': ['pending', 'accepted', 'preparing', 'out_for_delivery', 'delivered', 'completed'],
+    'cancelled': ['pending', 'cancelled'],
+  };
+
+  let createdCount = 0;
+  const now = new Date();
+
+  for (const { year, month, count } of monthlyPlan) {
+    for (let i = 0; i < count; i++) {
+      // Random date within the month
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const maxDay = (year === 2026 && month === 1) ? Math.min(14, daysInMonth) : daysInMonth;
+      const day = randomInt(1, maxDay);
+      const hour = randomInt(7, 19);
+      const minute = randomInt(0, 59);
+      const orderDate = new Date(year, month, day, hour, minute);
+
+      // Don't create orders in the future
+      if (orderDate > now) continue;
+
+      // Status: older orders almost always completed; recent ones more varied
+      const ageInDays = (now - orderDate) / (1000 * 60 * 60 * 24);
+      let status;
+      if (ageInDays > 180) {
+        // Very old → heavily completed
+        const r = Math.random();
+        status = r < 0.72 ? 'completed' : r < 0.88 ? 'delivered' : r < 0.94 ? 'cancelled' : 'rejected';
+      } else if (ageInDays > 30) {
+        // Medium age → mostly complete, some cancelled
+        const r = Math.random();
+        status = r < 0.55 ? 'completed' : r < 0.75 ? 'delivered' : r < 0.85 ? 'cancelled' : r < 0.90 ? 'rejected' : r < 0.95 ? 'out_for_delivery' : 'preparing';
+      } else {
+        // Recent — mix of all statuses
+        const r = Math.random();
+        status = r < 0.20 ? 'pending' : r < 0.35 ? 'accepted' : r < 0.50 ? 'preparing' : r < 0.60 ? 'out_for_delivery' : r < 0.75 ? 'delivered' : r < 0.90 ? 'completed' : r < 0.96 ? 'cancelled' : 'rejected';
+      }
+
+      const customer = randomItem(guestCustomers);
+      const numItems = randomInt(1, 6);
+
+      // Pick random unique products
+      const pickedSkus = new Set();
+      const items = [];
+      for (let j = 0; j < numItems; j++) {
+        let sku;
+        let attempts = 0;
+        do {
+          sku = randomItem(productSkus);
+          attempts++;
+        } while (pickedSkus.has(sku) && attempts < 20);
+        if (pickedSkus.has(sku)) continue;
+        pickedSkus.add(sku);
+
+        const product = productMap.get(sku);
+        if (!product) continue;
+        const quantity = randomInt(1, 10);
+        items.push({
+          productId: product.id,
+          quantity,
+          unitPrice: product.price,
+          subtotal: product.price * quantity,
+        });
+      }
+      if (items.length === 0) continue;
+
+      const totalAmount = items.reduce((sum, it) => sum + it.subtotal, 0);
+      const isRegistered = randomInt(1, 4) === 1;
+
+      const flow = statusFlow[status] || ['pending'];
+      const historyEntries = [];
+      let prevStatus = null;
+      let historyDate = new Date(orderDate);
+      for (const flowStatus of flow) {
+        historyDate = new Date(historyDate.getTime() + randomInt(30, 180) * 60000);
+        historyEntries.push({
+          fromStatus: prevStatus,
+          toStatus: flowStatus,
+          notes: flowStatus === 'rejected' ? 'Out of stock items' :
+            flowStatus === 'cancelled' ? 'Customer requested cancellation' :
+              flowStatus === 'pending' ? 'Order placed (seed data)' : null,
+          createdAt: historyDate,
+        });
+        prevStatus = flowStatus;
+      }
+
+      await prisma.order.create({
+        data: {
+          orderNumber: generateOrderNumber(),
+          customerId: isRegistered ? randomItem([customer1.id, customer2.id]) : null,
+          customerName: customer.name,
+          phone: customer.phone,
+          address: customer.address,
+          barangay: customer.barangay,
+          landmarks: customer.landmarks,
+          status,
+          totalAmount,
+          notes: randomInt(1, 4) === 1 ? randomItem([
+            'Please call before delivery',
+            'Leave at the gate',
+            'Rush order - need ASAP',
+            'Deliver in the morning only',
+            'Construction site - ask for foreman',
+          ]) : null,
+          createdAt: orderDate,
+          items: { create: items },
+          statusHistory: { create: historyEntries },
+        },
+      });
+      createdCount++;
+    }
+  }
+  console.log(`✅ Historical orders created: ${createdCount}`);
 
   // Add wishlist items for customer 1
   const wishlistProducts = await prisma.product.findMany({

@@ -136,59 +136,72 @@ const getDashboard = async (req, res, next) => {
 // GET /api/admin/reports/sales
 const getSalesReport = async (req, res, next) => {
   try {
-    const { startDate, endDate, period = 'daily' } = req.query;
+    const { days, startDate, endDate } = req.query;
 
-    // Build date filter
-    const where = {
-      status: { in: ['delivered', 'completed'] },
-    };
+    // Build date range: support both `days` (from frontend) and startDate/endDate
+    let start, end;
+    end = new Date();
+    end.setHours(23, 59, 59, 999);
 
-    // Default to last 30 days if no dates provided
-    let start = startDate ? new Date(startDate) : new Date();
-    let end = endDate ? new Date(endDate) : new Date();
-
-    if (!startDate) {
-      start.setDate(start.getDate() - 30);
+    if (days) {
+      start = new Date();
+      start.setDate(start.getDate() - parseInt(days, 10));
       start.setHours(0, 0, 0, 0);
+    } else if (startDate) {
+      start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      if (endDate) {
+        end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+      }
     } else {
+      start = new Date();
+      start.setDate(start.getDate() - 30);
       start.setHours(0, 0, 0, 0);
     }
 
-    // Set end to end of day (23:59:59.999)
-    end.setHours(23, 59, 59, 999);
-
-    where.createdAt = {
-      gte: start,
-      lte: end,
+    const dateFilter = {
+      createdAt: { gte: start, lte: end },
     };
 
-    // Get aggregate totals
-    const salesData = await prisma.order.aggregate({
-      where,
-      _sum: { totalAmount: true },
-      _count: { id: true },
-      _avg: { totalAmount: true },
-      _max: { totalAmount: true },
-      _min: { totalAmount: true },
-    });
-
-    // Get all orders for daily breakdown
-    const orders = await prisma.order.findMany({
-      where,
-      select: {
-        id: true,
-        totalAmount: true,
-        createdAt: true,
-        status: true,
-      },
+    // --- All orders in range (any status) ---
+    const allOrdersInRange = await prisma.order.findMany({
+      where: dateFilter,
+      select: { id: true, totalAmount: true, createdAt: true, status: true },
       orderBy: { createdAt: 'asc' },
     });
 
-    // Generate daily breakdown
-    const dailyBreakdown = {};
-    const daysInRange = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    const totalOrders = allOrdersInRange.length;
+    const totalRevenue = allOrdersInRange.reduce((sum, o) => sum + o.totalAmount, 0);
 
-    // Initialize all days with zero values
+    // --- Status-specific counts ---
+    const completedStatuses = ['delivered', 'completed'];
+    const completedOrders = allOrdersInRange.filter(o => completedStatuses.includes(o.status)).length;
+    const cancelledOrders = allOrdersInRange.filter(o => o.status === 'cancelled').length;
+    const completedRevenue = allOrdersInRange
+      .filter(o => completedStatuses.includes(o.status))
+      .reduce((sum, o) => sum + o.totalAmount, 0);
+    const pendingRevenue = allOrdersInRange
+      .filter(o => o.status === 'pending')
+      .reduce((sum, o) => sum + o.totalAmount, 0);
+    const averageOrderValue = totalOrders > 0
+      ? Math.round((totalRevenue / totalOrders) * 100) / 100
+      : 0;
+
+    // --- Orders by status ---
+    const statusCounts = {};
+    allOrdersInRange.forEach(o => {
+      statusCounts[o.status] = (statusCounts[o.status] || 0) + 1;
+    });
+    const ordersByStatus = Object.entries(statusCounts).map(([status, count]) => ({
+      status,
+      _count: count,
+    }));
+
+    // --- Daily breakdown for charts ---
+    const dailyBreakdown = {};
+    const daysInRange = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+
     for (let i = 0; i < daysInRange; i++) {
       const date = new Date(start);
       date.setDate(date.getDate() + i);
@@ -196,8 +209,7 @@ const getSalesReport = async (req, res, next) => {
       dailyBreakdown[dateKey] = { revenue: 0, orders: 0 };
     }
 
-    // Fill in actual data
-    orders.forEach(order => {
+    allOrdersInRange.forEach(order => {
       const dateKey = new Date(order.createdAt).toISOString().split('T')[0];
       if (dailyBreakdown[dateKey]) {
         dailyBreakdown[dateKey].revenue += order.totalAmount;
@@ -205,67 +217,57 @@ const getSalesReport = async (req, res, next) => {
       }
     });
 
-    // Convert to array format for charts
     const dailyData = Object.entries(dailyBreakdown).map(([date, data]) => ({
       date,
       revenue: Math.round(data.revenue * 100) / 100,
       orders: data.orders,
     }));
 
-    // Calculate comparison with previous period
-    const periodLength = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    // --- Growth comparison with previous period ---
+    const periodLength = daysInRange;
     const previousStart = new Date(start);
     previousStart.setDate(previousStart.getDate() - periodLength);
     const previousEnd = new Date(start);
-    previousEnd.setMilliseconds(-1); // End just before current period starts
+    previousEnd.setMilliseconds(-1);
 
-    const previousPeriodData = await prisma.order.aggregate({
+    const previousOrders = await prisma.order.findMany({
       where: {
-        status: { in: ['delivered', 'completed'] },
-        createdAt: {
-          gte: previousStart,
-          lte: previousEnd,
-        },
+        createdAt: { gte: previousStart, lte: previousEnd },
       },
-      _sum: { totalAmount: true },
-      _count: { id: true },
+      select: { totalAmount: true },
     });
 
-    const currentTotal = salesData._sum.totalAmount || 0;
-    const previousTotal = previousPeriodData._sum.totalAmount || 0;
+    const previousTotal = previousOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+    const previousCount = previousOrders.length;
     const revenueGrowth = previousTotal > 0
-      ? ((currentTotal - previousTotal) / previousTotal * 100).toFixed(1)
-      : currentTotal > 0 ? 100 : 0;
-
-    const currentOrders = salesData._count.id || 0;
-    const previousOrders = previousPeriodData._count.id || 0;
-    const orderGrowth = previousOrders > 0
-      ? ((currentOrders - previousOrders) / previousOrders * 100).toFixed(1)
-      : currentOrders > 0 ? 100 : 0;
+      ? parseFloat(((totalRevenue - previousTotal) / previousTotal * 100).toFixed(1))
+      : totalRevenue > 0 ? 100 : 0;
+    const orderGrowth = previousCount > 0
+      ? parseFloat(((totalOrders - previousCount) / previousCount * 100).toFixed(1))
+      : totalOrders > 0 ? 100 : 0;
 
     res.json({
       success: true,
       data: {
-        // Summary metrics
-        totalSales: salesData._sum.totalAmount || 0,
-        orderCount: salesData._count.id || 0,
-        averageOrderValue: Math.round((salesData._avg.totalAmount || 0) * 100) / 100,
-        highestOrder: salesData._max.totalAmount || 0,
-        lowestOrder: salesData._min.totalAmount || 0,
-        // Period info
-        period: {
-          start: start.toISOString(),
-          end: end.toISOString(),
-          days: periodLength,
-        },
-        // Growth comparison
+        totalRevenue: Math.round(totalRevenue * 100) / 100,
+        totalOrders,
+        completedOrders,
+        cancelledOrders,
+        averageOrderValue,
+        completedRevenue: Math.round(completedRevenue * 100) / 100,
+        pendingRevenue: Math.round(pendingRevenue * 100) / 100,
+        ordersByStatus,
+        // Keep legacy fields for existing tests
+        totalSales: Math.round(totalRevenue * 100) / 100,
+        orderCount: totalOrders,
+        // Period & growth
+        period: { start: start.toISOString(), end: end.toISOString(), days: periodLength },
         growth: {
-          revenue: parseFloat(revenueGrowth),
-          orders: parseFloat(orderGrowth),
+          revenue: revenueGrowth,
+          orders: orderGrowth,
           previousPeriodRevenue: previousTotal,
-          previousPeriodOrders: previousOrders,
+          previousPeriodOrders: previousCount,
         },
-        // Daily breakdown for charts
         dailyData,
       },
     });
@@ -278,32 +280,128 @@ const getSalesReport = async (req, res, next) => {
 // GET /api/admin/reports/products
 const getProductReport = async (req, res, next) => {
   try {
-    const topProducts = await prisma.orderItem.groupBy({
+    const { days } = req.query;
+    let dateFilter = {};
+    if (days) {
+      const start = new Date();
+      start.setDate(start.getDate() - parseInt(days, 10));
+      start.setHours(0, 0, 0, 0);
+      dateFilter = {
+        order: { createdAt: { gte: start } },
+      };
+    }
+
+    // --- Top products ---
+    const topProductsRaw = await prisma.orderItem.groupBy({
       by: ['productId'],
+      where: dateFilter,
       _sum: { quantity: true, subtotal: true },
-      orderBy: { _sum: { quantity: 'desc' } },
+      orderBy: { _sum: { subtotal: 'desc' } },
       take: 10,
     });
 
-    // Get product details
-    const productIds = topProducts.map(p => p.productId);
+    const productIds = topProductsRaw.map(p => p.productId);
     const products = await prisma.product.findMany({
       where: { id: { in: productIds } },
-      select: { id: true, name: true, price: true },
+      select: { id: true, name: true, sku: true, price: true, imageUrl: true, category: { select: { name: true } } },
     });
-
     const productMap = new Map(products.map(p => [p.id, p]));
 
-    const report = topProducts.map(item => ({
-      product: productMap.get(item.productId),
-      totalQuantity: item._sum.quantity,
-      totalRevenue: item._sum.subtotal,
+    const topProducts = topProductsRaw.map(item => {
+      const prod = productMap.get(item.productId) || {};
+      return {
+        id: item.productId,
+        name: prod.name || 'Unknown',
+        sku: prod.sku || null,
+        imageUrl: prod.imageUrl || null,
+        category: prod.category || null,
+        totalSold: item._sum.quantity || 0,
+        totalRevenue: item._sum.subtotal || 0,
+      };
+    });
+
+    // --- Category stats ---
+    const categories = await prisma.category.findMany({
+      where: { isDeleted: false },
+      select: {
+        id: true,
+        name: true,
+        icon: true,
+        products: {
+          where: { isDeleted: false },
+          select: { id: true },
+        },
+      },
+    });
+
+    // Get items for each category (aggregated via product-category join)
+    const allItems = await prisma.orderItem.findMany({
+      where: dateFilter,
+      select: {
+        quantity: true,
+        subtotal: true,
+        product: { select: { categoryId: true } },
+      },
+    });
+
+    const categoryAgg = {};
+    allItems.forEach(item => {
+      const catId = item.product.categoryId;
+      if (!categoryAgg[catId]) categoryAgg[catId] = { totalSold: 0, totalRevenue: 0 };
+      categoryAgg[catId].totalSold += item.quantity;
+      categoryAgg[catId].totalRevenue += item.subtotal;
+    });
+
+    const categoryStats = categories.map(cat => ({
+      id: cat.id,
+      name: cat.name,
+      icon: cat.icon,
+      productCount: cat.products.length,
+      totalSold: categoryAgg[cat.id]?.totalSold || 0,
+      totalRevenue: categoryAgg[cat.id]?.totalRevenue || 0,
     }));
 
     res.json({
       success: true,
-      data: report,
+      data: { topProducts, categoryStats },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET /api/admin/reports/export
+const exportReport = async (req, res, next) => {
+  try {
+    const { days } = req.query;
+    let start = new Date();
+    start.setDate(start.getDate() - parseInt(days || '30', 10));
+    start.setHours(0, 0, 0, 0);
+
+    const orders = await prisma.order.findMany({
+      where: { createdAt: { gte: start } },
+      include: {
+        items: {
+          include: { product: { select: { name: true, sku: true } } },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Build CSV
+    const header = 'Order Number,Date,Customer,Phone,Status,Items,Total Amount\n';
+    const rows = orders.map(o => {
+      const date = new Date(o.createdAt).toISOString().split('T')[0];
+      const items = o.items.map(i => `${i.product.name} x${i.quantity}`).join('; ');
+      const customerName = (o.customerName || '').replace(/,/g, ' ');
+      return `${o.orderNumber},${date},"${customerName}",${o.phone},${o.status},"${items}",${o.totalAmount.toFixed(2)}`;
+    }).join('\n');
+
+    const csv = header + rows;
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=sales_report_${new Date().toISOString().split('T')[0]}.csv`);
+    res.send(csv);
   } catch (error) {
     next(error);
   }
@@ -541,6 +639,7 @@ module.exports = {
   getDashboard,
   getSalesReport,
   getProductReport,
+  exportReport,
   getUsers,
   createUser,
   updateUser,

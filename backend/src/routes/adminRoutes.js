@@ -44,6 +44,7 @@ router.delete('/categories/:id', categoryController.deleteCategory);
 // Reports
 router.get('/reports/sales', adminController.getSalesReport);
 router.get('/reports/products', adminController.getProductReport);
+router.get('/reports/export', adminController.exportReport);
 
 // User management (super admin only)
 router.get('/users', isAdmin, adminController.getUsers);

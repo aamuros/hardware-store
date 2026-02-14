@@ -348,12 +348,20 @@ describe('Critical Bug Scenarios', () => {
                 .expect(200);
 
             expect(response.body.success).toBe(true);
+            // Legacy fields (backward compat)
             expect(response.body.data).toHaveProperty('totalSales');
             expect(response.body.data).toHaveProperty('orderCount');
             expect(response.body.data).toHaveProperty('averageOrderValue');
+            // New fields
+            expect(response.body.data).toHaveProperty('totalRevenue');
+            expect(response.body.data).toHaveProperty('totalOrders');
+            expect(response.body.data).toHaveProperty('completedOrders');
+            expect(response.body.data).toHaveProperty('cancelledOrders');
+            expect(response.body.data).toHaveProperty('ordersByStatus');
+            expect(response.body.data).toHaveProperty('dailyData');
 
             // At least our 3 completed orders should be counted
-            expect(response.body.data.orderCount).toBeGreaterThanOrEqual(3);
+            expect(response.body.data.totalOrders).toBeGreaterThanOrEqual(3);
         });
 
         it('should filter by date range', async () => {
