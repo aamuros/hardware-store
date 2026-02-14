@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, useEffect, useRef, useCallback } from 'react'
+import { createContext, useContext, useReducer, useEffect, useRef, useCallback, useState, useMemo } from 'react'
 import { useCustomerAuth } from './CustomerAuthContext'
 import { orderApi } from '../services/api'
 
@@ -187,10 +187,21 @@ const calculateTotals = (items) => {
   }
 }
 
+// Build a composite key for an item
+const getItemKey = (item) =>
+  item.variantId ? `${item.id}-${item.variantId}` : `${item.id}`
+
 // Provider component
 export function CartProvider({ children }) {
   const { customer } = useCustomerAuth()
   const [state, dispatch] = useReducer(cartReducer, initialState)
+
+  // Selection state — Set of composite item keys (not persisted)
+  const [selectedKeys, setSelectedKeys] = useState(new Set())
+
+  // Track which item keys existed in the cart on the previous render,
+  // so we can distinguish genuinely-new items from quantity/stock updates.
+  const prevItemKeysRef = useRef(new Set())
 
   // Refs to track customer switches and avoid stale closures
   const storageKeyRef = useRef(null)
@@ -239,6 +250,77 @@ export function CartProvider({ children }) {
     }
   }, [state])
 
+  // Keep selectedKeys in sync with cart items.
+  // Only auto-select genuinely NEW items (not previously in the cart).
+  // Quantity / stock updates do NOT change the set of keys, so they won't re-select.
+  useEffect(() => {
+    const currentKeys = new Set(state.items.map(getItemKey))
+    const prevItemKeys = prevItemKeysRef.current
+
+    setSelectedKeys((prev) => {
+      // Keep only keys that still exist in the cart
+      const next = new Set([...prev].filter((k) => currentKeys.has(k)))
+
+      // Auto-select genuinely new items (present in cart now but not before)
+      for (const k of currentKeys) {
+        if (!prevItemKeys.has(k)) {
+          next.add(k)
+        }
+      }
+
+      return next
+    })
+
+    // Remember current keys for next comparison
+    prevItemKeysRef.current = currentKeys
+  }, [state.items])
+
+  // Selection helpers
+  const toggleSelectItem = useCallback((productId, variantId = null) => {
+    const key = variantId ? `${productId}-${variantId}` : `${productId}`
+    setSelectedKeys((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) {
+        next.delete(key)
+      } else {
+        next.add(key)
+      }
+      return next
+    })
+  }, [])
+
+  const selectAll = useCallback(() => {
+    setSelectedKeys(new Set(state.items.map(getItemKey)))
+  }, [state.items])
+
+  const deselectAll = useCallback(() => {
+    setSelectedKeys(new Set())
+  }, [])
+
+  const isItemSelected = useCallback(
+    (productId, variantId = null) => {
+      const key = variantId ? `${productId}-${variantId}` : `${productId}`
+      return selectedKeys.has(key)
+    },
+    [selectedKeys]
+  )
+
+  // Derived: selected items list & totals
+  const selectedItems = useMemo(
+    () => state.items.filter((item) => selectedKeys.has(getItemKey(item))),
+    [state.items, selectedKeys]
+  )
+
+  const selectedTotalItems = useMemo(
+    () => selectedItems.reduce((sum, item) => sum + item.quantity, 0),
+    [selectedItems]
+  )
+
+  const selectedTotalAmount = useMemo(
+    () => selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    [selectedItems]
+  )
+
   // Actions
   const addToCart = (product, quantity = 1, variant = null) => {
     dispatch({
@@ -271,7 +353,18 @@ export function CartProvider({ children }) {
 
   const clearCart = () => {
     dispatch({ type: 'CLEAR_CART' })
+    setSelectedKeys(new Set())
   }
+
+  // Remove only the given items (used after partial checkout)
+  const removeItems = useCallback((itemKeys) => {
+    for (const key of itemKeys) {
+      const parts = key.split('-')
+      const productId = parseInt(parts[0], 10)
+      const variantId = parts.length > 1 ? parseInt(parts[1], 10) : null
+      dispatch({ type: 'REMOVE_ITEM', payload: { id: productId, variantId } })
+    }
+  }, [])
 
   const getItemQuantity = (productId, variantId = null) => {
     const searchKey = variantId ? `${productId}-${variantId}` : `${productId}`
@@ -340,8 +433,18 @@ export function CartProvider({ children }) {
     removeFromCart,
     updateQuantity,
     clearCart,
+    removeItems,
     getItemQuantity,
     refreshStockLevels,
+    // Selection
+    selectedKeys,
+    selectedItems,
+    selectedTotalItems,
+    selectedTotalAmount,
+    toggleSelectItem,
+    selectAll,
+    deselectAll,
+    isItemSelected,
   }
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>

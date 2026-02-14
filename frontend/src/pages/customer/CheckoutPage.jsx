@@ -41,7 +41,7 @@ function CheckoutProgress({ currentStep }) {
 
 export default function CheckoutPage() {
   const navigate = useNavigate()
-  const { items, totalItems, totalAmount, clearCart } = useCart()
+  const { selectedItems, selectedTotalItems, selectedTotalAmount, removeItems, selectedKeys } = useCart()
   const { customer, isAuthenticated } = useCustomerAuth()
   const [loading, setLoading] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
@@ -158,8 +158,8 @@ export default function CheckoutPage() {
       return
     }
 
-    if (items.length === 0) {
-      toast.error('Your cart is empty')
+    if (selectedItems.length === 0) {
+      toast.error('No items selected for checkout')
       return
     }
 
@@ -172,7 +172,7 @@ export default function CheckoutPage() {
     setLoading(true)
     try {
       // First, validate cart items to ensure they're still available
-      const cartItems = items.map(item => ({
+      const cartItems = selectedItems.map(item => ({
         productId: item.id,
         quantity: item.quantity,
         variantId: item.variantId || null,
@@ -218,7 +218,9 @@ export default function CheckoutPage() {
       const response = await orderApi.create(orderData)
       const { orderNumber } = response.data.data
 
-      clearCart()
+      // Remove only the ordered items from cart (keep unselected items)
+      const orderedKeys = [...selectedKeys]
+      removeItems(orderedKeys)
       toast.success('Order placed successfully!')
       navigate(`/order-confirmation/${orderNumber}`)
     } catch (error) {
@@ -271,13 +273,13 @@ export default function CheckoutPage() {
     }
   }
 
-  if (items.length === 0) {
+  if (selectedItems.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center animate-fade-in">
-        <h1 className="text-2xl font-bold text-primary-900 mb-2">Your Cart is Empty</h1>
-        <p className="text-neutral-600 mb-8">Add some products before checkout!</p>
-        <Link to="/products" className="btn-primary">
-          Browse Products
+        <h1 className="text-2xl font-bold text-primary-900 mb-2">No Items Selected</h1>
+        <p className="text-neutral-600 mb-8">Go back to your cart and select items to checkout.</p>
+        <Link to="/cart" className="btn-primary">
+          Back to Cart
         </Link>
       </div>
     )
@@ -451,7 +453,7 @@ export default function CheckoutPage() {
           <div className="card p-6">
             <h2 className="text-lg font-bold text-primary-900 mb-4">Order Items</h2>
             <div className="space-y-3">
-              {items.map((item) => {
+              {selectedItems.map((item) => {
                 const itemKey = item.variantId ? `${item.id}-${item.variantId}` : `${item.id}`
                 return (
                   <div key={itemKey} className="flex justify-between items-center py-2 border-b border-neutral-100 last:border-0">
@@ -481,8 +483,8 @@ export default function CheckoutPage() {
 
             <div className="space-y-3 mb-6">
               <div className="flex justify-between text-neutral-600">
-                <span>Subtotal</span>
-                <span>{formatPrice(totalAmount)}</span>
+                <span>Subtotal ({selectedTotalItems} {selectedTotalItems === 1 ? 'item' : 'items'})</span>
+                <span>{formatPrice(selectedTotalAmount)}</span>
               </div>
               <div className="flex justify-between text-neutral-600">
                 <span>Delivery Fee</span>
@@ -490,7 +492,7 @@ export default function CheckoutPage() {
               </div>
               <div className="border-t border-neutral-200 pt-3 flex justify-between text-lg font-bold">
                 <span>Total</span>
-                <span className="text-primary-800">{formatPrice(totalAmount)}</span>
+                <span className="text-primary-800">{formatPrice(selectedTotalAmount)}</span>
               </div>
             </div>
 
@@ -576,10 +578,10 @@ export default function CheckoutPage() {
                         <span className="font-medium">Address:</span> {formData.address}, {formData.barangay}
                       </p>
                       <p className="text-sm text-neutral-700">
-                        <span className="font-medium">Items:</span> {totalItems} {totalItems === 1 ? 'item' : 'items'}
+                        <span className="font-medium">Items:</span> {selectedTotalItems} {selectedTotalItems === 1 ? 'item' : 'items'}
                       </p>
                       <p className="text-lg font-bold text-primary-800 pt-2 border-t border-neutral-200">
-                        Total: {formatPrice(totalAmount)}
+                        Total: {formatPrice(selectedTotalAmount)}
                       </p>
                     </div>
                     <p className="mt-3 text-sm text-neutral-500">

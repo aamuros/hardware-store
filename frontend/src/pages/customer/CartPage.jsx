@@ -210,9 +210,17 @@ function QuantityInput({ item, updateQuantity, onRequestRemove }) {
 }
 
 export default function CartPage() {
-  const { items, totalItems, totalAmount, updateQuantity, removeFromCart, clearCart, refreshStockLevels } = useCart()
+  const {
+    items, totalItems, totalAmount,
+    updateQuantity, removeFromCart, clearCart, refreshStockLevels,
+    selectedKeys, selectedTotalItems, selectedTotalAmount,
+    toggleSelectItem, selectAll, deselectAll, isItemSelected,
+  } = useCart()
   const [itemToRemove, setItemToRemove] = useState(null)
   const [showClearCartModal, setShowClearCartModal] = useState(false)
+
+  const allSelected = selectedKeys.size === items.length && items.length > 0
+  const someSelected = selectedKeys.size > 0 && selectedKeys.size < items.length
 
   // Refresh stock levels from the server when the cart page loads
   useEffect(() => {
@@ -270,13 +278,39 @@ export default function CartPage() {
       {/* Progress Indicator */}
       <CheckoutProgress currentStep={1} />
 
-      <div className="flex items-center justify-end mb-4">
-        <button
-          onClick={() => setShowClearCartModal(true)}
-          className="text-red-600 hover:text-red-700 text-sm font-medium"
-        >
-          Clear Cart
-        </button>
+      {/* Select All / Clear Cart Bar */}
+      <div className="flex items-center justify-between mb-4 bg-neutral-50 rounded-xl px-4 py-3 border border-neutral-200">
+        <label className="flex items-center gap-3 cursor-pointer select-none group">
+          <div className="relative flex items-center">
+            <input
+              type="checkbox"
+              checked={allSelected}
+              ref={(el) => { if (el) el.indeterminate = someSelected }}
+              onChange={() => allSelected ? deselectAll() : selectAll()}
+              className="w-5 h-5 rounded border-neutral-300 text-accent-600 focus:ring-accent-500 cursor-pointer transition-colors"
+            />
+          </div>
+          <span className="text-sm font-medium text-primary-800 group-hover:text-accent-600 transition-colors">
+            {allSelected ? 'Deselect All' : someSelected ? `${selectedKeys.size} of ${items.length} selected` : `Select All (${items.length})`}
+          </span>
+        </label>
+        <div className="flex items-center gap-3">
+          {selectedKeys.size > 0 && selectedKeys.size < items.length && (
+            <button
+              onClick={deselectAll}
+              className="text-neutral-500 hover:text-neutral-700 text-sm transition-colors"
+            >
+              Clear selection
+            </button>
+          )}
+          <button
+            onClick={() => setShowClearCartModal(true)}
+            className="text-red-500 hover:text-red-600 text-sm font-medium flex items-center gap-1.5 transition-colors"
+          >
+            <TrashIcon className="h-4 w-4" />
+            <span className="hidden sm:inline">Clear Cart</span>
+          </button>
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
@@ -285,8 +319,31 @@ export default function CartPage() {
           {items.map((item) => {
             // Use composite key for items with variants
             const itemKey = item.variantId ? `${item.id}-${item.variantId}` : `${item.id}`
+            const selected = isItemSelected(item.id, item.variantId)
             return (
-              <div key={itemKey} className="card p-4 flex gap-4">
+              <div
+                key={itemKey}
+                className={`card p-4 flex gap-3 sm:gap-4 transition-all duration-200 cursor-pointer ${
+                  selected
+                    ? 'ring-2 ring-accent-500/40 bg-accent-50/40 border-accent-200'
+                    : 'hover:border-neutral-300 opacity-75 hover:opacity-100'
+                }`}
+                onClick={(e) => {
+                  // Toggle selection when clicking the card background (not controls)
+                  if (e.target.closest('button, a, input')) return
+                  toggleSelectItem(item.id, item.variantId)
+                }}
+              >
+                {/* Selection Checkbox */}
+                <div className="flex items-center self-stretch">
+                  <input
+                    type="checkbox"
+                    checked={selected}
+                    onChange={() => toggleSelectItem(item.id, item.variantId)}
+                    className="w-5 h-5 rounded border-neutral-300 text-accent-600 focus:ring-accent-500 cursor-pointer transition-colors"
+                    aria-label={`Select ${item.name} for checkout`}
+                  />
+                </div>
                 {/* Image */}
                 <div className="w-20 h-20 bg-neutral-100 rounded-xl flex-shrink-0 overflow-hidden">
                   {item.imageUrl ? (
@@ -373,23 +430,50 @@ export default function CartPage() {
             <h2 className="text-lg font-bold text-primary-900 mb-4">Order Summary</h2>
 
             <div className="space-y-3 mb-6">
-              <div className="flex justify-between text-neutral-600">
-                <span>Subtotal ({totalItems} {totalItems === 1 ? 'item' : 'items'})</span>
-                <span>{formatPrice(totalAmount)}</span>
+              {/* Selected items summary */}
+              <div className="flex justify-between items-center">
+                <span className="text-neutral-600">
+                  Subtotal
+                  <span className="text-xs text-neutral-400 ml-1">
+                    ({selectedTotalItems} {selectedTotalItems === 1 ? 'item' : 'items'})
+                  </span>
+                </span>
+                <span className="font-medium text-primary-800">{formatPrice(selectedTotalAmount)}</span>
               </div>
+
+              {/* Show unselected count if any */}
+              {selectedKeys.size < items.length && selectedKeys.size > 0 && (
+                <div className="flex justify-between text-xs text-neutral-400">
+                  <span>{items.length - selectedKeys.size} {items.length - selectedKeys.size === 1 ? 'item' : 'items'} not selected</span>
+                  <span>{formatPrice(totalAmount - selectedTotalAmount)}</span>
+                </div>
+              )}
+
               <div className="flex justify-between text-neutral-600">
                 <span>Delivery Fee</span>
-                <span className="text-emerald-600">To be calculated</span>
+                <span className="text-emerald-600 text-sm">To be calculated</span>
               </div>
               <div className="border-t border-neutral-200 pt-3 flex justify-between text-lg font-bold">
                 <span>Total</span>
-                <span className="text-primary-800">{formatPrice(totalAmount)}</span>
+                <span className="text-primary-800">{formatPrice(selectedTotalAmount)}</span>
               </div>
             </div>
 
-            <Link to="/checkout" className="btn-primary w-full text-center block">
-              Proceed to Checkout
-            </Link>
+            {selectedKeys.size === 0 ? (
+              <div className="text-center">
+                <button
+                  disabled
+                  className="btn-primary w-full opacity-40 cursor-not-allowed"
+                >
+                  Select items to checkout
+                </button>
+                <p className="text-xs text-neutral-400 mt-2">Check the items you want to order</p>
+              </div>
+            ) : (
+              <Link to="/checkout" className="btn-primary w-full text-center block">
+                Checkout ({selectedKeys.size} {selectedKeys.size === 1 ? 'item' : 'items'})
+              </Link>
+            )}
 
             <Link
               to="/products"
@@ -429,6 +513,32 @@ export default function CartPage() {
           onCancel={() => setShowClearCartModal(false)}
         />
       )}
+
+      {/* Mobile Sticky Checkout Bar */}
+      <div className="fixed bottom-0 inset-x-0 bg-white border-t border-neutral-200 p-4 lg:hidden z-40 safe-area-bottom shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
+        <div className="flex items-center justify-between gap-4 max-w-7xl mx-auto">
+          <div className="min-w-0">
+            <p className="text-xs text-neutral-500">
+              {selectedKeys.size > 0
+                ? `${selectedKeys.size} ${selectedKeys.size === 1 ? 'item' : 'items'} selected`
+                : 'No items selected'}
+            </p>
+            <p className="text-lg font-bold text-primary-800 truncate">{formatPrice(selectedTotalAmount)}</p>
+          </div>
+          {selectedKeys.size === 0 ? (
+            <button disabled className="btn-primary px-6 py-3 opacity-40 cursor-not-allowed whitespace-nowrap text-sm">
+              Select Items
+            </button>
+          ) : (
+            <Link to="/checkout" className="btn-primary px-6 py-3 whitespace-nowrap text-sm">
+              Checkout ({selectedKeys.size})
+            </Link>
+          )}
+        </div>
+      </div>
+
+      {/* Spacer for mobile sticky bar */}
+      <div className="h-24 lg:hidden" />
     </div>
   )
 }
