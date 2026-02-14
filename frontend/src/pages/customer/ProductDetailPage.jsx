@@ -11,6 +11,7 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [quantity, setQuantity] = useState(1)
+  const [editingQuantity, setEditingQuantity] = useState(null) // null = not editing
   const [selectedVariant, setSelectedVariant] = useState(null)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [showLightbox, setShowLightbox] = useState(false)
@@ -54,8 +55,8 @@ export default function ProductDetailPage() {
   // Calculate bulk discount for current quantity
   const currentBulkTier = product?.hasBulkPricing && product?.bulkPricingTiers?.length > 0
     ? [...product.bulkPricingTiers]
-        .sort((a, b) => b.minQuantity - a.minQuantity)
-        .find(tier => quantity >= tier.minQuantity)
+      .sort((a, b) => b.minQuantity - a.minQuantity)
+      .find(tier => quantity >= tier.minQuantity)
     : null
 
   const bulkUnitPrice = currentBulkTier
@@ -374,15 +375,43 @@ export default function ProductDetailPage() {
                       <MinusIcon className="h-4 w-4" />
                     </button>
                     <input
-                      type="number"
-                      min="1"
-                      max={effectiveStock}
-                      value={quantity}
+                      type="text"
+                      inputMode="numeric"
+                      value={editingQuantity !== null ? editingQuantity : quantity}
                       onChange={(e) => {
-                        const val = Math.max(1, parseInt(e.target.value) || 1)
-                        setQuantity(Math.min(val, effectiveStock))
+                        const val = e.target.value
+                        // Allow only digits or empty string
+                        if (val === '' || /^\d+$/.test(val)) {
+                          setEditingQuantity(val)
+                        }
+                      }}
+                      onFocus={(e) => {
+                        setEditingQuantity(String(quantity))
+                        setTimeout(() => e.target.select(), 0)
+                      }}
+                      onBlur={() => {
+                        if (!editingQuantity || editingQuantity === '') {
+                          setEditingQuantity(null)
+                          return
+                        }
+                        const parsed = parseInt(editingQuantity, 10)
+                        if (isNaN(parsed) || parsed < 1) {
+                          setEditingQuantity(null)
+                          return
+                        }
+                        setQuantity(Math.min(parsed, effectiveStock))
+                        setEditingQuantity(null)
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.target.blur()
+                        } else if (e.key === 'Escape') {
+                          setEditingQuantity(null)
+                          e.target.blur()
+                        }
                       }}
                       className="w-16 text-center border-0 focus:ring-0"
+                      aria-label="Quantity"
                     />
                     <button
                       onClick={() => setQuantity(Math.min(quantity + 1, effectiveStock))}

@@ -166,14 +166,11 @@ export function CartProvider({ children }) {
   }
 
   const updateQuantity = (productId, quantity, variantId = null) => {
-    if (quantity < 1) {
-      removeFromCart(productId, variantId)
-    } else {
-      dispatch({
-        type: 'UPDATE_QUANTITY',
-        payload: { id: productId, quantity, variantId },
-      })
-    }
+    const clampedQuantity = Math.max(1, quantity)
+    dispatch({
+      type: 'UPDATE_QUANTITY',
+      payload: { id: productId, quantity: clampedQuantity, variantId },
+    })
   }
 
   const clearCart = () => {
