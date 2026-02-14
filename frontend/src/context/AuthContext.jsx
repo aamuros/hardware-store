@@ -18,7 +18,7 @@ export function AuthProvider({ children }) {
       setUser(JSON.parse(savedUser))
       api.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`
     }
-    
+
     setLoading(false)
   }, [])
 
@@ -32,7 +32,7 @@ export function AuthProvider({ children }) {
       setUser(userData)
       localStorage.setItem('admin-token', newToken)
       localStorage.setItem('admin-user', JSON.stringify(userData))
-      
+
       // Set authorization header for future requests
       api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`
 
@@ -55,6 +55,10 @@ export function AuthProvider({ children }) {
     return !!token
   }
 
+  const isAdminRole = () => {
+    return user?.role === 'admin'
+  }
+
   const value = {
     user,
     token,
@@ -62,6 +66,7 @@ export function AuthProvider({ children }) {
     login,
     logout,
     isAuthenticated,
+    isAdminRole,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

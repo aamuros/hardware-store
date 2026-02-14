@@ -9,11 +9,12 @@ import {
   MenuIcon,
   CloseIcon,
   ChartIcon,
-  WrenchIcon
+  WrenchIcon,
+  UsersIcon
 } from '../icons'
 import { useState } from 'react'
 
-const navigation = [
+const baseNavigation = [
   { name: 'Dashboard', href: '/admin', icon: HomeIcon },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingBagIcon },
   { name: 'Products', href: '/admin/products', icon: BoxIcon },
@@ -21,11 +22,19 @@ const navigation = [
   { name: 'Reports', href: '/admin/reports', icon: ChartIcon },
 ]
 
+const adminOnlyNavigation = [
+  { name: 'Staff', href: '/admin/users', icon: UsersIcon },
+]
+
 export default function AdminLayout() {
-  const { user, logout } = useAuth()
+  const { user, logout, isAdminRole } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  const navigation = isAdminRole()
+    ? [...baseNavigation, ...adminOnlyNavigation]
+    : baseNavigation
 
   const handleLogout = () => {
     logout()
@@ -72,8 +81,8 @@ export default function AdminLayout() {
               to={item.href}
               onClick={() => setSidebarOpen(false)}
               className={`flex items-center px-4 py-3 text-sm font-medium transition-colors ${isActive(item.href)
-                  ? 'bg-primary-800 text-white'
-                  : 'text-primary-300 hover:bg-primary-800 hover:text-white'
+                ? 'bg-primary-800 text-white'
+                : 'text-primary-300 hover:bg-primary-800 hover:text-white'
                 }`}
             >
               <item.icon className="h-5 w-5 mr-3" />
@@ -100,8 +109,8 @@ export default function AdminLayout() {
                 key={item.name}
                 to={item.href}
                 className={`flex items-center px-4 py-3 text-sm font-medium transition-all ${isActive(item.href)
-                    ? 'bg-primary-800 text-white border-l-4 border-accent-500'
-                    : 'text-primary-300 hover:bg-primary-800 hover:text-white hover:translate-x-1'
+                  ? 'bg-primary-800 text-white border-l-4 border-accent-500'
+                  : 'text-primary-300 hover:bg-primary-800 hover:text-white hover:translate-x-1'
                   }`}
               >
                 <item.icon className="h-5 w-5 mr-3" />
@@ -133,6 +142,12 @@ export default function AdminLayout() {
               <span className="text-sm text-neutral-600">
                 Welcome, <strong>{user?.name || 'Admin'}</strong>
               </span>
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${user?.role === 'admin'
+                  ? 'bg-purple-100 text-purple-700'
+                  : 'bg-blue-100 text-blue-700'
+                }`}>
+                {user?.role === 'admin' ? 'Admin' : 'Staff'}
+              </span>
               <button
                 onClick={handleLogout}
                 className="flex items-center text-sm text-neutral-600 hover:text-red-600 transition-colors"
@@ -152,3 +167,4 @@ export default function AdminLayout() {
     </div>
   )
 }
+

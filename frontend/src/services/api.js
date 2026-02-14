@@ -141,6 +141,14 @@ export const adminApi = {
   // Reports
   getSalesReport: (params) => api.get('/admin/reports/sales', { params }),
   getProductReport: () => api.get('/admin/reports/products'),
+  exportReport: (params) => api.get('/admin/reports/export', { params, responseType: 'blob' }),
+
+  // User Management (admin only)
+  getUsers: () => api.get('/admin/users'),
+  createUser: (data) => api.post('/admin/users', data),
+  updateUser: (id, data) => api.patch(`/admin/users/${id}`, data),
+  deleteUser: (id) => api.delete(`/admin/users/${id}`),
+  changePassword: (data) => api.patch('/admin/change-password', data),
 }
 
 // Customer API (account features)

@@ -496,6 +496,30 @@ const updateUser = async (req, res, next) => {
     const { id } = req.params;
     const { name, role, isActive, password } = req.body;
 
+    const targetUser = await prisma.user.findUnique({
+      where: { id: parseInt(id, 10) },
+    });
+
+    if (!targetUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    // Prevent removing the last admin
+    if (targetUser.role === 'admin' && role && role !== 'admin') {
+      const adminCount = await prisma.user.count({
+        where: { role: 'admin', isActive: true },
+      });
+      if (adminCount <= 1) {
+        return res.status(400).json({
+          success: false,
+          message: 'Cannot change role: this is the last active admin account',
+        });
+      }
+    }
+
     const updateData = {};
     if (name) updateData.name = name;
     if (role) updateData.role = role;

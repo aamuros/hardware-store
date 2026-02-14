@@ -34,6 +34,7 @@ const OrderDetailPage = lazy(() => import('./pages/admin/OrderDetailPage'))
 const ProductsManagementPage = lazy(() => import('./pages/admin/ProductsManagementPage'))
 const CategoriesPage = lazy(() => import('./pages/admin/CategoriesPage'))
 const ReportsPage = lazy(() => import('./pages/admin/ReportsPage'))
+const UserManagementPage = lazy(() => import('./pages/admin/UserManagementPage'))
 
 // Auth
 import ProtectedRoute from './components/ProtectedRoute'
@@ -88,6 +89,7 @@ function App() {
             <Route path="products" element={<ProductsManagementPage />} />
             <Route path="categories" element={<CategoriesPage />} />
             <Route path="reports" element={<ReportsPage />} />
+            <Route path="users" element={<UserManagementPage />} />
           </Route>
 
           {/* 404 Catch-all */}
