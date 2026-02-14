@@ -129,7 +129,7 @@ const createOrder = async (req, res, next) => {
       // Calculate order items with prices
       const orderItems = items.map(item => {
         const product = productMap.get(item.productId);
-        const unitPrice = item.unitPrice || product.price;
+        const unitPrice = item.unitPrice ?? product.price;
         return {
           productId: item.productId,
           variantId: item.variantId || null,

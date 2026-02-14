@@ -110,7 +110,7 @@ export default function WishlistPage() {
 
                                 {/* Remove Button */}
                                 <button
-                                    onClick={() => handleRemove(item.productId)}
+                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRemove(item.productId); }}
                                     className="absolute top-2 right-2 p-2 bg-white/90 hover:bg-red-50 rounded-full shadow-md transition-colors"
                                 >
                                     <HeartSolidIcon className="w-5 h-5 text-pink-500" />

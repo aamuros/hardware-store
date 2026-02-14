@@ -52,6 +52,7 @@ const errorHandler = (err, req, res, next) => {
       success: false,
       message: 'Foreign key constraint failed',
       code: 'FOREIGN_KEY_ERROR',
+      field: err.meta?.field_name,
     });
   }
   

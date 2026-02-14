@@ -32,28 +32,33 @@ const createAddress = async (req, res, next) => {
             });
         }
 
-        // If this is set as default, unset other defaults
-        if (isDefault) {
-            await prisma.savedAddress.updateMany({
+        // Use a transaction to prevent race conditions with default address setting
+        const savedAddress = await prisma.$transaction(async (tx) => {
+            // Check if this is the first address (make it default)
+            const existingCount = await tx.savedAddress.count({
                 where: { customerId: req.customer.id },
-                data: { isDefault: false },
             });
-        }
 
-        // Check if this is the first address (make it default)
-        const existingCount = await prisma.savedAddress.count({
-            where: { customerId: req.customer.id },
-        });
+            const shouldBeDefault = isDefault || existingCount === 0;
 
-        const savedAddress = await prisma.savedAddress.create({
-            data: {
-                customerId: req.customer.id,
-                label,
-                address,
-                barangay,
-                landmarks: landmarks || null,
-                isDefault: isDefault || existingCount === 0,
-            },
+            // If this is set as default, unset other defaults
+            if (shouldBeDefault && existingCount > 0) {
+                await tx.savedAddress.updateMany({
+                    where: { customerId: req.customer.id },
+                    data: { isDefault: false },
+                });
+            }
+
+            return tx.savedAddress.create({
+                data: {
+                    customerId: req.customer.id,
+                    label,
+                    address,
+                    barangay,
+                    landmarks: landmarks || null,
+                    isDefault: shouldBeDefault,
+                },
+            });
         });
 
         res.status(201).json({
@@ -109,9 +114,18 @@ const updateAddress = async (req, res, next) => {
         }
 
         const updateData = {};
-        if (label) updateData.label = label;
-        if (address) updateData.address = address;
-        if (barangay) updateData.barangay = barangay;
+        if (label !== undefined) {
+            if (!label) return res.status(400).json({ success: false, message: 'Label cannot be empty' });
+            updateData.label = label;
+        }
+        if (address !== undefined) {
+            if (!address) return res.status(400).json({ success: false, message: 'Address cannot be empty' });
+            updateData.address = address;
+        }
+        if (barangay !== undefined) {
+            if (!barangay) return res.status(400).json({ success: false, message: 'Barangay cannot be empty' });
+            updateData.barangay = barangay;
+        }
         if (landmarks !== undefined) updateData.landmarks = landmarks || null;
         if (isDefault !== undefined) updateData.isDefault = isDefault;
 

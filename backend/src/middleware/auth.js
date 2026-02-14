@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config');
+const prisma = require('../utils/prismaClient');
 
 // Verify JWT token middleware
 const authenticate = (req, res, next) => {
@@ -84,7 +85,7 @@ const authenticateCustomer = (req, res, next) => {
 
 // Customer authentication - REQUIRED
 // Returns 401 if no valid customer token
-const requireCustomer = (req, res, next) => {
+const requireCustomer = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -103,6 +104,19 @@ const requireCustomer = (req, res, next) => {
       return res.status(401).json({
         success: false,
         message: 'Customer authentication required',
+      });
+    }
+
+    // Verify the customer still exists in the database
+    const customer = await prisma.customer.findUnique({
+      where: { id: decoded.id },
+      select: { id: true, email: true, isActive: true },
+    });
+
+    if (!customer || !customer.isActive) {
+      return res.status(401).json({
+        success: false,
+        message: 'Account not found or deactivated. Please log in again.',
       });
     }
 
