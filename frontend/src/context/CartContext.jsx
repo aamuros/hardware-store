@@ -1,4 +1,6 @@
-import { createContext, useContext, useReducer, useEffect } from 'react'
+import { createContext, useContext, useReducer, useEffect, useRef, useCallback } from 'react'
+import { useCustomerAuth } from './CustomerAuthContext'
+import { orderApi } from '../services/api'
 
 const CartContext = createContext()
 
@@ -12,21 +14,51 @@ const initialState = {
   totalAmount: 0,
 }
 
-// Load cart from localStorage
-const loadCartFromStorage = () => {
+// Build a per-customer localStorage key (guest gets its own key)
+const getStorageKey = (customerId) => {
+  return customerId ? `hardware-store-cart-${customerId}` : 'hardware-store-cart-guest'
+}
+
+// Load cart from localStorage for a given key
+const loadCartFromStorage = (key) => {
   try {
-    const savedCart = localStorage.getItem('hardware-store-cart')
-    return savedCart ? JSON.parse(savedCart) : initialState
+    const savedCart = localStorage.getItem(key)
+    if (savedCart) {
+      const parsed = JSON.parse(savedCart)
+      if (parsed && Array.isArray(parsed.items)) {
+        return parsed
+      }
+    }
+    return initialState
   } catch (error) {
     console.error('Error loading cart from storage:', error)
     return initialState
   }
 }
 
-// Cart reducer
-const cartReducer = (state, action) => {
-  let newState
+// One-time migration: move the old shared key into the current customer's key
+const migrateOldCart = (currentKey) => {
+  try {
+    const oldCart = localStorage.getItem('hardware-store-cart')
+    if (oldCart) {
+      const parsed = JSON.parse(oldCart)
+      if (parsed && Array.isArray(parsed.items) && parsed.items.length > 0) {
+        // Only migrate if the destination is still empty
+        const existing = localStorage.getItem(currentKey)
+        if (!existing || existing === JSON.stringify(initialState)) {
+          localStorage.setItem(currentKey, oldCart)
+        }
+      }
+      // Remove the old shared key so migration only happens once
+      localStorage.removeItem('hardware-store-cart')
+    }
+  } catch {
+    // Ignore migration errors
+  }
+}
 
+// Cart reducer — pure state transitions, no side effects
+const cartReducer = (state, action) => {
   switch (action.type) {
     case 'ADD_ITEM': {
       // Use composite key: productId + variantId for unique identification
@@ -46,27 +78,32 @@ const cartReducer = (state, action) => {
       let updatedItems
 
       if (existingIndex >= 0) {
-        // Item exists, update quantity with max limit
-        updatedItems = state.items.map((item, index) =>
-          index === existingIndex
-            ? { ...item, quantity: Math.min(item.quantity + action.payload.quantity, MAX_QUANTITY) }
-            : item
-        )
+        // Item exists, update quantity with stock and max limit
+        updatedItems = state.items.map((item, index) => {
+          if (index === existingIndex) {
+            const maxAllowed = Math.min(item.stockQuantity || MAX_QUANTITY, MAX_QUANTITY)
+            return {
+              ...item,
+              quantity: Math.min(item.quantity + action.payload.quantity, maxAllowed),
+              stockQuantity: action.payload.stockQuantity // Update stock in case it changed
+            }
+          }
+          return item
+        })
       } else {
-        // New item with quantity limit
-        updatedItems = [...state.items, { ...action.payload, quantity: Math.min(action.payload.quantity, MAX_QUANTITY) }]
+        // New item with stock and quantity limit
+        const maxAllowed = Math.min(action.payload.stockQuantity || MAX_QUANTITY, MAX_QUANTITY)
+        updatedItems = [...state.items, { ...action.payload, quantity: Math.min(action.payload.quantity, maxAllowed) }]
       }
 
-      newState = {
+      return {
         ...state,
         items: updatedItems,
         ...calculateTotals(updatedItems),
       }
-      break
     }
 
     case 'REMOVE_ITEM': {
-      // action.payload can be either productId (number) or composite key (string)
       const removeKey = action.payload.variantId
         ? `${action.payload.id}-${action.payload.variantId}`
         : `${action.payload.id}`
@@ -77,12 +114,11 @@ const cartReducer = (state, action) => {
           : `${item.id}`
         return itemKey !== removeKey
       })
-      newState = {
+      return {
         ...state,
         items: updatedItems,
         ...calculateTotals(updatedItems),
       }
-      break
     }
 
     case 'UPDATE_QUANTITY': {
@@ -90,38 +126,57 @@ const cartReducer = (state, action) => {
         ? `${action.payload.id}-${action.payload.variantId}`
         : `${action.payload.id}`
 
-      const newQuantity = Math.min(Math.max(1, action.payload.quantity), MAX_QUANTITY)
       const updatedItems = state.items.map(item => {
         const itemKey = item.variantId
           ? `${item.id}-${item.variantId}`
           : `${item.id}`
-        return itemKey === updateKey
-          ? { ...item, quantity: newQuantity }
-          : item
+
+        if (itemKey === updateKey) {
+          // Enforce minimum of 1, maximum of either stock or MAX_QUANTITY
+          const maxAllowed = Math.min(item.stockQuantity || MAX_QUANTITY, MAX_QUANTITY)
+          const newQuantity = Math.min(Math.max(1, action.payload.quantity), maxAllowed)
+          return { ...item, quantity: newQuantity }
+        }
+        return item
       })
-      newState = {
+      return {
         ...state,
         items: updatedItems,
         ...calculateTotals(updatedItems),
       }
-      break
+    }
+
+    case 'UPDATE_STOCK_LEVELS': {
+      // action.payload = { stockMap: Map<string, number> }
+      // stockMap keys are composite keys like "productId" or "productId-variantId"
+      const { stockMap } = action.payload
+      const updatedItems = state.items.map(item => {
+        const itemKey = item.variantId
+          ? `${item.id}-${item.variantId}`
+          : `${item.id}`
+        if (stockMap.has(itemKey)) {
+          const newStock = stockMap.get(itemKey)
+          const clampedQty = Math.min(item.quantity, Math.max(1, newStock))
+          return { ...item, stockQuantity: newStock, quantity: clampedQty }
+        }
+        return item
+      })
+      return {
+        ...state,
+        items: updatedItems,
+        ...calculateTotals(updatedItems),
+      }
     }
 
     case 'CLEAR_CART':
-      newState = initialState
-      break
+      return initialState
 
     case 'LOAD_CART':
-      newState = action.payload
-      break
+      return action.payload
 
     default:
       return state
   }
-
-  // Save to localStorage
-  localStorage.setItem('hardware-store-cart', JSON.stringify(newState))
-  return newState
 }
 
 // Calculate totals
@@ -134,15 +189,55 @@ const calculateTotals = (items) => {
 
 // Provider component
 export function CartProvider({ children }) {
+  const { customer } = useCustomerAuth()
   const [state, dispatch] = useReducer(cartReducer, initialState)
 
-  // Load cart from localStorage on mount
+  // Refs to track customer switches and avoid stale closures
+  const storageKeyRef = useRef(null)
+  const prevCustomerIdRef = useRef(undefined) // undefined = not yet initialised
+  const stateRef = useRef(state)
+
+  // Keep stateRef in sync so the customer-switch effect can read the latest cart
   useEffect(() => {
-    const savedCart = loadCartFromStorage()
-    if (savedCart.items.length > 0) {
+    stateRef.current = state
+  }, [state])
+
+  // --- Handle customer changes (login / logout / switch) ---
+  useEffect(() => {
+    const currentCustomerId = customer?.id ?? null
+    const newKey = getStorageKey(currentCustomerId)
+
+    // First render — migrate old shared cart key if present, then load
+    if (prevCustomerIdRef.current === undefined) {
+      migrateOldCart(newKey)
+      const savedCart = loadCartFromStorage(newKey)
       dispatch({ type: 'LOAD_CART', payload: savedCart })
+      storageKeyRef.current = newKey
+      prevCustomerIdRef.current = currentCustomerId
+      return
     }
-  }, [])
+
+    // Customer actually changed (login, logout, or account switch)
+    if (prevCustomerIdRef.current !== currentCustomerId) {
+      // Persist current cart under the OLD customer's key before switching
+      const oldKey = getStorageKey(prevCustomerIdRef.current)
+      localStorage.setItem(oldKey, JSON.stringify(stateRef.current))
+
+      // Load the NEW customer's cart
+      const savedCart = loadCartFromStorage(newKey)
+      dispatch({ type: 'LOAD_CART', payload: savedCart })
+
+      storageKeyRef.current = newKey
+      prevCustomerIdRef.current = currentCustomerId
+    }
+  }, [customer?.id])
+
+  // --- Persist cart to localStorage whenever it changes ---
+  useEffect(() => {
+    if (storageKeyRef.current) {
+      localStorage.setItem(storageKeyRef.current, JSON.stringify(state))
+    }
+  }, [state])
 
   // Actions
   const addToCart = (product, quantity = 1, variant = null) => {
@@ -157,6 +252,7 @@ export function CartProvider({ children }) {
         quantity,
         variantId: variant?.id || null,
         variantName: variant?.name || null,
+        stockQuantity: variant ? variant.stockQuantity : product.stockQuantity,
       },
     })
   }
@@ -188,6 +284,54 @@ export function CartProvider({ children }) {
     return item ? item.quantity : 0
   }
 
+  // Fetch live stock data from the server and update cart items
+  const refreshStockLevels = useCallback(async () => {
+    if (state.items.length === 0) return { clampedItems: [] }
+
+    try {
+      const cartItems = state.items.map(item => ({
+        productId: item.id,
+        variantId: item.variantId || undefined,
+        quantity: item.quantity,
+      }))
+
+      const response = await orderApi.validateCart(cartItems)
+      const { validatedItems = [], errors = [] } = response.data
+
+      // Build a stock map from both validated items and error responses
+      const stockMap = new Map()
+      for (const vi of validatedItems) {
+        const key = vi.variantId ? `${vi.productId}-${vi.variantId}` : `${vi.productId}`
+        stockMap.set(key, vi.stockQuantity)
+      }
+      for (const err of errors) {
+        if (err.availableQuantity !== undefined) {
+          const key = err.variantId ? `${err.productId}-${err.variantId}` : `${err.productId}`
+          stockMap.set(key, err.availableQuantity)
+        }
+      }
+
+      // Determine which items will be clamped
+      const clampedItems = state.items.filter(item => {
+        const key = item.variantId ? `${item.id}-${item.variantId}` : `${item.id}`
+        const newStock = stockMap.get(key)
+        return newStock !== undefined && item.quantity > newStock
+      }).map(item => ({
+        name: item.name,
+        variantName: item.variantName,
+        oldQuantity: item.quantity,
+        newQuantity: Math.max(1, stockMap.get(item.variantId ? `${item.id}-${item.variantId}` : `${item.id}`)),
+      }))
+
+      dispatch({ type: 'UPDATE_STOCK_LEVELS', payload: { stockMap } })
+
+      return { clampedItems }
+    } catch (error) {
+      console.error('Error refreshing stock levels:', error)
+      return { clampedItems: [] }
+    }
+  }, [state.items])
+
   const value = {
     items: state.items,
     totalItems: state.totalItems,
@@ -197,6 +341,7 @@ export function CartProvider({ children }) {
     updateQuantity,
     clearCart,
     getItemQuantity,
+    refreshStockLevels,
   }
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>

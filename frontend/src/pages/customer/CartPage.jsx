@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { TrashIcon, MinusIcon, PlusIcon, CartIcon, BoxIcon, CashIcon, CheckIcon } from '../../components/icons'
 import { useCart } from '../../context/CartContext'
+import toast from 'react-hot-toast'
 
 // Checkout Progress Steps Component
 function CheckoutProgress({ currentStep }) {
@@ -17,7 +18,7 @@ function CheckoutProgress({ currentStep }) {
         <div key={step.id} className="flex items-center">
           <div className={`checkout-step ${currentStep === step.id ? 'active' : currentStep > step.id ? 'completed' : ''}`}>
             <span className={`checkout-step-dot ${currentStep === step.id ? 'active' :
-                currentStep > step.id ? 'completed' : 'inactive'
+              currentStep > step.id ? 'completed' : 'inactive'
               }`}>
               {currentStep > step.id ? (
                 <CheckIcon className="h-4 w-4" />
@@ -71,6 +72,7 @@ function RemoveItemModal({ item, onConfirm, onCancel }) {
 function QuantityInput({ item, updateQuantity, onRequestRemove }) {
   const [editValue, setEditValue] = useState(null) // null = not editing
   const isEditing = editValue !== null
+  const maxStock = item.stockQuantity || 999
 
   const handleFocus = (e) => {
     setEditValue(String(item.quantity))
@@ -91,7 +93,12 @@ function QuantityInput({ item, updateQuantity, onRequestRemove }) {
       onRequestRemove()
       return
     }
-    updateQuantity(item.id, parsed, item.variantId)
+    // Clamp to stock limit
+    const finalQuantity = Math.min(parsed, maxStock)
+    if (parsed > maxStock) {
+      toast.error(`Only ${maxStock} ${item.unit}(s) available in stock`)
+    }
+    updateQuantity(item.id, finalQuantity, item.variantId)
     setEditValue(null)
   }
 
@@ -126,6 +133,10 @@ function QuantityInput({ item, updateQuantity, onRequestRemove }) {
   }
 
   const handleIncrement = () => {
+    if (item.quantity >= maxStock) {
+      toast.error(`Maximum available stock (${maxStock}) reached`)
+      return
+    }
     updateQuantity(item.id, item.quantity + 1, item.variantId)
   }
 
@@ -151,7 +162,11 @@ function QuantityInput({ item, updateQuantity, onRequestRemove }) {
       />
       <button
         onClick={handleIncrement}
-        className="p-2 hover:bg-neutral-100 transition-colors"
+        disabled={item.quantity >= maxStock}
+        className={`p-2 transition-colors ${item.quantity >= maxStock
+            ? 'opacity-40 cursor-not-allowed'
+            : 'hover:bg-neutral-100'
+          }`}
         aria-label={`Increase quantity of ${item.name}`}
       >
         <PlusIcon className="h-4 w-4" />
@@ -161,8 +176,24 @@ function QuantityInput({ item, updateQuantity, onRequestRemove }) {
 }
 
 export default function CartPage() {
-  const { items, totalAmount, updateQuantity, removeFromCart, clearCart } = useCart()
+  const { items, totalItems, totalAmount, updateQuantity, removeFromCart, clearCart, refreshStockLevels } = useCart()
   const [itemToRemove, setItemToRemove] = useState(null)
+
+  // Refresh stock levels from the server when the cart page loads
+  useEffect(() => {
+    const refresh = async () => {
+      const { clampedItems } = await refreshStockLevels()
+      if (clampedItems.length > 0) {
+        for (const item of clampedItems) {
+          const label = item.variantName ? `${item.name} (${item.variantName})` : item.name
+          toast.error(`${label} quantity adjusted from ${item.oldQuantity} to ${item.newQuantity} due to stock changes`)
+        }
+      }
+    }
+    if (items.length > 0) {
+      refresh()
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('en-PH', {
@@ -268,6 +299,25 @@ export default function CartPage() {
                       <TrashIcon className="h-5 w-5" />
                     </button>
                   </div>
+
+                  {/* Stock Availability Warning */}
+                  {item.stockQuantity && (
+                    <div className="mt-2">
+                      {item.quantity >= item.stockQuantity ? (
+                        <p className="text-xs text-amber-600 font-medium">
+                          Maximum stock reached ({item.stockQuantity} available)
+                        </p>
+                      ) : item.quantity >= item.stockQuantity * 0.8 ? (
+                        <p className="text-xs text-amber-600">
+                          Only {item.stockQuantity - item.quantity} more available
+                        </p>
+                      ) : (
+                        <p className="text-xs text-neutral-500">
+                          {item.stockQuantity} available in stock
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Subtotal */}
@@ -289,7 +339,7 @@ export default function CartPage() {
 
             <div className="space-y-3 mb-6">
               <div className="flex justify-between text-neutral-600">
-                <span>Subtotal ({items.length} items)</span>
+                <span>Subtotal ({totalItems} {totalItems === 1 ? 'item' : 'items'})</span>
                 <span>{formatPrice(totalAmount)}</span>
               </div>
               <div className="flex justify-between text-neutral-600">

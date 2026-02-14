@@ -41,7 +41,7 @@ function CheckoutProgress({ currentStep }) {
 
 export default function CheckoutPage() {
   const navigate = useNavigate()
-  const { items, totalAmount, clearCart } = useCart()
+  const { items, totalItems, totalAmount, clearCart } = useCart()
   const { customer, isAuthenticated } = useCustomerAuth()
   const [loading, setLoading] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
@@ -576,7 +576,7 @@ export default function CheckoutPage() {
                         <span className="font-medium">Address:</span> {formData.address}, {formData.barangay}
                       </p>
                       <p className="text-sm text-neutral-700">
-                        <span className="font-medium">Items:</span> {items.length} item(s)
+                        <span className="font-medium">Items:</span> {totalItems} {totalItems === 1 ? 'item' : 'items'}
                       </p>
                       <p className="text-lg font-bold text-primary-800 pt-2 border-t border-neutral-200">
                         Total: {formatPrice(totalAmount)}
