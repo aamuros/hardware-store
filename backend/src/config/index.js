@@ -52,6 +52,23 @@ const config = {
     },
   },
 
+  // Email Configuration (for password resets, etc.)
+  email: {
+    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+    port: parseInt(process.env.EMAIL_PORT) || 587,
+    secure: process.env.EMAIL_SECURE === 'true',
+    user: process.env.EMAIL_USER || '',
+    password: process.env.EMAIL_PASSWORD || '',
+    from: process.env.EMAIL_FROM || process.env.EMAIL_USER || 'noreply@hardwarestore.com',
+    // Test mode - logs emails but doesn't send
+    testMode: process.env.EMAIL_TEST_MODE !== 'false', // defaults to true for safety
+  },
+
+  // Password Reset
+  passwordReset: {
+    tokenExpiryMinutes: parseInt(process.env.PASSWORD_RESET_EXPIRY_MINUTES) || 30,
+  },
+
   // Store Info
   store: {
     name: process.env.STORE_NAME || 'Hardware Store',

@@ -100,9 +100,17 @@ export default function CustomerLoginPage() {
                         </div>
 
                         <div>
-                            <label htmlFor="password" className="label">
-                                Password
-                            </label>
+                            <div className="flex items-center justify-between">
+                                <label htmlFor="password" className="label">
+                                    Password
+                                </label>
+                                <Link
+                                    to="/forgot-password"
+                                    className="text-accent-600 hover:text-accent-700 text-sm font-medium"
+                                >
+                                    Forgot password?
+                                </Link>
+                            </div>
                             <div className="relative">
                                 <LockIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                                 <input

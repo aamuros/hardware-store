@@ -3,17 +3,36 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const config = require('../config');
 const { validatePasswordStrength } = require('../middleware/sanitizer');
+const { getPasswordRequirements } = require('./passwordResetController');
 
 // POST /api/customers/register
 const register = async (req, res, next) => {
     try {
         const { email, password, name, phone } = req.body;
 
-        // Validate required fields
-        if (!email || !password || !name) {
+        // Validate required fields with specific messages
+        const missingFields = [];
+        if (!name || !name.trim()) missingFields.push('name');
+        if (!email || !email.trim()) missingFields.push('email');
+        if (!password) missingFields.push('password');
+
+        if (missingFields.length > 0) {
             return res.status(400).json({
                 success: false,
-                message: 'Email, password, and name are required',
+                message: `The following required field${missingFields.length > 1 ? 's are' : ' is'} missing: ${missingFields.join(', ')}`,
+                errors: missingFields.map(field => ({
+                    field,
+                    message: `${field.charAt(0).toUpperCase() + field.slice(1)} is required`,
+                })),
+            });
+        }
+
+        // Validate name length
+        if (name.trim().length < 2) {
+            return res.status(400).json({
+                success: false,
+                message: 'Name must be at least 2 characters long',
+                errors: [{ field: 'name', message: 'Name must be at least 2 characters long' }],
             });
         }
 
@@ -22,17 +41,33 @@ const register = async (req, res, next) => {
         if (!emailRegex.test(email)) {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid email format',
+                message: 'Please enter a valid email address (e.g., name@example.com)',
+                errors: [{ field: 'email', message: 'Invalid email format. Please use a format like name@example.com' }],
             });
         }
 
-        // Validate password strength
+        // Validate phone format if provided
+        if (phone && phone.trim()) {
+            const cleanPhone = phone.replace(/\s/g, '');
+            if (!/^(09|\+639)\d{9}$/.test(cleanPhone)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid phone number format. Please use 09XXXXXXXXX or +639XXXXXXXXX',
+                    errors: [{ field: 'phone', message: 'Phone number must be a valid Philippine mobile number (e.g., 09171234567)' }],
+                });
+            }
+        }
+
+        // Validate password strength with detailed, actionable feedback
         const passwordValidation = validatePasswordStrength(password);
         if (!passwordValidation.isValid) {
+            const requirements = getPasswordRequirements(password);
             return res.status(400).json({
                 success: false,
-                message: 'Password does not meet requirements',
+                message: 'Your password is too weak. Please review the requirements below:',
                 errors: passwordValidation.errors,
+                requirements,
+                field: 'password',
             });
         }
 
@@ -42,9 +77,11 @@ const register = async (req, res, next) => {
         });
 
         if (existingCustomer) {
-            return res.status(400).json({
+            return res.status(409).json({
                 success: false,
-                message: 'Email already registered',
+                message: 'An account with this email address already exists. Please try logging in instead, or use a different email.',
+                errors: [{ field: 'email', message: 'This email is already registered' }],
+                suggestion: 'login',
             });
         }
 
@@ -248,10 +285,13 @@ const changePassword = async (req, res, next) => {
         // Validate new password strength
         const passwordValidation = validatePasswordStrength(newPassword);
         if (!passwordValidation.isValid) {
+            const requirements = getPasswordRequirements(newPassword);
             return res.status(400).json({
                 success: false,
-                message: 'New password does not meet requirements',
+                message: 'Your new password does not meet security requirements. Please review the requirements below:',
                 errors: passwordValidation.errors,
+                requirements,
+                field: 'newPassword',
             });
         }
 

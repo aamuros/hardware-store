@@ -10,6 +10,7 @@ export default function CustomerRegisterPage() {
     const { register, isAuthenticated } = useCustomerAuth()
     const [loading, setLoading] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
+    const [serverErrors, setServerErrors] = useState([])
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -38,31 +39,62 @@ export default function CustomerRegisterPage() {
 
         if (!formData.name.trim()) {
             newErrors.name = 'Name is required'
+        } else if (formData.name.trim().length < 2) {
+            newErrors.name = 'Name must be at least 2 characters long'
         }
 
         if (!formData.email.trim()) {
             newErrors.email = 'Email is required'
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-            newErrors.email = 'Invalid email format'
+            newErrors.email = 'Please enter a valid email address (e.g., name@example.com)'
         }
 
         if (formData.phone && !/^(09|\+639)\d{9}$/.test(formData.phone.replace(/\s/g, ''))) {
-            newErrors.phone = 'Invalid phone format (e.g., 09171234567)'
+            newErrors.phone = 'Please enter a valid Philippine mobile number (e.g., 09171234567)'
         }
 
         if (!formData.password) {
             newErrors.password = 'Password is required'
-        } else if (formData.password.length < 6) {
-            newErrors.password = 'Password must be at least 6 characters'
+        } else {
+            // Check each requirement
+            const unmet = passwordRequirements.filter(r => !r.met)
+            if (unmet.length > 0) {
+                newErrors.password = 'Password does not meet all requirements'
+            }
         }
 
-        if (formData.password !== formData.confirmPassword) {
+        if (!formData.confirmPassword) {
+            newErrors.confirmPassword = 'Please confirm your password'
+        } else if (formData.password !== formData.confirmPassword) {
             newErrors.confirmPassword = 'Passwords do not match'
         }
 
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
     }
+
+    // Password requirements check
+    const passwordRequirements = [
+        { label: 'At least 8 characters', met: formData.password.length >= 8 },
+        { label: 'At least one uppercase letter (A-Z)', met: /[A-Z]/.test(formData.password) },
+        { label: 'At least one lowercase letter (a-z)', met: /[a-z]/.test(formData.password) },
+        { label: 'At least one number (0-9)', met: /[0-9]/.test(formData.password) },
+        { label: 'At least one special character (!@#$%^&*)', met: /[!@#$%^&*(),.?":{}|<>]/.test(formData.password) },
+    ]
+
+    const allRequirementsMet = passwordRequirements.every(r => r.met)
+
+    // Password strength calculation
+    const getPasswordStrength = () => {
+        if (!formData.password) return { level: 0, label: '', color: '' }
+        let score = passwordRequirements.filter(r => r.met).length
+        if (score <= 2) return { level: score, label: 'Weak', color: 'bg-red-500' }
+        if (score <= 3) return { level: score, label: 'Fair', color: 'bg-yellow-500' }
+        if (score <= 4) return { level: score, label: 'Good', color: 'bg-blue-500' }
+        return { level: score, label: 'Strong', color: 'bg-green-500' }
+    }
+
+    const strength = getPasswordStrength()
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -80,7 +112,39 @@ export default function CustomerRegisterPage() {
             const from = location.state?.from?.pathname || '/account'
             navigate(from, { replace: true })
         } else {
-            toast.error(result.message)
+            // Handle detailed server errors
+            const data = result.data || {}
+            setServerErrors([])
+
+            if (data.errors && Array.isArray(data.errors)) {
+                // Map server field errors to form errors
+                const fieldErrors = {}
+                data.errors.forEach(err => {
+                    if (err.field) {
+                        fieldErrors[err.field] = err.message
+                    }
+                })
+                if (Object.keys(fieldErrors).length > 0) {
+                    setErrors(prev => ({ ...prev, ...fieldErrors }))
+                }
+            }
+
+            if (data.requirements) {
+                setServerErrors(data.requirements)
+            }
+
+            // If suggestion is 'login', show a special message
+            if (data.suggestion === 'login') {
+                toast.error(
+                    <span>
+                        {data.message}{' '}
+                        <a href="/login" className="font-bold underline">Sign in here</a>
+                    </span>,
+                    { duration: 6000 }
+                )
+            } else {
+                toast.error(result.message)
+            }
         }
     }
 
@@ -190,6 +254,63 @@ export default function CustomerRegisterPage() {
                             </div>
                             {errors.password && (
                                 <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                            )}
+
+                            {/* Password strength bar */}
+                            {formData.password && (
+                                <div className="mt-2">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <div className="flex-1 h-1.5 bg-neutral-200 rounded-full overflow-hidden">
+                                            <div
+                                                className={`h-full rounded-full transition-all duration-300 ${strength.color}`}
+                                                style={{ width: `${(strength.level / 5) * 100}%` }}
+                                            />
+                                        </div>
+                                        <span className={`text-xs font-medium ${
+                                            strength.level <= 2 ? 'text-red-600' :
+                                            strength.level <= 3 ? 'text-yellow-600' :
+                                            strength.level <= 4 ? 'text-blue-600' :
+                                            'text-green-600'
+                                        }`}>
+                                            {strength.label}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Password requirements checklist */}
+                            {formData.password && (
+                                <ul className="mt-3 space-y-1.5">
+                                    {passwordRequirements.map((req, i) => (
+                                        <li key={i} className={`flex items-center gap-2 text-sm ${req.met ? 'text-green-600' : 'text-neutral-500'}`}>
+                                            {req.met ? (
+                                                <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            ) : (
+                                                <svg className="w-4 h-4 text-neutral-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <circle cx="12" cy="12" r="10" strokeWidth="2" />
+                                                </svg>
+                                            )}
+                                            <span>{req.label}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+
+                            {/* Server-side requirement errors */}
+                            {serverErrors.length > 0 && (
+                                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                    <p className="text-red-700 text-sm font-medium mb-1">Password requirements not met:</p>
+                                    <ul className="space-y-1">
+                                        {serverErrors.filter(r => !r.met).map((req, i) => (
+                                            <li key={i} className="text-red-600 text-sm flex items-start gap-2">
+                                                <span className="text-red-400 mt-0.5">•</span>
+                                                <span>{req.label}{req.tip ? ` — ${req.tip}` : ''}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
                             )}
                         </div>
 

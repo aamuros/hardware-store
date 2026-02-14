@@ -19,6 +19,8 @@ const NotFoundPage = lazy(() => import('./pages/customer/NotFoundPage'))
 // Customer Account Pages - Lazy loaded
 const CustomerLoginPage = lazy(() => import('./pages/customer/CustomerLoginPage'))
 const CustomerRegisterPage = lazy(() => import('./pages/customer/CustomerRegisterPage'))
+const ForgotPasswordPage = lazy(() => import('./pages/customer/ForgotPasswordPage'))
+const ResetPasswordPage = lazy(() => import('./pages/customer/ResetPasswordPage'))
 const AccountPage = lazy(() => import('./pages/customer/AccountPage'))
 const OrderHistoryPage = lazy(() => import('./pages/customer/OrderHistoryPage'))
 const SavedAddressesPage = lazy(() => import('./pages/customer/SavedAddressesPage'))
@@ -67,6 +69,8 @@ function App() {
             {/* Customer Auth Routes */}
             <Route path="login" element={<CustomerLoginPage />} />
             <Route path="register" element={<CustomerRegisterPage />} />
+            <Route path="forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="reset-password" element={<ResetPasswordPage />} />
 
             {/* Customer Account Routes (Protected) */}
             <Route path="account" element={<ProtectedCustomerRoute><AccountPage /></ProtectedCustomerRoute>} />

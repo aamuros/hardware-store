@@ -56,10 +56,10 @@ describe('Customer Authentication API', () => {
                     password: 'AnotherPass123!',
                     name: 'Another Customer',
                 })
-                .expect(400);
+                .expect(409);
 
             expect(response.body).toHaveProperty('success', false);
-            expect(response.body.message).toContain('already registered');
+            expect(response.body.message).toContain('already exists');
         });
 
         it('should reject registration with missing required fields', async () => {
@@ -84,7 +84,7 @@ describe('Customer Authentication API', () => {
                 .expect(400);
 
             expect(response.body).toHaveProperty('success', false);
-            expect(response.body.message).toContain('Invalid email');
+            expect(response.body.message).toContain('valid email');
         });
 
         it('should reject registration with weak password', async () => {
@@ -98,7 +98,8 @@ describe('Customer Authentication API', () => {
                 .expect(400);
 
             expect(response.body).toHaveProperty('success', false);
-            expect(response.body.message).toContain('Password does not meet requirements');
+            expect(response.body.message).toContain('password');
+            expect(response.body).toHaveProperty('requirements');
         });
 
         it('should normalize email to lowercase', async () => {
@@ -361,7 +362,8 @@ describe('Customer Authentication API', () => {
                     })
                     .expect(400);
 
-                expect(response.body.message).toContain('does not meet requirements');
+                expect(response.body.message).toContain('password');
+                expect(response.body).toHaveProperty('requirements');
             });
         });
     });
@@ -369,6 +371,9 @@ describe('Customer Authentication API', () => {
     // Cleanup after all tests
     afterAll(async () => {
         if (customerId) {
+            await prisma.passwordReset.deleteMany({
+                where: { customerId },
+            }).catch(() => { });
             await prisma.wishlistItem.deleteMany({
                 where: { customerId },
             }).catch(() => { });

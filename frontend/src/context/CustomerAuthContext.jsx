@@ -54,7 +54,8 @@ export function CustomerAuthProvider({ children }) {
             return { success: true }
         } catch (error) {
             const message = error.response?.data?.message || 'Registration failed'
-            return { success: false, message }
+            const data = error.response?.data || {}
+            return { success: false, message, data }
         }
     }
 

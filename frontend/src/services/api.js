@@ -149,6 +149,11 @@ export const customerApi = {
   register: (data) => api.post('/customers/register', data),
   login: (data) => api.post('/customers/login', data),
 
+  // Password Reset
+  forgotPassword: (data) => api.post('/customers/forgot-password', data),
+  verifyResetToken: (data) => api.post('/customers/verify-reset-token', data),
+  resetPassword: (data) => api.post('/customers/reset-password', data),
+
   // Profile
   getProfile: () => api.get('/customers/profile'),
   updateProfile: (data) => api.patch('/customers/profile', data),

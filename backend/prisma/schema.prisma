@@ -44,8 +44,26 @@ model Customer {
   orders           Order[]
   savedAddresses   SavedAddress[]
   wishlistItems    WishlistItem[]
+  passwordResets   PasswordReset[]
 
   @@map("customers")
+}
+
+// Password reset tokens
+model PasswordReset {
+  id          Int       @id @default(autoincrement())
+  customerId  Int
+  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  token       String    @unique
+  expiresAt   DateTime
+  usedAt      DateTime?
+  
+  createdAt   DateTime  @default(now())
+
+  @@index([customerId])
+  @@index([token])
+  @@map("password_resets")
 }
 
 // Product categories

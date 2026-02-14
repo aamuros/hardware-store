@@ -6,6 +6,7 @@ const config = require('../config');
 
 // Controllers
 const customerController = require('../controllers/customerController');
+const passwordResetController = require('../controllers/passwordResetController');
 const addressController = require('../controllers/addressController');
 const wishlistController = require('../controllers/wishlistController');
 const orderHistoryController = require('../controllers/orderHistoryController');
@@ -33,6 +34,11 @@ const orderHistoryController = require('../controllers/orderHistoryController');
 // TEMPORARILY DISABLED - Rate limiting removed from routes
 router.post('/register', /* authLimiter, */ customerController.register);
 router.post('/login', /* authLimiter, */ customerController.login);
+
+// Password reset
+router.post('/forgot-password', /* authLimiter, */ passwordResetController.forgotPassword);
+router.post('/verify-reset-token', passwordResetController.verifyResetToken);
+router.post('/reset-password', /* authLimiter, */ passwordResetController.resetPassword);
 
 // ============================================
 // Protected routes (customer authentication required)
