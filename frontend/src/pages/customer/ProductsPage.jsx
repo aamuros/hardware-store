@@ -8,6 +8,7 @@ import { useDebounce } from '../../hooks/useDebounce'
 export default function ProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [products, setProducts] = useState([])
+  const [outOfStockProducts, setOutOfStockProducts] = useState([])
   const [categories, setCategories] = useState([])
   const [initialLoading, setInitialLoading] = useState(true)
   const [isSearching, setIsSearching] = useState(false)
@@ -15,6 +16,7 @@ export default function ProductsPage() {
   const debouncedSearch = useDebounce(searchQuery, 300)
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '')
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1 })
+  const [showOutOfStock, setShowOutOfStock] = useState(false)
   const prevSearchParam = useRef(searchParams.get('search') || '')
 
   useEffect(() => {
@@ -54,12 +56,34 @@ export default function ProductsPage() {
     }
   }, [debouncedSearch])
 
+  // Fetch out-of-stock products whenever category changes
+  useEffect(() => {
+    fetchOutOfStockProducts()
+  }, [selectedCategory])
+
   const fetchCategories = async () => {
     try {
       const response = await categoryApi.getAll()
       setCategories(response.data.data)
     } catch (error) {
       console.error('Error fetching categories:', error)
+    }
+  }
+
+  const fetchOutOfStockProducts = async () => {
+    try {
+      const params = {
+        limit: 100,
+        available: true,
+        inStock: false,
+      }
+      if (selectedCategory) {
+        params.category = selectedCategory
+      }
+      const response = await productApi.getAll(params)
+      setOutOfStockProducts(response.data.data)
+    } catch (error) {
+      console.error('Error fetching out-of-stock products:', error)
     }
   }
 
@@ -75,6 +99,7 @@ export default function ProductsPage() {
         page: searchParams.get('page') || 1,
         limit: 12,
         available: true,
+        inStock: true,
       }
 
       if (selectedCategory) {
@@ -129,6 +154,7 @@ export default function ProductsPage() {
     }
     setSearchQuery('')
     prevSearchParam.current = ''
+    setShowOutOfStock(false)
   }
 
   const handlePageChange = (newPage) => {
@@ -137,6 +163,8 @@ export default function ProductsPage() {
     setSearchParams(params)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
+
+  const isSearchActive = !!searchQuery.trim()
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
@@ -207,7 +235,7 @@ export default function ProductsPage() {
             </div>
           ))}
         </div>
-      ) : products.length === 0 ? (
+      ) : products.length === 0 && outOfStockProducts.length === 0 ? (
         <div className="text-center py-16">
           <div className="text-6xl mb-4">🔍</div>
           <h3 className="text-xl font-semibold text-primary-900 mb-2">No products found</h3>
@@ -232,20 +260,30 @@ export default function ProductsPage() {
                 </div>
               </div>
             )}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-              {products.map((product, index) => (
-                <div
-                  key={product.id}
-                  className={`animate-fade-in-up opacity-0 stagger-${Math.min(index + 1, 12)}`}
-                  style={{ animationFillMode: 'forwards' }}
-                >
-                  <ProductCard product={product} />
-                </div>
-              ))}
-            </div>
+
+            {/* In-Stock Products Grid */}
+            {products.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                {products.map((product, index) => (
+                  <div
+                    key={product.id}
+                    className={`animate-fade-in-up opacity-0 stagger-${Math.min(index + 1, 12)}`}
+                    style={{ animationFillMode: 'forwards' }}
+                  >
+                    <ProductCard product={product} />
+                  </div>
+                ))}
+              </div>
+            ) : !isSearchActive && outOfStockProducts.length > 0 ? (
+              <div className="text-center py-12">
+                <div className="text-5xl mb-3">📦</div>
+                <h3 className="text-lg font-semibold text-primary-900 mb-1">All items in this category are out of stock</h3>
+                <p className="text-neutral-500 text-sm">Check back soon or browse other categories</p>
+              </div>
+            ) : null}
           </div>
 
-          {/* Pagination */}
+          {/* Pagination — only for in-stock products */}
           {pagination.totalPages > 1 && (
             <div className="flex justify-center gap-2 mt-10">
               <button
@@ -265,6 +303,53 @@ export default function ProductsPage() {
               >
                 Next
               </button>
+            </div>
+          )}
+
+          {/* Out of Stock — collapsible section, always at bottom, independent of pagination */}
+          {!isSearchActive && outOfStockProducts.length > 0 && (
+            <div className="mt-14">
+              <button
+                onClick={() => setShowOutOfStock(!showOutOfStock)}
+                className="w-full group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-px flex-1 bg-neutral-200 group-hover:bg-neutral-300 transition-colors"></div>
+                  <div className="flex items-center gap-2 px-5 py-2 bg-neutral-100 group-hover:bg-neutral-200 rounded-full transition-colors">
+                    <div className="w-2 h-2 rounded-full bg-red-400"></div>
+                    <span className="text-sm font-medium text-neutral-600">Out of Stock</span>
+                    <span className="text-xs text-neutral-400 bg-neutral-200 group-hover:bg-neutral-300 px-1.5 py-0.5 rounded-full transition-colors">
+                      {outOfStockProducts.length}
+                    </span>
+                    <svg
+                      className={`w-4 h-4 text-neutral-400 transition-transform duration-200 ${showOutOfStock ? 'rotate-180' : ''}`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                  <div className="h-px flex-1 bg-neutral-200 group-hover:bg-neutral-300 transition-colors"></div>
+                </div>
+              </button>
+
+              {showOutOfStock && (
+                <div className="mt-6 animate-fade-in">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 opacity-70">
+                    {outOfStockProducts.map((product, index) => (
+                      <div
+                        key={product.id}
+                        className={`animate-fade-in-up opacity-0 stagger-${Math.min(index + 1, 12)}`}
+                        style={{ animationFillMode: 'forwards' }}
+                      >
+                        <ProductCard product={product} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </>

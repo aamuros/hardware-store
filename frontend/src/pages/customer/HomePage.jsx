@@ -77,10 +77,36 @@ export default function HomePage() {
       try {
         const [categoriesRes, productsRes] = await Promise.all([
           categoryApi.getAll(),
-          productApi.getAll({ limit: 8, available: true }),
+          productApi.getAll({ limit: 24, available: true }),
         ])
         setCategories(categoriesRes.data.data)
-        setFeaturedProducts(productsRes.data.data)
+
+        // Curate featured products: prioritize in-stock, diverse categories
+        const allProducts = productsRes.data.data
+        const inStock = allProducts.filter(p => p.hasVariants || (p.stockQuantity ?? 0) > 0)
+        const featured = []
+        const usedCategories = new Set()
+
+        // First pass: one from each category for diversity
+        for (const product of inStock) {
+          if (featured.length >= 8) break
+          const catId = product.categoryId || product.category?.id
+          if (!usedCategories.has(catId)) {
+            featured.push(product)
+            usedCategories.add(catId)
+          }
+        }
+
+        // Second pass: fill remaining slots with highest-stock items
+        const remaining = inStock
+          .filter(p => !featured.includes(p))
+          .sort((a, b) => (b.stockQuantity ?? 0) - (a.stockQuantity ?? 0))
+        for (const product of remaining) {
+          if (featured.length >= 8) break
+          featured.push(product)
+        }
+
+        setFeaturedProducts(featured.length > 0 ? featured : allProducts.slice(0, 8))
       } catch (error) {
         console.error('Error fetching data:', error)
       } finally {

@@ -11,7 +11,7 @@ const safeParseInt = (value, defaultValue, min = 1, max = Infinity) => {
 // GET /api/products
 const getAllProducts = async (req, res, next) => {
   try {
-    const { category, available, page = 1, limit = 20, search } = req.query;
+    const { category, available, page = 1, limit = 20, search, inStock } = req.query;
 
     const where = { isDeleted: false };
 
@@ -30,13 +30,36 @@ const getAllProducts = async (req, res, next) => {
       where.isAvailable = available === 'true';
     }
 
+    // Filter by stock availability at the DB level
+    if (inStock === 'true') {
+      where.OR = [
+        { stockQuantity: { gt: 0 } },
+        { hasVariants: true },
+      ];
+    } else if (inStock === 'false') {
+      where.stockQuantity = { lte: 0 };
+      where.hasVariants = false;
+    }
+
     if (search && search.trim().length > 0) {
       const searchTerm = search.trim();
-      where.OR = [
+      // If we already have an OR for inStock, we need to use AND to combine
+      const searchConditions = [
         { name: { contains: searchTerm } },
         { description: { contains: searchTerm } },
         { sku: { contains: searchTerm } },
       ];
+      if (where.OR) {
+        // Move the existing OR (inStock filter) into an AND clause
+        const existingOr = where.OR;
+        delete where.OR;
+        where.AND = [
+          { OR: existingOr },
+          { OR: searchConditions },
+        ];
+      } else {
+        where.OR = searchConditions;
+      }
     }
 
     const parsedPage = safeParseInt(page, 1, 1);
@@ -128,6 +151,9 @@ const searchProducts = async (req, res, next) => {
         },
         skip,
         take: parsedLimit,
+        orderBy: {
+          name: 'asc',
+        },
       }),
       prisma.product.count({ where: searchWhere }),
     ]);
