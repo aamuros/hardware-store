@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { categoryApi, productApi, statsApi } from '../../services/api'
 import ProductCard from '../../components/ProductCard'
@@ -14,66 +14,11 @@ import {
   BoxIcon
 } from '../../components/icons'
 
-// Animated counter hook
-function useCountUp(end, duration = 2000, started = false) {
-  const [count, setCount] = useState(0)
-
-  useEffect(() => {
-    if (!started || end === 0) return
-
-    let startTime
-    let animationId
-    const animate = (currentTime) => {
-      if (!startTime) startTime = currentTime
-      const progress = Math.min((currentTime - startTime) / duration, 1)
-      setCount(Math.floor(progress * end))
-      if (progress < 1) {
-        animationId = requestAnimationFrame(animate)
-      }
-    }
-    animationId = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(animationId)
-  }, [end, duration, started])
-
-  return count
-}
-
-// Hook to detect when an element is visible in viewport
-function useInView() {
-  const [isInView, setIsInView] = useState(false)
-  const [node, setNode] = useState(null)
-  const ref = useCallback((el) => setNode(el), [])
-
-  useEffect(() => {
-    if (!node) return
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsInView(true)
-          observer.disconnect()
-        }
-      },
-      { threshold: 0.1 }
-    )
-    observer.observe(node)
-    return () => observer.disconnect()
-  }, [node])
-
-  return { ref, isInView }
-}
-
 export default function HomePage() {
   const [categories, setCategories] = useState([])
   const [featuredProducts, setFeaturedProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({ totalProducts: 0, deliveredOrders: 0, totalCustomers: 0 })
-
-  const statsInView = useInView()
-  const statsReady = statsInView.isInView && stats.totalProducts > 0
-
-  const productsCount = useCountUp(stats.totalProducts, 2000, statsReady)
-  const ordersCount = useCountUp(stats.deliveredOrders, 2000, statsReady)
-  const customersCount = useCountUp(stats.totalCustomers, 2000, statsReady)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -167,19 +112,9 @@ export default function HomePage() {
   return (
     <div>
       {/* ─── Hero Section ─── */}
-      <section className="relative overflow-hidden bg-white">
-        {/* Subtle background pattern */}
-        <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px] opacity-40"></div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="grid lg:grid-cols-5 gap-12 lg:gap-16 items-center py-16 md:py-24 lg:py-28">
-            {/* Left — Copy (3 cols) */}
-            <div className="lg:col-span-3 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 bg-accent-50 border border-accent-200 rounded-full px-4 py-1.5 mb-6">
-                <span className="w-1.5 h-1.5 bg-accent-500 rounded-full"></span>
-                <span className="text-accent-700 text-xs font-semibold tracking-wide uppercase">Your Trusted Hardware Partner</span>
-              </div>
-
+      <section className="bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="py-16 md:py-24 lg:py-28 max-w-3xl mx-auto text-center lg:text-left lg:mx-0 lg:max-w-2xl">
               <h1 className="text-4xl sm:text-5xl md:text-[3.5rem] font-extrabold tracking-tight leading-[1.1] text-primary-900 mb-5">
                 Quality Hardware{' '}
                 <span className="text-accent-500">&amp;</span>
@@ -195,97 +130,47 @@ export default function HomePage() {
               <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
                 <Link
                   to="/products"
-                  className="btn btn-lg bg-primary-900 hover:bg-primary-800 text-white transition-colors duration-200"
+                  className="btn btn-lg bg-primary-900 hover:bg-primary-800 text-white transition-colors"
                 >
                   Browse Products
                   <span className="ml-2">→</span>
                 </Link>
                 <Link
                   to="/track-order"
-                  className="btn btn-lg border border-neutral-300 text-primary-800 hover:bg-neutral-50 transition-colors duration-200"
+                  className="btn btn-lg border border-neutral-300 text-primary-800 hover:bg-neutral-50 transition-colors"
                 >
                   Track Your Order
                 </Link>
               </div>
-            </div>
 
-            {/* Right — Stats card (2 cols, desktop) */}
-            <div className="lg:col-span-2 hidden lg:block" ref={statsInView.ref}>
-              <div className="bg-primary-900 rounded-2xl p-8 text-white relative overflow-hidden">
-                {/* Decorative gradient */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-accent-500/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                <div className="absolute bottom-0 left-0 w-24 h-24 bg-accent-500/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
-
-                <div className="relative">
-                  <div className="grid grid-cols-3 gap-4 text-center mb-8">
-                    <div>
-                      <div className="text-3xl font-bold text-white leading-none mb-1">{productsCount}+</div>
-                      <div className="text-primary-400 text-xs font-medium uppercase tracking-wider">Products</div>
-                    </div>
-                    <div className="border-x border-white/10">
-                      <div className="text-3xl font-bold text-white leading-none mb-1">{ordersCount}+</div>
-                      <div className="text-primary-400 text-xs font-medium uppercase tracking-wider">Delivered</div>
-                    </div>
-                    <div>
-                      <div className="text-3xl font-bold text-white leading-none mb-1">{customersCount}+</div>
-                      <div className="text-primary-400 text-xs font-medium uppercase tracking-wider">Customers</div>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-white/10 pt-6 space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-accent-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <TruckIcon className="h-4 w-4 text-accent-400" />
-                      </div>
-                      <div>
-                        <div className="text-white text-sm font-medium">Fast Delivery</div>
-                        <div className="text-primary-400 text-xs">Free on orders over ₱2,000</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-accent-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <ShieldIcon className="h-4 w-4 text-accent-400" />
-                      </div>
-                      <div>
-                        <div className="text-white text-sm font-medium">Quality Guaranteed</div>
-                        <div className="text-primary-400 text-xs">100% authentic products</div>
-                      </div>
-                    </div>
-                  </div>
+              {/* Inline stats */}
+              <div className="flex items-center gap-8 mt-10 justify-center lg:justify-start text-sm">
+                <div>
+                  <span className="text-2xl font-bold text-primary-900">{stats.totalProducts.toLocaleString()}+</span>
+                  <span className="text-neutral-400 ml-1.5">Products</span>
+                </div>
+                <div className="w-px h-6 bg-neutral-200"></div>
+                <div>
+                  <span className="text-2xl font-bold text-primary-900">{stats.deliveredOrders.toLocaleString()}+</span>
+                  <span className="text-neutral-400 ml-1.5">Delivered</span>
+                </div>
+                <div className="w-px h-6 bg-neutral-200"></div>
+                <div>
+                  <span className="text-2xl font-bold text-primary-900">{stats.totalCustomers.toLocaleString()}+</span>
+                  <span className="text-neutral-400 ml-1.5">Customers</span>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile stats strip */}
-        <div className="lg:hidden bg-primary-900">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="grid grid-cols-3 divide-x divide-white/10 py-5 text-center">
-              <div>
-                <div className="text-xl font-bold text-white">{stats.totalProducts.toLocaleString()}+</div>
-                <div className="text-primary-400 text-[11px] font-medium uppercase tracking-wider">Products</div>
-              </div>
-              <div>
-                <div className="text-xl font-bold text-white">{stats.deliveredOrders.toLocaleString()}+</div>
-                <div className="text-primary-400 text-[11px] font-medium uppercase tracking-wider">Delivered</div>
-              </div>
-              <div>
-                <div className="text-xl font-bold text-white">{stats.totalCustomers.toLocaleString()}+</div>
-                <div className="text-primary-400 text-[11px] font-medium uppercase tracking-wider">Customers</div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
 
-      {/* ─── Trust Bar ─── */}
+      {/* ─── Value Props ─── */}
       <section className="bg-neutral-50 border-y border-neutral-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-neutral-200">
             {[
               { icon: TruckIcon, title: 'Free Delivery', desc: 'On orders over ₱2,000' },
-              { icon: ShieldIcon, title: 'Quality Guaranteed', desc: '100% authentic products' },
+              { icon: ShieldIcon, title: '100% Authentic', desc: 'Quality guaranteed' },
               { icon: CashIcon, title: 'Cash on Delivery', desc: 'Pay when you receive' },
               { icon: PhoneIcon, title: 'SMS Updates', desc: 'Real-time order tracking' },
             ].map((badge, idx) => (
@@ -323,7 +208,7 @@ export default function HomePage() {
               <Link
                 key={category.id}
                 to={`/products?category=${category.id}`}
-                className="group relative bg-neutral-50 hover:bg-white border border-neutral-100 hover:border-neutral-200 rounded-2xl p-5 transition-all duration-200 hover:shadow-soft"
+                className="group relative bg-neutral-50 hover:bg-white border border-neutral-100 hover:border-neutral-200 rounded-2xl p-5 transition-colors duration-200 hover:shadow-soft"
               >
                 <div className="flex items-start gap-3.5">
                   <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center text-primary-700 border border-neutral-200 group-hover:border-accent-300 group-hover:text-accent-600 transition-colors flex-shrink-0">
@@ -388,7 +273,7 @@ export default function HomePage() {
                     <div className="w-16 h-16 bg-neutral-50 border-2 border-neutral-200 rounded-2xl flex items-center justify-center relative z-10 bg-white">
                       <item.Icon className="h-7 w-7 text-primary-700" />
                     </div>
-                    <span className="absolute -top-2 -right-2 w-6 h-6 bg-accent-500 text-white rounded-full flex items-center justify-center text-xs font-bold z-20 shadow-sm">
+                    <span className="absolute -top-2 -right-2 w-6 h-6 bg-accent-500 text-white rounded-full flex items-center justify-center text-xs font-bold z-20">
                       {item.step}
                     </span>
                   </div>
@@ -396,37 +281,6 @@ export default function HomePage() {
                   <p className="text-neutral-500 text-xs leading-relaxed max-w-[180px] mx-auto">{item.desc}</p>
                 </div>
               ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── CTA ─── */}
-      <section className="bg-primary-900 relative overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute top-0 left-1/4 w-64 h-64 bg-accent-500/5 rounded-full -translate-y-1/2"></div>
-        <div className="absolute bottom-0 right-1/4 w-48 h-48 bg-accent-500/5 rounded-full translate-y-1/2"></div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="py-16 md:py-20 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">Ready to Start Your Project?</h2>
-            <p className="text-primary-300 mb-8 text-sm md:text-base max-w-lg mx-auto leading-relaxed">
-              Browse our complete catalog of construction materials, plumbing supplies, and professional tools.
-              Cash on delivery available.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link
-                to="/products"
-                className="btn btn-lg bg-accent-500 hover:bg-accent-600 text-white transition-colors duration-200 inline-flex items-center gap-2"
-              >
-                Start Shopping <span>→</span>
-              </Link>
-              <Link
-                to="/track-order"
-                className="btn btn-lg border border-white/20 text-white hover:bg-white/10 transition-colors duration-200"
-              >
-                Track an Order
-              </Link>
             </div>
           </div>
         </div>

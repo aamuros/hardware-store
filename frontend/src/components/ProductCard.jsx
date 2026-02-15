@@ -82,7 +82,7 @@ const ProductCard = memo(function ProductCard({ product }) {
         <OptimizedImage
           src={product.imageUrl}
           alt={product.name}
-          className="transition-transform duration-300 ease-out group-hover:scale-[1.02]"
+          className=""
           fallback={<BoxIcon className="h-16 w-16 text-neutral-300" />}
         />
 
@@ -146,7 +146,7 @@ const ProductCard = memo(function ProductCard({ product }) {
           {isInStock ? (
             <button
               onClick={handleAddToCart}
-              className="p-2.5 bg-primary-800 text-white rounded-xl hover:bg-primary-900 transition-all duration-200 hover:shadow-md active:scale-95"
+              className="p-2.5 bg-primary-800 text-white rounded-xl hover:bg-primary-900 transition-colors"
               aria-label={hasVariants ? 'View options' : 'Add to cart'}
               title={hasVariants ? 'View options' : 'Add to cart'}
             >
