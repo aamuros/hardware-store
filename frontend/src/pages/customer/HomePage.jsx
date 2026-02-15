@@ -14,11 +14,18 @@ import {
   BoxIcon
 } from '../../components/icons'
 
+import { useCountUp } from '../../hooks/useCountUp'
+
 export default function HomePage() {
   const [categories, setCategories] = useState([])
   const [featuredProducts, setFeaturedProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({ totalProducts: 0, deliveredOrders: 0, totalCustomers: 0 })
+
+  // Animation values
+  const animatedProducts = useCountUp(stats.totalProducts, 2000, !loading && stats.totalProducts > 0)
+  const animatedDelivered = useCountUp(stats.deliveredOrders, 2000, !loading && stats.deliveredOrders > 0)
+  const animatedCustomers = useCountUp(stats.totalCustomers, 2000, !loading && stats.totalCustomers > 0)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -70,18 +77,23 @@ export default function HomePage() {
   if (loading) {
     return (
       <div>
-        {/* Hero Skeleton */}
-        <section className="bg-white py-16 md:py-24">
+        {/* Hero Skeleton - Updated layout hint */}
+        <section className="bg-white py-16 md:py-24 relative overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-xl mx-auto text-center lg:text-left lg:mx-0">
-              <div className="h-4 bg-neutral-100 rounded w-40 mb-6 mx-auto lg:mx-0 animate-pulse"></div>
-              <div className="h-12 bg-neutral-100 rounded-lg w-full mb-3 animate-pulse"></div>
-              <div className="h-12 bg-neutral-100 rounded-lg w-3/4 mb-6 mx-auto lg:mx-0 animate-pulse"></div>
-              <div className="h-5 bg-neutral-50 rounded w-full mb-2 animate-pulse"></div>
-              <div className="h-5 bg-neutral-50 rounded w-2/3 mb-8 mx-auto lg:mx-0 animate-pulse"></div>
-              <div className="flex gap-3 justify-center lg:justify-start">
-                <div className="h-12 w-44 bg-neutral-100 rounded-xl animate-pulse"></div>
-                <div className="h-12 w-40 bg-neutral-50 rounded-xl animate-pulse"></div>
+            <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+              <div className="flex-1 text-center lg:text-left">
+                <div className="h-4 bg-neutral-100 rounded w-40 mb-6 mx-auto lg:mx-0 animate-pulse"></div>
+                <div className="h-12 bg-neutral-100 rounded-lg w-full mb-3 animate-pulse"></div>
+                <div className="h-12 bg-neutral-100 rounded-lg w-3/4 mb-6 mx-auto lg:mx-0 animate-pulse"></div>
+                <div className="h-5 bg-neutral-50 rounded w-full mb-2 animate-pulse"></div>
+                <div className="h-5 bg-neutral-50 rounded w-2/3 mb-8 mx-auto lg:mx-0 animate-pulse"></div>
+                <div className="flex gap-3 justify-center lg:justify-start">
+                  <div className="h-12 w-44 bg-neutral-100 rounded-xl animate-pulse"></div>
+                  <div className="h-12 w-40 bg-neutral-50 rounded-xl animate-pulse"></div>
+                </div>
+              </div>
+              <div className="w-full lg:w-1/3">
+                <div className="aspect-[4/3] bg-neutral-50 rounded-3xl animate-pulse"></div>
               </div>
             </div>
           </div>
@@ -112,78 +124,104 @@ export default function HomePage() {
   return (
     <div>
       {/* ─── Hero Section ─── */}
-      <section className="bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-16 md:py-24 lg:py-28 max-w-3xl mx-auto text-center lg:text-left lg:mx-0 lg:max-w-2xl">
-              <h1 className="text-4xl sm:text-5xl md:text-[3.5rem] font-extrabold tracking-tight leading-[1.1] text-primary-900 mb-5">
+      <section className="bg-white relative overflow-hidden">
+        {/* Decorative background elements */}
+        <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-96 h-96 bg-accent-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 translate-y-1/4 -translate-x-1/4 w-96 h-96 bg-primary-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="py-16 md:py-24 lg:py-28 flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+
+            {/* Left Column: Text Content */}
+            <div className="flex-1 text-center lg:text-left z-10">
+              <h1 className="text-4xl sm:text-5xl md:text-[3.5rem] font-extrabold tracking-tight leading-[1.1] text-primary-900 mb-6">
                 Quality Hardware{' '}
-                <span className="text-accent-500">&amp;</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-500 to-accent-600">&amp;</span>
                 <br className="hidden sm:block" />
                 {' '}Building Materials
               </h1>
 
-              <p className="text-neutral-500 text-base md:text-lg leading-relaxed max-w-lg mx-auto lg:mx-0 mb-8">
+              <p className="text-neutral-600 text-lg md:text-xl leading-relaxed max-w-lg mx-auto lg:mx-0 mb-10">
                 From construction materials to plumbing supplies and professional tools —
                 get everything you need delivered to your doorstep.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link
                   to="/products"
-                  className="btn btn-lg bg-primary-900 hover:bg-primary-800 text-white transition-colors"
+                  className="btn btn-lg bg-primary-900 hover:bg-primary-800 text-white shadow-lg shadow-primary-900/20 hover:shadow-xl hover:shadow-primary-900/30 hover:-translate-y-1 transition-all duration-300"
                 >
                   Browse Products
                   <span className="ml-2">→</span>
                 </Link>
                 <Link
                   to="/track-order"
-                  className="btn btn-lg border border-neutral-300 text-primary-800 hover:bg-neutral-50 transition-colors"
+                  className="btn btn-lg bg-white border border-neutral-200 text-primary-800 hover:bg-neutral-50 hover:border-neutral-300 shadow-sm hover:shadow-md transition-all duration-300"
                 >
                   Track Your Order
                 </Link>
               </div>
+            </div>
 
-              {/* Inline stats */}
-              <div className="flex items-center gap-8 mt-10 justify-center lg:justify-start text-sm">
-                <div>
-                  <span className="text-2xl font-bold text-primary-900">{stats.totalProducts.toLocaleString()}+</span>
-                  <span className="text-neutral-400 ml-1.5">Products</span>
-                </div>
-                <div className="w-px h-6 bg-neutral-200"></div>
-                <div>
-                  <span className="text-2xl font-bold text-primary-900">{stats.deliveredOrders.toLocaleString()}+</span>
-                  <span className="text-neutral-400 ml-1.5">Delivered</span>
-                </div>
-                <div className="w-px h-6 bg-neutral-200"></div>
-                <div>
-                  <span className="text-2xl font-bold text-primary-900">{stats.totalCustomers.toLocaleString()}+</span>
-                  <span className="text-neutral-400 ml-1.5">Customers</span>
-                </div>
-              </div>
-          </div>
-        </div>
-      </section>
+            {/* Right Column: Stats & Visuals */}
+            <div className="w-full lg:w-[420px] xl:w-[480px] z-10">
+              <div className="relative">
+                {/* Stats Card */}
+                <div className="bg-white/80 backdrop-blur-xl border border-white/40 shadow-2xl rounded-3xl p-8 sm:p-10 relative overflow-hidden group hover:shadow-soft-lg transition-shadow duration-500">
+                  <div className="absolute inset-0 bg-gradient-to-br from-white via-white/50 to-neutral-100/50 opacity-100"></div>
 
-      {/* ─── Value Props ─── */}
-      <section className="bg-neutral-50 border-y border-neutral-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-neutral-200">
-            {[
-              { icon: TruckIcon, title: 'Free Delivery', desc: 'On orders over ₱2,000' },
-              { icon: ShieldIcon, title: '100% Authentic', desc: 'Quality guaranteed' },
-              { icon: CashIcon, title: 'Cash on Delivery', desc: 'Pay when you receive' },
-              { icon: PhoneIcon, title: 'SMS Updates', desc: 'Real-time order tracking' },
-            ].map((badge, idx) => (
-              <div key={idx} className="flex items-center gap-3 py-5 md:px-6 first:pl-0 last:pr-0">
-                <div className="flex-shrink-0 w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-neutral-200">
-                  <badge.icon className="h-5 w-5 text-primary-700" />
+                  {/* Decorative glass reflection */}
+                  <div className="absolute -inset-full top-0 block h-full w-1/2 -skew-x-12 bg-gradient-to-r from-transparent to-white opacity-40 group-hover:animate-shine" />
+
+                  <div className="relative z-10 space-y-8">
+                    <div className="flex items-center gap-6">
+                      <div className="w-14 h-14 rounded-2xl bg-primary-50 flex items-center justify-center text-primary-600 shadow-inner">
+                        <CategoryIcon category={{ name: 'Products' }} className="w-7 h-7" />
+                      </div>
+                      <div>
+                        <div className="text-4xl font-extrabold text-primary-900 tracking-tight">
+                          {animatedProducts.toLocaleString()}+
+                        </div>
+                        <div className="text-neutral-500 font-medium">Quality Products</div>
+                      </div>
+                    </div>
+
+                    <div className="w-full h-px bg-gradient-to-r from-transparent via-neutral-200 to-transparent"></div>
+
+                    <div className="flex items-center gap-6">
+                      <div className="w-14 h-14 rounded-2xl bg-accent-50 flex items-center justify-center text-accent-600 shadow-inner">
+                        <CheckIcon className="w-7 h-7" />
+                      </div>
+                      <div>
+                        <div className="text-4xl font-extrabold text-primary-900 tracking-tight">
+                          {animatedDelivered.toLocaleString()}+
+                        </div>
+                        <div className="text-neutral-500 font-medium">Orders Delivered</div>
+                      </div>
+                    </div>
+
+                    <div className="w-full h-px bg-gradient-to-r from-transparent via-neutral-200 to-transparent"></div>
+
+                    <div className="flex items-center gap-6">
+                      <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 shadow-inner">
+                        <ShieldIcon className="w-7 h-7" />
+                      </div>
+                      <div>
+                        <div className="text-4xl font-extrabold text-primary-900 tracking-tight">
+                          {animatedCustomers.toLocaleString()}+
+                        </div>
+                        <div className="text-neutral-500 font-medium">Happy Customers</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <div className="font-semibold text-primary-900 text-sm leading-tight">{badge.title}</div>
-                  <div className="text-neutral-500 text-xs mt-0.5">{badge.desc}</div>
-                </div>
+
+                {/* Floating elements behind card */}
+                <div className="absolute -top-10 -right-10 w-24 h-24 bg-accent-400/10 rounded-full blur-2xl -z-10 animate-pulse"></div>
+                <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-primary-400/10 rounded-full blur-2xl -z-10 animate-pulse delay-700"></div>
               </div>
-            ))}
+            </div>
+
           </div>
         </div>
       </section>
