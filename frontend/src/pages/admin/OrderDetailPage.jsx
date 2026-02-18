@@ -40,6 +40,7 @@ export default function OrderDetailPage() {
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
   const [error, setError] = useState(null)
+  const [updateError, setUpdateError] = useState(null)
   const [showRejectModal, setShowRejectModal] = useState(false)
   const [rejectReason, setRejectReason] = useState('')
 
@@ -51,8 +52,14 @@ export default function OrderDetailPage() {
     try {
       const response = await adminApi.getOrder(id)
       setOrder(response.data.data)
+      setError(null)
     } catch (err) {
-      setError('Failed to load order details')
+      // Only set the page-level error if we never loaded order data
+      if (!order) {
+        setError('Failed to load order details')
+      } else {
+        setUpdateError('Failed to refresh order details')
+      }
       console.error('Error fetching order:', err)
     } finally {
       setLoading(false)
@@ -61,13 +68,15 @@ export default function OrderDetailPage() {
 
   const handleStatusUpdate = async (newStatus, message = '') => {
     setUpdating(true)
+    setUpdateError(null)
     try {
       await adminApi.updateOrderStatus(id, newStatus, message)
       await fetchOrder() // Refresh order data
       setShowRejectModal(false)
       setRejectReason('')
     } catch (err) {
-      setError('Failed to update order status')
+      const serverMessage = err.response?.data?.message
+      setUpdateError(serverMessage || 'Failed to update order status')
       console.error('Error updating status:', err)
     } finally {
       setUpdating(false)
@@ -102,10 +111,10 @@ export default function OrderDetailPage() {
     )
   }
 
-  if (error || !order) {
+  if (!order) {
     return (
-      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-        {error || 'Order not found'}
+      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center justify-between">
+        <span>{error || 'Order not found'}</span>
         <Link to="/admin/orders" className="ml-4 underline">
           Back to Orders
         </Link>
@@ -145,6 +154,11 @@ export default function OrderDetailPage() {
       {availableTransitions.length > 0 && (
         <div className="bg-white rounded-2xl shadow-soft p-4">
           <h3 className="text-sm font-medium text-primary-700 mb-3">Update Order Status</h3>
+          {updateError && (
+            <div className="mb-3 bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
+              {updateError}
+            </div>
+          )}
           <div className="flex flex-wrap gap-3">
             {availableTransitions.includes('accepted') && (
               <button

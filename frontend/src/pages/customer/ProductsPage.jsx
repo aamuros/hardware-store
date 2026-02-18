@@ -169,67 +169,81 @@ export default function ProductsPage() {
   return (
     <div className="min-h-screen bg-neutral-50">
       {/* Page Header Bar */}
-      <div className="bg-white border-b border-neutral-100 sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+      <div className="bg-white border-b border-neutral-100 sticky top-0 z-20 shadow-[0_1px_0_0_#f5f5f5]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Top row: title + search */}
+          <div className="flex items-center gap-4 py-3.5">
             {/* Title + Count */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-baseline gap-3">
-                <h1 className="text-lg font-bold text-primary-900 tracking-tight">Products</h1>
+              <div className="flex items-baseline gap-2.5">
+                <h1 className="text-base font-bold text-primary-900 tracking-tight">Products</h1>
                 {!initialLoading && (
-                  <span className="text-sm text-neutral-400">
+                  <span className="text-xs text-neutral-400 font-medium">
                     {isSearchActive
                       ? `${products.length} result${products.length !== 1 ? 's' : ''} for "${searchQuery}"`
-                      : `${products.length} available`}
+                      : `${products.length} items`}
                   </span>
                 )}
               </div>
             </div>
 
             {/* Search */}
-            <form onSubmit={handleSearch} className="flex gap-2 w-full sm:w-72">
+            <form onSubmit={handleSearch} className="flex items-center gap-2 w-full sm:w-80">
               <div className="relative flex-1">
-                <SearchIcon className="h-4 w-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <SearchIcon className="h-3.5 w-3.5 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
                   placeholder="Search products…"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-sm placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 focus:bg-white transition-all"
+                  className="w-full pl-9 pr-8 py-2 bg-neutral-50 border border-neutral-200 rounded-lg text-sm placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 focus:bg-white transition-all"
                 />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => { setSearchQuery(''); fetchProducts() }}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition-colors"
+                    aria-label="Clear search"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
               </div>
-              <button type="submit" className="px-4 py-2 bg-primary-900 text-white text-sm font-medium rounded-xl hover:bg-primary-800 transition-colors shadow-sm">
-                Go
-              </button>
             </form>
           </div>
 
-          {/* Category Chips */}
-          <div className="flex flex-wrap gap-1.5 mt-3">
-            <button
-              onClick={() => handleCategoryChange('')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
-                !selectedCategory
-                  ? 'bg-primary-900 text-white border-primary-900'
-                  : 'bg-white text-neutral-500 border-neutral-200 hover:border-primary-300 hover:text-primary-800'
-              }`}
-            >
-              All
-            </button>
-            {categories.map((category) => (
+          {/* Category Chips row — horizontally scrollable */}
+          <div className="relative -mx-4 sm:-mx-6 lg:-mx-8">
+            <div className="flex items-center gap-1.5 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-3 scrollbar-hide">
               <button
-                key={category.id}
-                onClick={() => handleCategoryChange(category.id.toString())}
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
-                  selectedCategory === category.id.toString()
+                onClick={() => handleCategoryChange('')}
+                className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                  !selectedCategory
                     ? 'bg-primary-900 text-white border-primary-900'
                     : 'bg-white text-neutral-500 border-neutral-200 hover:border-primary-300 hover:text-primary-800'
                 }`}
               >
-                <CategoryIcon category={category} className="h-3 w-3" />
-                {category.name}
+                All
               </button>
-            ))}
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => handleCategoryChange(category.id.toString())}
+                  className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                    selectedCategory === category.id.toString()
+                      ? 'bg-primary-900 text-white border-primary-900'
+                      : 'bg-white text-neutral-500 border-neutral-200 hover:border-primary-300 hover:text-primary-800'
+                  }`}
+                >
+                  <CategoryIcon category={category} className="h-3 w-3" />
+                  {category.name}
+                </button>
+              ))}
+            </div>
+            {/* Fade-out edge hints */}
+            <div className="pointer-events-none absolute top-0 right-0 bottom-3 w-8 bg-gradient-to-l from-white to-transparent" />
           </div>
         </div>
       </div>
@@ -265,7 +279,7 @@ export default function ProductsPage() {
                 setSearchQuery('')
                 handleCategoryChange('')
               }}
-              className="px-5 py-2.5 bg-primary-900 text-white text-sm font-medium rounded-xl hover:bg-primary-800 transition-colors"
+              className="px-5 py-2.5 bg-primary-900 text-white text-sm font-medium rounded-lg hover:bg-primary-800 transition-colors"
             >
               Clear Filters
             </button>
@@ -299,44 +313,52 @@ export default function ProductsPage() {
 
             {/* Pagination */}
             {pagination.totalPages > 1 && (
-              <div className="flex justify-center items-center gap-1.5 mt-10">
+              <div className="flex justify-center items-center gap-1 mt-12">
                 <button
                   onClick={() => handlePageChange(pagination.page - 1)}
                   disabled={pagination.page === 1}
-                  className="px-4 py-2 text-sm font-medium rounded-xl border border-neutral-200 bg-white text-neutral-600 hover:border-primary-300 hover:text-primary-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-lg border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 hover:border-neutral-300 hover:text-primary-800 disabled:opacity-35 disabled:cursor-not-allowed transition-all"
                 >
-                  ← Prev
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Prev
                 </button>
-                {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
-                  .filter(p => p === 1 || p === pagination.totalPages || Math.abs(p - pagination.page) <= 1)
-                  .reduce((acc, p, i, arr) => {
-                    if (i > 0 && p - arr[i - 1] > 1) acc.push('...')
-                    acc.push(p)
-                    return acc
-                  }, [])
-                  .map((p, i) =>
-                    p === '...' ? (
-                      <span key={`ellipsis-${i}`} className="px-2 text-neutral-400 text-sm">…</span>
-                    ) : (
-                      <button
-                        key={p}
-                        onClick={() => handlePageChange(p)}
-                        className={`w-9 h-9 text-sm font-medium rounded-xl transition-all ${
-                          p === pagination.page
-                            ? 'bg-primary-900 text-white shadow-sm'
-                            : 'border border-neutral-200 bg-white text-neutral-600 hover:border-primary-300 hover:text-primary-800'
-                        }`}
-                      >
-                        {p}
-                      </button>
-                    )
-                  )}
+                <div className="flex items-center gap-1 mx-1">
+                  {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
+                    .filter(p => p === 1 || p === pagination.totalPages || Math.abs(p - pagination.page) <= 1)
+                    .reduce((acc, p, i, arr) => {
+                      if (i > 0 && p - arr[i - 1] > 1) acc.push('...')
+                      acc.push(p)
+                      return acc
+                    }, [])
+                    .map((p, i) =>
+                      p === '...' ? (
+                        <span key={`ellipsis-${i}`} className="w-8 text-center text-neutral-400 text-sm select-none">…</span>
+                      ) : (
+                        <button
+                          key={p}
+                          onClick={() => handlePageChange(p)}
+                          className={`w-9 h-9 text-sm font-medium rounded-lg transition-all ${
+                            p === pagination.page
+                              ? 'bg-primary-900 text-white shadow-sm'
+                              : 'border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 hover:border-neutral-300 hover:text-primary-800'
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      )
+                    )}
+                </div>
                 <button
                   onClick={() => handlePageChange(pagination.page + 1)}
                   disabled={pagination.page === pagination.totalPages}
-                  className="px-4 py-2 text-sm font-medium rounded-xl border border-neutral-200 bg-white text-neutral-600 hover:border-primary-300 hover:text-primary-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-lg border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 hover:border-neutral-300 hover:text-primary-800 disabled:opacity-35 disabled:cursor-not-allowed transition-all"
                 >
-                  Next →
+                  Next
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
                 </button>
               </div>
             )}
@@ -357,11 +379,11 @@ export default function ProductsPage() {
                         {outOfStockProducts.length}
                       </span>
                       <svg
-                        className={`w-3.5 h-3.5 text-neutral-400 transition-transform duration-200 ${showOutOfStock ? 'rotate-180' : ''}`}
+                        className={`w-3 h-3 text-neutral-400 transition-transform duration-200 ${showOutOfStock ? 'rotate-180' : ''}`}
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
-                        strokeWidth={2}
+                        strokeWidth={2.5}
                       >
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                       </svg>
