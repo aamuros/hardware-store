@@ -1,5 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
+const fs = require('fs');
+const path = require('path');
 
 const prisma = new PrismaClient();
 
@@ -63,7 +65,6 @@ async function main() {
   // ─── PRODUCT IMAGE MAPPING ─────────────────────────────────────────
   const productImages = {
     'Angle Bar': '/uploads/angle-bar.jpg',
-    'Deformed Bar G33': '/uploads/deformed-bar-g33.jpg',
     'Deformed Bar G40': '/uploads/deformed-bar-g40.jpg',
     'Flat Bar': '/uploads/flat-bar.jpg',
     'C-Purlins GI': '/uploads/c-purlins-gi.jpg',
@@ -71,7 +72,6 @@ async function main() {
     'G.I Pipe Local S20': '/uploads/g.i-pipe-local-s20.jpg',
     'Coco Lumber': '/uploads/coco-lumber.jpg',
     'Good Lumber S4S': '/uploads/good-lumber-s4s.jpg',
-    'KD S4S Wood PL': '/uploads/kd-s4s-wood-pl.jpg',
     'Marine Plywood Local': '/uploads/marine-plywood-local.jpg',
     'Plywood Ordinary': '/uploads/plywood-ordinary.jpg',
     'Phenolic Board 1/2 Croco': '/uploads/phenolic-board-one-half-croco.jpg',
@@ -93,7 +93,6 @@ async function main() {
     'Lucky PPR Elbow Female 1/2': '/uploads/lucky-ppr-elbow-female-one-half.jpg',
     'Royu THHN Wire 8.0mm': '/uploads/royu-thhn-wire-8.0mm.jpg',
     'Circuit Breaker Bolt-On': '/uploads/circuit-breaker-bolt-on.jpg',
-    'Neltex Electrical Pipe Thickwall 1/2"': '/uploads/neltex-electrical-pipe-thickwall-one-half.jpg',
     'Neltex Electrical Pipe Thinwall': '/uploads/neltex-electrical-pipe-thinwall.jpg',
     'Boysen Lacquer Thinner B50': '/uploads/boysen-lacquer-thinner-b50.jpg',
     'Boysen Permacoat Flat Latex White': '/uploads/boysen-permacoat-flat-latex-white.jpg',
@@ -179,25 +178,6 @@ async function main() {
       { name: '2" x 2" x 5mm (20ft)', sku: 'STL-ANGLE-2X2-5', price: 2100.00, stockQuantity: 15 },
       { name: '3" x 3" x 5mm (20ft)', sku: 'STL-ANGLE-3X3', price: 4500.00, stockQuantity: 10 },
       { name: '4" x 4" x 6mm (20ft)', sku: 'STL-ANGLE-4X4', price: 7467.00, stockQuantity: 5 },
-    ],
-  });
-
-  // #17 – Deformed Bar G33 (₱80–₱598)
-  await createProduct({
-    name: 'Deformed Bar G33',
-    description: 'Grade 33 deformed reinforcing steel bar for light structural work and residential construction.',
-    price: 80.00,
-    unit: 'piece',
-    sku: 'STL-DBAR-G33',
-    categoryId: categoryMap['Steel & Metal'],
-    lowStockThreshold: 15,
-    stockQuantity: 0,
-    variants: [
-      { name: '10mm (6m)', sku: 'STL-DBAR-G33-10', price: 80.00, stockQuantity: 100 },
-      { name: '12mm (6m)', sku: 'STL-DBAR-G33-12', price: 135.00, stockQuantity: 80 },
-      { name: '16mm (6m)', sku: 'STL-DBAR-G33-16', price: 260.00, stockQuantity: 50 },
-      { name: '20mm (6m)', sku: 'STL-DBAR-G33-20', price: 420.00, stockQuantity: 30 },
-      { name: '25mm (6m)', sku: 'STL-DBAR-G33-25', price: 598.00, stockQuantity: 20 },
     ],
   });
 
@@ -333,23 +313,6 @@ async function main() {
       { name: '2" x 4" x 8ft', sku: 'WOOD-S4S-2X4', price: 580.00, stockQuantity: 30 },
       { name: '2" x 6" x 10ft', sku: 'WOOD-S4S-2X6', price: 1200.00, stockQuantity: 15 },
       { name: '4" x 4" x 10ft', sku: 'WOOD-S4S-4X4', price: 2142.00, stockQuantity: 8 },
-    ],
-  });
-
-  // #28 – KD S4S Wood PL (₱212–₱331)
-  await createProduct({
-    name: 'KD S4S Wood PL',
-    description: 'Kiln-dried S4S Philippine lumber. Premium quality for interior and exterior use.',
-    price: 212.00,
-    unit: 'piece',
-    sku: 'WOOD-KD-S4S',
-    categoryId: categoryMap['Lumber & Wood'],
-    lowStockThreshold: 10,
-    stockQuantity: 0,
-    variants: [
-      { name: '1" x 3" x 8ft', sku: 'WOOD-KD-1X3', price: 212.00, stockQuantity: 45 },
-      { name: '1" x 4" x 8ft', sku: 'WOOD-KD-1X4', price: 265.00, stockQuantity: 35 },
-      { name: '2" x 2" x 8ft', sku: 'WOOD-KD-2X2', price: 331.00, stockQuantity: 30 },
     ],
   });
 
@@ -689,18 +652,6 @@ async function main() {
 
   // #20 – Electrical Pipe Thickwall — REMOVED (overlaps with Neltex branded products #34 and #35)
 
-  // #34 – Neltex Electrical Pipe Thickwall 1/2" (single price)
-  await createProduct({
-    name: 'Neltex Electrical Pipe Thickwall 1/2"',
-    description: 'Neltex brand PVC electrical conduit pipe, thickwall type 1/2". Premium quality for concealed wiring.',
-    price: 110.00,
-    unit: 'piece',
-    sku: 'ELEC-NELTEX-TK-05',
-    categoryId: categoryMap['Electrical'],
-    lowStockThreshold: 15,
-    stockQuantity: 50,
-  });
-
   // #35 – Neltex Electrical Pipe Thinwall (₱105–₱160)
   await createProduct({
     name: 'Neltex Electrical Pipe Thinwall',
@@ -1019,9 +970,481 @@ async function main() {
 
   console.log(`\n✅ Products created: ${productCount}`);
   console.log(`✅ Product variants created: ${variantCount}`);
+
+  // ═══════════════════════════════════════════════════════════════════
+  // STAFF USERS — additional staff for order processing
+  // ═══════════════════════════════════════════════════════════════════
+  console.log('\n🔄 Creating staff users...');
+  const staffPassword = await bcrypt.hash('staff123', 10);
+  const staffList = [
+    { username: 'juan_staff', name: 'Juan dela Cruz', role: 'staff' },
+    { username: 'maria_staff', name: 'Maria Santos', role: 'staff' },
+    { username: 'pedro_staff', name: 'Pedro Garcia', role: 'staff' },
+    { username: 'ana_staff', name: 'Ana Reyes', role: 'staff' },
+    { username: 'carlos_mgr', name: 'Carlos Mendoza', role: 'admin' },
+  ];
+  for (const s of staffList) {
+    await prisma.user.create({ data: { ...s, password: staffPassword } });
+  }
+  console.log(`✅ Staff users created: ${staffList.length}`);
+
+  // ═══════════════════════════════════════════════════════════════════
+  // CUSTOMERS — 80 realistic customer accounts (happy customer base)
+  // ═══════════════════════════════════════════════════════════════════
+  console.log('\n🔄 Creating customer accounts...');
+  const customerPassword = await bcrypt.hash('customer123', 10);
+
+  const customerDataList = [
+    // ── Regular homeowners ──
+    { email: 'juan.delacruz@gmail.com', name: 'Juan dela Cruz', phone: '09171234567' },
+    { email: 'maria.santos@yahoo.com', name: 'Maria Santos', phone: '09189876543' },
+    { email: 'pedro.garcia@gmail.com', name: 'Pedro Garcia', phone: '09201112222' },
+    { email: 'ana.reyes@outlook.com', name: 'Ana Reyes', phone: '09163334444' },
+    { email: 'carlos.mendoza@gmail.com', name: 'Carlos Mendoza', phone: '09175556666' },
+    { email: 'sofia.cruz@yahoo.com', name: 'Sofia Cruz', phone: '09187778888' },
+    { email: 'roberto.villanueva@gmail.com', name: 'Roberto Villanueva', phone: '09199990000' },
+    { email: 'elena.fernandez@gmail.com', name: 'Elena Fernandez', phone: '09161231234' },
+    { email: 'miguel.tan@outlook.com', name: 'Miguel Tan', phone: '09174564567' },
+    { email: 'patricia.lim@gmail.com', name: 'Patricia Lim', phone: '09187897890' },
+    { email: 'antonio.bautista@yahoo.com', name: 'Antonio Bautista', phone: '09203213210' },
+    { email: 'rosa.gonzales@gmail.com', name: 'Rosa Gonzales', phone: '09176546543' },
+    { email: 'fernando.castro@gmail.com', name: 'Fernando Castro', phone: '09189879876' },
+    { email: 'carmen.aquino@yahoo.com', name: 'Carmen Aquino', phone: '09161011010' },
+    { email: 'ricardo.torres@gmail.com', name: 'Ricardo Torres', phone: '09172022020' },
+    // ── Contractors / repeat buyers ──
+    { email: 'jenny.lozano@gmail.com', name: 'Jenny Lozano', phone: '09183033030' },
+    { email: 'mark.ramos@outlook.com', name: 'Mark Ramos', phone: '09194044040' },
+    { email: 'grace.dizon@gmail.com', name: 'Grace Dizon', phone: '09205055050' },
+    { email: 'danny.villar@yahoo.com', name: 'Danny Villar', phone: '09166066060' },
+    { email: 'cherry.lopez@gmail.com', name: 'Cherry Lopez', phone: '09177077070' },
+    { email: 'rex.manalo@gmail.com', name: 'Rex Manalo', phone: '09188088080' },
+    { email: 'beth.navarro@outlook.com', name: 'Beth Navarro', phone: '09199099090' },
+    { email: 'joey.flores@gmail.com', name: 'Joey Flores', phone: '09201100110' },
+    { email: 'lorna.padilla@yahoo.com', name: 'Lorna Padilla', phone: '09162110211' },
+    { email: 'arnel.delos_santos@gmail.com', name: 'Arnel delos Santos', phone: '09173220322' },
+    { email: 'mila.sarmiento@gmail.com', name: 'Mila Sarmiento', phone: '09184330433' },
+    { email: 'ruben.corpuz@outlook.com', name: 'Ruben Corpuz', phone: '09195440544' },
+    { email: 'alma.pangilinan@gmail.com', name: 'Alma Pangilinan', phone: '09206550655' },
+    { email: 'edgar.soriano@yahoo.com', name: 'Edgar Soriano', phone: '09167660766' },
+    { email: 'nora.bondoc@gmail.com', name: 'Nora Bondoc', phone: '09178770877' },
+    // ── Additional happy customers ──
+    { email: 'ramon.delas_alas@gmail.com', name: 'Ramon delas Alas', phone: '09179881234' },
+    { email: 'lynette.manansala@yahoo.com', name: 'Lynette Manansala', phone: '09181992345' },
+    { email: 'benjamin.ocampo@gmail.com', name: 'Benjamin Ocampo', phone: '09192003456' },
+    { email: 'divina.pascual@outlook.com', name: 'Divina Pascual', phone: '09163014567' },
+    { email: 'ernesto.salazar@gmail.com', name: 'Ernesto Salazar', phone: '09174025678' },
+    { email: 'felisa.trinidad@yahoo.com', name: 'Felisa Trinidad', phone: '09185036789' },
+    { email: 'gilbert.umali@gmail.com', name: 'Gilbert Umali', phone: '09196047890' },
+    { email: 'helen.viray@outlook.com', name: 'Helen Viray', phone: '09207058901' },
+    { email: 'isidro.wenceslao@gmail.com', name: 'Isidro Wenceslao', phone: '09168069012' },
+    { email: 'josefina.yap@yahoo.com', name: 'Josefina Yap', phone: '09179070123' },
+    { email: 'kristine.zamora@gmail.com', name: 'Kristine Zamora', phone: '09180081234' },
+    { email: 'leonardo.abadilla@outlook.com', name: 'Leonardo Abadilla', phone: '09191092345' },
+    { email: 'maricel.buenaventura@gmail.com', name: 'Maricel Buenaventura', phone: '09202103456' },
+    { email: 'nestor.concepcion@yahoo.com', name: 'Nestor Concepcion', phone: '09163114567' },
+    { email: 'olivia.dimaculangan@gmail.com', name: 'Olivia Dimaculangan', phone: '09174125678' },
+    { email: 'paolo.enriquez@outlook.com', name: 'Paolo Enriquez', phone: '09185136789' },
+    { email: 'queenie.francisco@gmail.com', name: 'Queenie Francisco', phone: '09196147890' },
+    { email: 'romeo.genuino@yahoo.com', name: 'Romeo Genuino', phone: '09207158901' },
+    { email: 'socorro.hernandez@gmail.com', name: 'Socorro Hernandez', phone: '09168169012' },
+    { email: 'teodoro.ignacio@outlook.com', name: 'Teodoro Ignacio', phone: '09179170123' },
+    // ── Small business owners ──
+    { email: 'ursula.javillonar@gmail.com', name: 'Ursula Javillonar', phone: '09180181234' },
+    { email: 'virgilio.katigbak@yahoo.com', name: 'Virgilio Katigbak', phone: '09191192345' },
+    { email: 'wilma.lacsamana@gmail.com', name: 'Wilma Lacsamana', phone: '09202203456' },
+    { email: 'xander.macapagal@outlook.com', name: 'Xander Macapagal', phone: '09163214567' },
+    { email: 'yolanda.napoles@gmail.com', name: 'Yolanda Napoles', phone: '09174225678' },
+    { email: 'zenaida.olmedo@yahoo.com', name: 'Zenaida Olmedo', phone: '09185236789' },
+    { email: 'alfredo.penaflor@gmail.com', name: 'Alfredo Penaflor', phone: '09196247890' },
+    { email: 'brenda.quiambao@outlook.com', name: 'Brenda Quiambao', phone: '09207258901' },
+    { email: 'crisanto.recio@gmail.com', name: 'Crisanto Recio', phone: '09168269012' },
+    { email: 'dolores.samson@yahoo.com', name: 'Dolores Samson', phone: '09179270123' },
+    // ── Construction company accounts ──
+    { email: 'orders@jmbuilders.ph', name: 'JM Builders Corp', phone: '09180281234' },
+    { email: 'procurement@manilaconst.ph', name: 'Manila Construction Inc', phone: '09191292345' },
+    { email: 'supply@solidfound.ph', name: 'Solid Foundation Builders', phone: '09202303456' },
+    { email: 'buying@topnotch.ph', name: 'Top Notch Renovations', phone: '09163314567' },
+    { email: 'materials@primedev.ph', name: 'Prime Development Co', phone: '09174325678' },
+    // ── Barangay / institutional ──
+    { email: 'brgy.maintenance@makati.gov.ph', name: 'Brgy Poblacion Makati', phone: '09185336789' },
+    { email: 'facilities@smdept.com', name: 'SM Facilities Dept', phone: '09196347890' },
+    { email: 'maintenance@condoliving.ph', name: 'Condo Living Admin', phone: '09207358901' },
+    // ── Walk-in regulars who eventually signed up ──
+    { email: 'mang.jose@gmail.com', name: 'Jose "Mang Jose" Ramos', phone: '09168369012' },
+    { email: 'aling.nena@yahoo.com', name: 'Nena "Aling Nena" Cruz', phone: '09179370123' },
+    { email: 'kuya.ben@gmail.com', name: 'Benjamin "Kuya Ben" Santos', phone: '09180381234' },
+    { email: 'ate.luz@outlook.com', name: 'Luz "Ate Luz" Garcia', phone: '09191392345' },
+    { email: 'tatay.dong@gmail.com', name: 'Eduardo "Tatay Dong" Reyes', phone: '09202403456' },
+    { email: 'nanay.rosa@yahoo.com', name: 'Rosa "Nanay Rosa" Mendoza', phone: '09163414567' },
+    { email: 'kuya.nonoy@gmail.com', name: 'Reynaldo "Kuya Nonoy" Dela Cruz', phone: '09174425678' },
+    { email: 'tisoy.builder@gmail.com', name: 'Francis "Tisoy" Villanueva', phone: '09185436789' },
+    { email: 'engineer.mike@outlook.com', name: 'Engr. Michael Tan', phone: '09196447890' },
+    { email: 'architect.anna@gmail.com', name: 'Arch. Anna Lim', phone: '09207458901' },
+    { email: 'foreman.ricky@yahoo.com', name: 'Ricardo "Foreman Ricky" Torres', phone: '09168469012' },
+    { email: 'master.plumber.eddie@gmail.com', name: 'Eduardo "Master Plumber" Flores', phone: '09179470123' },
+  ];
+
+  const createdCustomers = [];
+  for (const cust of customerDataList) {
+    const c = await prisma.customer.create({
+      data: {
+        email: cust.email,
+        password: customerPassword,
+        name: cust.name,
+        phone: cust.phone,
+        isActive: true,
+      },
+    });
+    createdCustomers.push(c);
+  }
+  console.log(`✅ Customers created: ${createdCustomers.length}`);
+
+  // ═══════════════════════════════════════════════════════════════════
+  // SAVED ADDRESSES — give customers saved delivery addresses
+  // ═══════════════════════════════════════════════════════════════════
+  console.log('🔄 Creating saved addresses for customers...');
+  const savedAddressTemplates = [
+    { label: 'Home', address: '123 Sampaguita St, Brgy. San Jose', barangay: 'San Jose', landmarks: 'Near sari-sari store' },
+    { label: 'Office', address: '456 Rizal Ave, Brgy. Poblacion', barangay: 'Poblacion', landmarks: 'Ground floor, beside BDO' },
+    { label: 'Construction Site', address: '789 National Hwy, Brgy. Bagumbayan', barangay: 'Bagumbayan', landmarks: 'Blue gate, ask for foreman' },
+    { label: 'Warehouse', address: '321 Industrial Rd, Brgy. Malanday', barangay: 'Malanday', landmarks: 'Near Petron gas station' },
+    { label: 'Home', address: '654 Mabini St, Brgy. Concepcion', barangay: 'Concepcion', landmarks: 'Yellow house with carport' },
+    { label: 'Project Site', address: '987 Bonifacio Ave, Brgy. Kapitolyo', barangay: 'Kapitolyo', landmarks: 'Active construction, blue tarp' },
+  ];
+
+  let savedAddrCount = 0;
+  for (const customer of createdCustomers) {
+    // Each customer gets 1-3 saved addresses
+    const numAddr = 1 + Math.floor(Math.random() * 3);
+    const shuffled = [...savedAddressTemplates].sort(() => Math.random() - 0.5);
+    for (let i = 0; i < numAddr && i < shuffled.length; i++) {
+      await prisma.savedAddress.create({
+        data: {
+          customerId: customer.id,
+          label: shuffled[i].label,
+          address: shuffled[i].address,
+          barangay: shuffled[i].barangay,
+          landmarks: shuffled[i].landmarks,
+          isDefault: i === 0,
+        },
+      });
+      savedAddrCount++;
+    }
+  }
+  console.log(`✅ Saved addresses created: ${savedAddrCount}`);
+
+  // ═══════════════════════════════════════════════════════════════════
+  // WISHLIST ITEMS — customers have wishlisted products
+  // ═══════════════════════════════════════════════════════════════════
+  console.log('🔄 Creating wishlist items...');
+  const allProductsForWishlist = await prisma.product.findMany();
+  let wishlistCount = 0;
+  for (const customer of createdCustomers) {
+    // ~40% of customers have wishlists
+    if (Math.random() < 0.4) {
+      const numWishlist = 1 + Math.floor(Math.random() * 5);
+      const shuffledProducts = [...allProductsForWishlist].sort(() => Math.random() - 0.5);
+      for (let i = 0; i < numWishlist && i < shuffledProducts.length; i++) {
+        await prisma.wishlistItem.create({
+          data: {
+            customerId: customer.id,
+            productId: shuffledProducts[i].id,
+          },
+        });
+        wishlistCount++;
+      }
+    }
+  }
+  console.log(`✅ Wishlist items created: ${wishlistCount}`);
+
+  // ═══════════════════════════════════════════════════════════════════
+  // ORDERS — Load from CSV files (prisma/data/orders.csv + order-items.csv)
+  // ═══════════════════════════════════════════════════════════════════
+  console.log('\n🔄 Loading orders from CSV files...');
+
+  const ordersCSVPath = path.join(__dirname, 'data', 'orders.csv');
+  const itemsCSVPath  = path.join(__dirname, 'data', 'order-items.csv');
+
+  if (!fs.existsSync(ordersCSVPath) || !fs.existsSync(itemsCSVPath)) {
+    console.log('⚠️  CSV files not found! Generate them first:');
+    console.log('   node prisma/generate-orders-csv.js');
+    console.log('   Skipping order creation...');
+  } else {
+    // ── CSV parser (handles quoted fields with commas/newlines) ──────
+    function parseCSV(filePath) {
+      const content = fs.readFileSync(filePath, 'utf8');
+      const rows = [];
+      let row = [];
+      let field = '';
+      let inQuotes = false;
+      let i = 0;
+
+      while (i < content.length) {
+        const ch = content[i];
+        if (inQuotes) {
+          if (ch === '"' && content[i + 1] === '"') {
+            field += '"';
+            i += 2;
+          } else if (ch === '"') {
+            inQuotes = false;
+            i++;
+          } else {
+            field += ch;
+            i++;
+          }
+        } else {
+          if (ch === '"') {
+            inQuotes = true;
+            i++;
+          } else if (ch === ',') {
+            row.push(field);
+            field = '';
+            i++;
+          } else if (ch === '\n' || ch === '\r') {
+            row.push(field);
+            field = '';
+            if (row.length > 1 || (row.length === 1 && row[0] !== '')) {
+              rows.push(row);
+            }
+            row = [];
+            if (ch === '\r' && content[i + 1] === '\n') i++;
+            i++;
+          } else {
+            field += ch;
+            i++;
+          }
+        }
+      }
+      // Last field/row
+      if (field || row.length > 0) {
+        row.push(field);
+        rows.push(row);
+      }
+
+      // First row is header
+      const headers = rows[0];
+      return rows.slice(1).map(r => {
+        const obj = {};
+        headers.forEach((h, idx) => { obj[h.trim()] = (r[idx] || '').trim(); });
+        return obj;
+      });
+    }
+
+    const orderRows = parseCSV(ordersCSVPath);
+    const itemRows  = parseCSV(itemsCSVPath);
+    console.log(`   📄 Loaded ${orderRows.length} orders and ${itemRows.length} items from CSV`);
+
+    // ── Build lookup maps ────────────────────────────────────────────
+    const allProducts = await prisma.product.findMany({ include: { variants: true } });
+    const allUsers    = await prisma.user.findMany();
+
+    // product name → { id, variants: { variantName → { id } } }
+    const productMap = {};
+    for (const p of allProducts) {
+      productMap[p.name] = {
+        id: p.id,
+        price: p.price,
+        variants: {},
+      };
+      if (p.variants) {
+        for (const v of p.variants) {
+          productMap[p.name].variants[v.name] = { id: v.id, price: v.price };
+        }
+      }
+    }
+
+    // customer email → customer record
+    const customerMap = {};
+    for (const c of createdCustomers) {
+      customerMap[c.email] = c;
+    }
+
+    // Group items by order_number
+    const itemsByOrder = {};
+    for (const item of itemRows) {
+      const key = item.order_number;
+      if (!itemsByOrder[key]) itemsByOrder[key] = [];
+      itemsByOrder[key].push(item);
+    }
+
+    // ── Insert orders in batches ─────────────────────────────────────
+    let totalOrderCount = 0;
+    let totalItemCount  = 0;
+    let skippedItems    = 0;
+    const batchSize     = 60;
+    let batch           = [];
+
+    for (const row of orderRows) {
+      const items = itemsByOrder[row.order_number] || [];
+      if (items.length === 0) continue;
+
+      const customer = row.customer_email ? customerMap[row.customer_email] : null;
+
+      // Parse date + time
+      const [y, mo, d] = row.date.split('-').map(Number);
+      const [h, mi, s] = (row.time || '10:00:00').split(':').map(Number);
+      const orderDate = new Date(y, mo - 1, d, h || 10, mi || 0, s || 0);
+
+      // Resolve items to product/variant IDs
+      const resolvedItems = [];
+      for (const it of items) {
+        const product = productMap[it.product_name];
+        if (!product) {
+          skippedItems++;
+          continue;
+        }
+
+        let variantId   = null;
+        let variantName = null;
+        if (it.variant_name) {
+          const variant = product.variants[it.variant_name];
+          if (variant) {
+            variantId   = variant.id;
+            variantName = it.variant_name;
+          }
+        }
+
+        resolvedItems.push({
+          productId: product.id,
+          variantId,
+          variantName,
+          quantity:  parseInt(it.quantity, 10) || 1,
+          unitPrice: parseFloat(it.unit_price) || 0,
+          subtotal:  parseFloat(it.subtotal)   || 0,
+        });
+      }
+
+      if (resolvedItems.length === 0) continue;
+
+      batch.push({
+        orderNumber:  row.order_number,
+        customerId:   customer ? customer.id : null,
+        customerName: row.customer_name || 'Walk-in Customer',
+        phone:        row.phone || '',
+        address:      row.address || '',
+        barangay:     row.barangay || '',
+        landmarks:    row.landmarks || '',
+        status:       row.status || 'pending',
+        totalAmount:  parseFloat(row.total_amount) || 0,
+        notes:        row.notes || null,
+        createdAt:    orderDate,
+        updatedAt:    orderDate,
+        items:        resolvedItems,
+      });
+
+      if (batch.length >= batchSize) {
+        await flushOrderBatch(batch, allUsers);
+        totalOrderCount += batch.length;
+        totalItemCount  += batch.reduce((s, o) => s + o.items.length, 0);
+        batch = [];
+
+        if (totalOrderCount % 500 < batchSize) {
+          console.log(`   📦 ${totalOrderCount} orders inserted so far...`);
+        }
+      }
+    }
+
+    // Flush remaining
+    if (batch.length > 0) {
+      await flushOrderBatch(batch, allUsers);
+      totalOrderCount += batch.length;
+      totalItemCount  += batch.reduce((s, o) => s + o.items.length, 0);
+    }
+
+    console.log(`\n✅ Orders created: ${totalOrderCount}`);
+    console.log(`✅ Order items created: ${totalItemCount}`);
+    if (skippedItems > 0) {
+      console.log(`⚠️  Skipped ${skippedItems} items (product not found in DB)`);
+    }
+  }
+
+  // ── SUMMARY ────────────────────────────────────────────────────────
+  const counts = {
+    users: await prisma.user.count(),
+    customers: await prisma.customer.count(),
+    categories: await prisma.category.count(),
+    products: await prisma.product.count(),
+    variants: await prisma.productVariant.count(),
+    orders: await prisma.order.count(),
+    orderItems: await prisma.orderItem.count(),
+    statusHistory: await prisma.orderStatusHistory.count(),
+    savedAddresses: await prisma.savedAddress.count(),
+    wishlistItems: await prisma.wishlistItem.count(),
+  };
+
   console.log('\n🎉 Database seeding completed!');
+  console.log('\n📊 Database Summary:');
+  console.log('   Admin + Staff Users:', counts.users);
+  console.log('   Customers:', counts.customers);
+  console.log('   Categories:', counts.categories);
+  console.log('   Products:', counts.products);
+  console.log('   Product Variants:', counts.variants);
+  console.log('   Orders:', counts.orders);
+  console.log('   Order Items:', counts.orderItems);
+  console.log('   Status History Records:', counts.statusHistory);
+  console.log('   Saved Addresses:', counts.savedAddresses);
+  console.log('   Wishlist Items:', counts.wishlistItems);
   console.log('\n📝 Default login credentials:');
-  console.log('   Admin: username="admin", password="admin123"');
+  console.log('   Admin:    username="admin", password="admin123"');
+  console.log('   Staff:    username="juan_staff", password="staff123"');
+  console.log('   Customer: email="juan.delacruz@gmail.com", password="customer123"');
+}
+
+// ── BATCH INSERT HELPER ──────────────────────────────────────────────
+async function flushOrderBatch(batch, allUsers) {
+  for (const orderData of batch) {
+    const { items, ...orderFields } = orderData;
+
+    const order = await prisma.order.create({
+      data: {
+        ...orderFields,
+        items: {
+          create: items.map(item => ({
+            productId: item.productId,
+            variantId: item.variantId,
+            variantName: item.variantName,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            subtotal: item.subtotal,
+          })),
+        },
+      },
+    });
+
+    // Create status history
+    const statusFlow = {
+      'pending': ['pending'],
+      'accepted': ['pending', 'accepted'],
+      'rejected': ['pending', 'rejected'],
+      'preparing': ['pending', 'accepted', 'preparing'],
+      'out_for_delivery': ['pending', 'accepted', 'preparing', 'out_for_delivery'],
+      'delivered': ['pending', 'accepted', 'preparing', 'out_for_delivery', 'delivered'],
+      'completed': ['pending', 'accepted', 'preparing', 'out_for_delivery', 'delivered', 'completed'],
+      'cancelled': ['pending', 'cancelled'],
+    };
+
+    const flow = statusFlow[orderData.status] || ['pending'];
+    let prevStatus = null;
+    let historyDate = new Date(orderData.createdAt);
+
+    for (const flowStatus of flow) {
+      // Time between status changes: 15min to 4 hours
+      historyDate = new Date(historyDate.getTime() + (15 + Math.floor(Math.random() * 225)) * 60000);
+
+      await prisma.orderStatusHistory.create({
+        data: {
+          orderId: order.id,
+          fromStatus: prevStatus,
+          toStatus: flowStatus,
+          changedById: allUsers[Math.floor(Math.random() * allUsers.length)].id,
+          notes: flowStatus === 'rejected' ? 'Out of stock items' :
+                 flowStatus === 'cancelled' ? 'Customer requested cancellation' : null,
+          createdAt: historyDate,
+        },
+      });
+      prevStatus = flowStatus;
+    }
+  }
 }
 
 main()
