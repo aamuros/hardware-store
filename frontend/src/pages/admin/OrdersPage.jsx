@@ -6,6 +6,8 @@ import {
   MagnifyingGlassIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  CalendarDaysIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline'
 
 const ORDER_STATUSES = [
@@ -40,10 +42,12 @@ export default function OrdersPage() {
   const statusFilter = searchParams.get('status') || ''
   const searchQuery = searchParams.get('search') || ''
   const currentPage = parseInt(searchParams.get('page')) || 1
+  const startDate = searchParams.get('startDate') || ''
+  const endDate = searchParams.get('endDate') || ''
 
   useEffect(() => {
     fetchOrders()
-  }, [statusFilter, searchQuery, currentPage])
+  }, [statusFilter, searchQuery, currentPage, startDate, endDate])
 
   const fetchOrders = async () => {
     setLoading(true)
@@ -54,6 +58,13 @@ export default function OrdersPage() {
       }
       if (statusFilter) params.status = statusFilter
       if (searchQuery) params.search = searchQuery
+      if (startDate) params.startDate = startDate
+      if (endDate) {
+        // include the full end day
+        const end = new Date(endDate)
+        end.setHours(23, 59, 59, 999)
+        params.endDate = end.toISOString()
+      }
 
       const response = await adminApi.getOrders(params)
       setOrders(response.data.data)
@@ -96,6 +107,27 @@ export default function OrdersPage() {
     setSearchParams(params)
   }
 
+  const handleDateChange = (field, value) => {
+    const params = new URLSearchParams(searchParams)
+    if (value) {
+      params.set(field, value)
+    } else {
+      params.delete(field)
+    }
+    params.delete('page')
+    setSearchParams(params)
+  }
+
+  const handleClearDates = () => {
+    const params = new URLSearchParams(searchParams)
+    params.delete('startDate')
+    params.delete('endDate')
+    params.delete('page')
+    setSearchParams(params)
+  }
+
+  const hasDateFilter = startDate || endDate
+
   const formatDate = (dateString) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('en-PH', {
@@ -115,7 +147,7 @@ export default function OrdersPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-2xl shadow-soft p-4">
+      <div className="bg-white rounded-2xl shadow-soft p-4 space-y-3">
         <div className="flex flex-col md:flex-row gap-4">
           {/* Status Filter */}
           <div className="flex items-center gap-2">
@@ -146,6 +178,47 @@ export default function OrdersPage() {
               />
             </div>
           </form>
+        </div>
+
+        {/* Date Range Filter */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <div className="flex items-center gap-2 text-neutral-500">
+            <CalendarDaysIcon className="h-5 w-5 text-neutral-400" />
+            <span className="text-sm font-medium whitespace-nowrap">Date range:</span>
+          </div>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 flex-1">
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                value={startDate}
+                max={endDate || undefined}
+                onChange={(e) => handleDateChange('startDate', e.target.value)}
+                className="input py-2 text-sm"
+              />
+              <span className="text-neutral-400 text-sm">to</span>
+              <input
+                type="date"
+                value={endDate}
+                min={startDate || undefined}
+                onChange={(e) => handleDateChange('endDate', e.target.value)}
+                className="input py-2 text-sm"
+              />
+            </div>
+            {hasDateFilter && (
+              <button
+                onClick={handleClearDates}
+                className="flex items-center gap-1 text-sm text-red-500 hover:text-red-700 transition-colors"
+              >
+                <XMarkIcon className="h-4 w-4" />
+                Clear dates
+              </button>
+            )}
+            {hasDateFilter && (
+              <span className="text-xs text-accent-600 bg-accent-50 px-2 py-1 rounded-full font-medium">
+                Filtered by date
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
