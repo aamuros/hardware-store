@@ -11,7 +11,8 @@ import {
     LogoutIcon,
     EditIcon,
     CheckIcon,
-    CloseIcon
+    CloseIcon,
+    LockIcon
 } from '../../components/icons'
 
 export default function AccountPage() {
@@ -99,6 +100,14 @@ export default function AccountPage() {
             count: stats.wishlist,
             link: '/account/wishlist',
             color: 'bg-pink-500',
+        },
+        {
+            icon: LockIcon,
+            label: 'Change Password',
+            description: 'Update your password',
+            count: null,
+            link: '/account/change-password',
+            color: 'bg-violet-500',
         },
     ]
 

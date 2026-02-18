@@ -167,10 +167,19 @@ export default function UserManagementPage() {
     const handleToggleActive = async (userToToggle) => {
         if (userToToggle.id === currentUser?.id) return
 
-        setConfirmAction({
-            type: userToToggle.isActive ? 'deactivate' : 'reactivate',
-            user: userToToggle,
-        })
+        if (userToToggle.role === 'staff') {
+            // Staff accounts can be permanently deleted
+            setConfirmAction({
+                type: 'delete',
+                user: userToToggle,
+            })
+        } else {
+            // Admin accounts can only be deactivated/reactivated
+            setConfirmAction({
+                type: userToToggle.isActive ? 'deactivate' : 'reactivate',
+                user: userToToggle,
+            })
+        }
     }
 
     const executeConfirmAction = async () => {
@@ -180,7 +189,10 @@ export default function UserManagementPage() {
         setConfirmAction(null)
 
         try {
-            if (type === 'deactivate') {
+            if (type === 'delete') {
+                await adminApi.deleteUser(targetUser.id)
+                setSuccessMsg(`Staff account "${targetUser.name}" deleted`)
+            } else if (type === 'deactivate') {
                 await adminApi.deleteUser(targetUser.id)
                 setSuccessMsg(`User "${targetUser.name}" deactivated`)
             } else {
@@ -241,10 +253,10 @@ export default function UserManagementPage() {
                 <div className="flex items-center justify-center h-64">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-800"></div>
                 </div>
-            ) : users.length === 0 ? (
+            ) : users.filter(u => u.id !== currentUser?.id).length === 0 ? (
                 <div className="bg-white rounded-2xl shadow-soft p-12 text-center">
                     <UsersIcon className="h-12 w-12 text-neutral-300 mx-auto mb-4" />
-                    <p className="text-neutral-500 mb-4">No users found</p>
+                    <p className="text-neutral-500 mb-4">No other users found</p>
                     <button onClick={openCreateModal} className="text-accent-600 hover:text-accent-700 font-medium">
                         Add your first staff member
                     </button>
@@ -330,12 +342,17 @@ export default function UserManagementPage() {
                                                 {u.id !== currentUser?.id && (
                                                     <button
                                                         onClick={() => handleToggleActive(u)}
-                                                        className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${u.isActive
+                                                        className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
+                                                            u.role === 'staff'
                                                                 ? 'text-red-600 hover:bg-red-50'
-                                                                : 'text-green-600 hover:bg-green-50'
-                                                            }`}
+                                                                : u.isActive
+                                                                    ? 'text-red-600 hover:bg-red-50'
+                                                                    : 'text-green-600 hover:bg-green-50'
+                                                        }`}
                                                     >
-                                                        {u.isActive ? 'Deactivate' : 'Reactivate'}
+                                                        {u.role === 'staff'
+                                                            ? 'Delete'
+                                                            : u.isActive ? 'Deactivate' : 'Reactivate'}
                                                     </button>
                                                 )}
                                                 {u.id === currentUser?.id && (
@@ -515,12 +532,18 @@ export default function UserManagementPage() {
                         <div className="fixed inset-0 bg-primary-900/30 backdrop-blur-sm" onClick={() => setConfirmAction(null)} />
                         <div className="relative bg-white rounded-2xl shadow-soft-lg max-w-sm w-full p-6">
                             <h3 className="text-lg font-semibold text-primary-900 mb-2">
-                                {confirmAction.type === 'deactivate' ? 'Deactivate User' : 'Reactivate User'}
+                                {confirmAction.type === 'delete'
+                                    ? 'Delete Staff Account'
+                                    : confirmAction.type === 'deactivate'
+                                        ? 'Deactivate User'
+                                        : 'Reactivate User'}
                             </h3>
                             <p className="text-sm text-neutral-600 mb-6">
-                                {confirmAction.type === 'deactivate'
-                                    ? `Are you sure you want to deactivate "${confirmAction.user.name}"? They will no longer be able to log in to the admin panel.`
-                                    : `Are you sure you want to reactivate "${confirmAction.user.name}"? They will be able to log in again.`}
+                                {confirmAction.type === 'delete'
+                                    ? `Are you sure you want to permanently delete "${confirmAction.user.name}"? This action cannot be undone.`
+                                    : confirmAction.type === 'deactivate'
+                                        ? `Are you sure you want to deactivate "${confirmAction.user.name}"? They will no longer be able to log in to the admin panel.`
+                                        : `Are you sure you want to reactivate "${confirmAction.user.name}"? They will be able to log in again.`}
                             </p>
                             <div className="flex justify-end gap-3">
                                 <button
@@ -531,12 +554,17 @@ export default function UserManagementPage() {
                                 </button>
                                 <button
                                     onClick={executeConfirmAction}
-                                    className={`btn ${confirmAction.type === 'deactivate'
-                                            ? 'bg-red-600 text-white hover:bg-red-700'
-                                            : 'bg-green-600 text-white hover:bg-green-700'
+                                    className={`btn ${
+                                        confirmAction.type === 'reactivate'
+                                            ? 'bg-green-600 text-white hover:bg-green-700'
+                                            : 'bg-red-600 text-white hover:bg-red-700'
                                         }`}
                                 >
-                                    {confirmAction.type === 'deactivate' ? 'Deactivate' : 'Reactivate'}
+                                    {confirmAction.type === 'delete'
+                                        ? 'Delete'
+                                        : confirmAction.type === 'deactivate'
+                                            ? 'Deactivate'
+                                            : 'Reactivate'}
                                 </button>
                             </div>
                         </div>

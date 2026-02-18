@@ -20,10 +20,17 @@ const login = async (req, res, next) => {
       where: { username },
     });
 
-    if (!user || !user.isActive) {
+    if (!user) {
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials',
+      });
+    }
+
+    if (!user.isActive) {
+      return res.status(401).json({
+        success: false,
+        message: 'This account has been deactivated. Please contact an administrator.',
       });
     }
 
@@ -579,7 +586,6 @@ const deleteUser = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    // Soft delete instead of hard delete to preserve audit trail
     // Don't allow deleting self
     if (parseInt(id, 10) === req.user.id) {
       return res.status(400).json({
@@ -600,7 +606,31 @@ const deleteUser = async (req, res, next) => {
       });
     }
 
-    // Soft delete by marking as inactive
+    // Protect the last admin account
+    if (existingUser.role === 'admin') {
+      const adminCount = await prisma.user.count({
+        where: { role: 'admin', isActive: true },
+      });
+      if (adminCount <= 1) {
+        return res.status(400).json({
+          success: false,
+          message: 'Cannot delete the last admin account',
+        });
+      }
+    }
+
+    // Hard delete staff accounts; soft-delete admin accounts to preserve audit trail
+    if (existingUser.role === 'staff') {
+      await prisma.user.delete({
+        where: { id: parseInt(id, 10) },
+      });
+      return res.json({
+        success: true,
+        message: 'Staff account deleted successfully',
+      });
+    }
+
+    // Soft delete admin by marking as inactive
     await prisma.user.update({
       where: { id: parseInt(id, 10) },
       data: { isActive: false },

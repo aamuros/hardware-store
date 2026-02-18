@@ -25,6 +25,7 @@ const AccountPage = lazy(() => import('./pages/customer/AccountPage'))
 const OrderHistoryPage = lazy(() => import('./pages/customer/OrderHistoryPage'))
 const SavedAddressesPage = lazy(() => import('./pages/customer/SavedAddressesPage'))
 const WishlistPage = lazy(() => import('./pages/customer/WishlistPage'))
+const CustomerChangePasswordPage = lazy(() => import('./pages/customer/CustomerChangePasswordPage'))
 
 // Admin Pages - Lazy loaded
 const AdminLoginPage = lazy(() => import('./pages/admin/AdminLoginPage'))
@@ -35,6 +36,9 @@ const ProductsManagementPage = lazy(() => import('./pages/admin/ProductsManageme
 const CategoriesPage = lazy(() => import('./pages/admin/CategoriesPage'))
 const ReportsPage = lazy(() => import('./pages/admin/ReportsPage'))
 const UserManagementPage = lazy(() => import('./pages/admin/UserManagementPage'))
+const ChangePasswordPage = lazy(() => import('./pages/admin/ChangePasswordPage'))
+const AdminForgotPasswordPage = lazy(() => import('./pages/admin/AdminForgotPasswordPage'))
+const AdminResetPasswordPage = lazy(() => import('./pages/admin/AdminResetPasswordPage'))
 
 // Auth
 import ProtectedRoute from './components/ProtectedRoute'
@@ -78,10 +82,13 @@ function App() {
             <Route path="account/orders" element={<ProtectedCustomerRoute><OrderHistoryPage /></ProtectedCustomerRoute>} />
             <Route path="account/addresses" element={<ProtectedCustomerRoute><SavedAddressesPage /></ProtectedCustomerRoute>} />
             <Route path="account/wishlist" element={<ProtectedCustomerRoute><WishlistPage /></ProtectedCustomerRoute>} />
+            <Route path="account/change-password" element={<ProtectedCustomerRoute><CustomerChangePasswordPage /></ProtectedCustomerRoute>} />
           </Route>
 
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route path="/admin/forgot-password" element={<AdminForgotPasswordPage />} />
+          <Route path="/admin/reset-password" element={<AdminResetPasswordPage />} />
           <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
             <Route index element={<DashboardPage />} />
             <Route path="orders" element={<OrdersPage />} />
@@ -90,6 +97,7 @@ function App() {
             <Route path="categories" element={<CategoriesPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="users" element={<UserManagementPage />} />
+            <Route path="change-password" element={<ChangePasswordPage />} />
           </Route>
 
           {/* 404 Catch-all */}

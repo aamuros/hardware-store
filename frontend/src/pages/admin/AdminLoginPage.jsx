@@ -102,8 +102,14 @@ export default function AdminLoginPage() {
             </button>
           </form>
 
-          {/* Back to store link */}
-          <div className="mt-6 text-center">
+          {/* Forgot password & back to store */}
+          <div className="mt-6 flex flex-col items-center gap-2">
+            <a
+              href="/admin/forgot-password"
+              className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+            >
+              Forgot your password?
+            </a>
             <a href="/" className="text-sm text-accent-600 hover:text-accent-700 font-medium">
               ← Back to Store
             </a>

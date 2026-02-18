@@ -10,9 +10,10 @@ import {
   CloseIcon,
   ChartIcon,
   WrenchIcon,
-  UsersIcon
+  UsersIcon,
+  LockIcon
 } from '../icons'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 
 const baseNavigation = [
   { name: 'Dashboard', href: '/admin', icon: HomeIcon },
@@ -32,9 +33,10 @@ export default function AdminLayout() {
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  const navigation = isAdminRole()
-    ? [...baseNavigation, ...adminOnlyNavigation]
-    : baseNavigation
+  const navigation = useMemo(
+    () => (user?.role === 'admin' ? [...baseNavigation, ...adminOnlyNavigation] : baseNavigation),
+    [user?.role]
+  )
 
   const handleLogout = () => {
     logout()
@@ -148,6 +150,14 @@ export default function AdminLayout() {
                 }`}>
                 {user?.role === 'admin' ? 'Admin' : 'Staff'}
               </span>
+              <Link
+                to="/admin/change-password"
+                className="flex items-center text-sm text-neutral-600 hover:text-primary-600 transition-colors"
+                title="Change Password"
+              >
+                <LockIcon className="h-5 w-5 mr-1" />
+                <span className="hidden sm:inline">Change Password</span>
+              </Link>
               <button
                 onClick={handleLogout}
                 className="flex items-center text-sm text-neutral-600 hover:text-red-600 transition-colors"

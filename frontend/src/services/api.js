@@ -153,6 +153,11 @@ export const adminApi = {
   updateUser: (id, data) => api.patch(`/admin/users/${id}`, data),
   deleteUser: (id) => api.delete(`/admin/users/${id}`),
   changePassword: (data) => api.patch('/admin/change-password', data),
+
+  // Admin password reset (unauthenticated)
+  forgotPassword: (data) => api.post('/admin/forgot-password', data),
+  verifyResetToken: (data) => api.post('/admin/verify-reset-token', data),
+  resetPassword: (data) => api.post('/admin/reset-password', data),
 }
 
 // Customer API (account features)

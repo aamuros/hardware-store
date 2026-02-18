@@ -24,6 +24,7 @@ model User {
   
   // Audit trail
   orderStatusChanges OrderStatusHistory[]
+  adminPasswordResets AdminPasswordReset[]
 
   @@map("users")
 }
@@ -64,6 +65,23 @@ model PasswordReset {
   @@index([customerId])
   @@index([token])
   @@map("password_resets")
+}
+
+// Admin password reset tokens
+model AdminPasswordReset {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([token])
+  @@map("admin_password_resets")
 }
 
 // Product categories

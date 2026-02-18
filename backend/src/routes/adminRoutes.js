@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
+const adminPasswordResetController = require('../controllers/adminPasswordResetController');
 const productController = require('../controllers/productController');
 const categoryController = require('../controllers/categoryController');
 const orderController = require('../controllers/orderController');
@@ -10,6 +11,9 @@ const upload = require('../middleware/upload');
 
 // Public admin routes
 router.post('/login', adminController.login);
+router.post('/forgot-password', adminPasswordResetController.forgotPassword);
+router.post('/verify-reset-token', adminPasswordResetController.verifyResetToken);
+router.post('/reset-password', adminPasswordResetController.resetPassword);
 
 // Protected routes - require authentication
 router.use(authenticate);
