@@ -76,90 +76,86 @@ const ProductCard = memo(function ProductCard({ product }) {
   }, [isInStock, addToCart, product, hasVariants, navigate, getItemQuantity])
 
   return (
-    <Link to={`/products/${product.id}`} className="card-hover group">
+    <Link to={`/products/${product.id}`} className="group block bg-white rounded-2xl border border-neutral-100 overflow-hidden hover:border-neutral-200 hover:shadow-soft-lg transition-all duration-200">
       {/* Product Image */}
-      <div className="relative overflow-hidden">
+      <div className="relative aspect-square overflow-hidden bg-neutral-50">
         <OptimizedImage
           src={product.imageUrl}
           alt={product.name}
-          className=""
+          className="group-hover:scale-[1.03] transition-transform duration-300"
           fallback={<BoxIcon className="h-16 w-16 text-neutral-300" />}
         />
 
         {/* Unavailable overlay — admin disabled the product */}
         {isUnavailable && !hasVariants && (
-          <div className="absolute inset-0 bg-neutral-900/50 backdrop-blur-[2px] flex items-center justify-center">
-            <span className="bg-white text-neutral-700 px-3 py-1.5 rounded-lg text-sm font-medium shadow-sm">
-              Currently Unavailable
+          <div className="absolute inset-0 bg-neutral-900/40 backdrop-blur-[2px] flex items-center justify-center">
+            <span className="bg-white/95 text-neutral-600 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm tracking-wide">
+              Unavailable
             </span>
           </div>
         )}
 
         {/* Out of Stock overlay — has stock = 0 but is available */}
         {isOutOfStock && !hasVariants && (
-          <div className="absolute inset-0 bg-red-900/30 backdrop-blur-[2px] flex items-center justify-center">
-            <span className="bg-white text-red-700 px-3 py-1.5 rounded-lg text-sm font-medium shadow-sm border border-red-200">
+          <div className="absolute inset-0 bg-neutral-900/30 backdrop-blur-[2px] flex items-center justify-center">
+            <span className="bg-white/95 text-red-600 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm border border-red-100 tracking-wide">
               Out of Stock
             </span>
           </div>
         )}
 
-        {/* Variants badge */}
-        {hasVariants && (
-          <div className="absolute top-3 left-3 bg-primary-700 text-white px-2 py-0.5 rounded text-xs font-medium">
-            Multiple Options
+        {/* Top-left badge */}
+        {hasVariants && isInStock && (
+          <div className="absolute top-2.5 left-2.5 bg-primary-800/90 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-[10px] font-semibold tracking-wide">
+            Options
           </div>
         )}
-
-        {/* Low Stock badge - only for non-variant products */}
         {isLowStock && !hasVariants && (
-          <div className="absolute top-3 left-3 bg-amber-500 text-white px-2 py-0.5 rounded text-xs font-medium">
+          <div className="absolute top-2.5 left-2.5 bg-amber-500/90 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-[10px] font-semibold tracking-wide">
             Only {product.stockQuantity} left
           </div>
         )}
 
         {/* Cart quantity badge */}
         {quantity > 0 && (
-          <div className={`absolute top-3 right-3 bg-accent-500 text-white rounded-lg h-6 flex items-center justify-center text-xs font-bold shadow-sm ${quantity > 99 ? 'min-w-6 px-1' : 'w-6'}`}>
+          <div className={`absolute top-2.5 right-2.5 bg-primary-800 text-white rounded-full h-5 flex items-center justify-center text-[10px] font-bold shadow ${quantity > 99 ? 'min-w-[20px] px-1.5' : 'w-5'}`}>
             {quantity > 99 ? '99+' : quantity}
           </div>
         )}
       </div>
 
       {/* Product Info */}
-      <div className="p-4">
-        <div className="text-xs text-neutral-500 mb-1 font-medium">{product.category?.name}</div>
-        <h3 className="font-medium text-primary-900 mb-1 line-clamp-2 group-hover:text-accent-600 transition-colors">
+      <div className="p-3.5">
+        {product.category?.name && (
+          <div className="text-[10px] text-neutral-400 mb-1 font-semibold uppercase tracking-widest">{product.category.name}</div>
+        )}
+        <h3 className="font-semibold text-primary-900 mb-2.5 line-clamp-2 text-sm leading-snug">
           {product.name}
         </h3>
-        <div className="flex items-center justify-between mt-3">
+        <div className="flex items-center justify-between">
           <div>
             {hasVariants && (
-              <span className="text-xs text-neutral-500 mr-0.5">From </span>
+              <span className="text-[10px] text-neutral-400 font-medium">From </span>
             )}
-            <span className="text-lg font-bold text-primary-800">
+            <span className="text-sm font-bold text-primary-900">
               {formattedPrice}
             </span>
-            <span className="text-xs text-neutral-500 ml-1">/ {product.unit}</span>
+            <span className="text-[10px] text-neutral-400 ml-0.5">/{product.unit}</span>
           </div>
 
           {isInStock ? (
             <button
               onClick={handleAddToCart}
-              className="p-2.5 bg-primary-800 text-white rounded-xl hover:bg-primary-900 transition-colors"
+              className="w-8 h-8 flex items-center justify-center bg-primary-900 text-white rounded-xl hover:bg-primary-800 active:scale-95 transition-all duration-150 shadow-sm"
               aria-label={hasVariants ? 'View options' : 'Add to cart'}
               title={hasVariants ? 'View options' : 'Add to cart'}
             >
-              <PlusIcon className="h-5 w-5" />
+              <PlusIcon className="h-4 w-4" />
             </button>
           ) : isUnavailable ? (
-            <span className="px-2 py-1 text-[10px] font-semibold text-neutral-500 bg-neutral-100 border border-neutral-200 rounded-lg uppercase tracking-wide">
-              Unavailable
-            </span>
+            <span className="text-[10px] font-semibold text-neutral-400 tracking-wide">N/A</span>
           ) : isOutOfStock ? (
-            <span className="px-2 py-1 text-[10px] font-semibold text-red-600 bg-red-50 border border-red-200 rounded-lg uppercase tracking-wide">
-              No Stock
-            </span>
+            <span className="text-[10px] font-semibold text-red-500 tracking-wide">Sold Out</span>
           ) : null}
         </div>
       </div>
