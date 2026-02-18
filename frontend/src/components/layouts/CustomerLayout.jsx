@@ -369,7 +369,7 @@ export default function CustomerLayout() {
               ) : (
                 <Link
                   to="/login"
-                  className="hidden sm:flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-accent-600 hover:bg-accent-700 rounded-lg transition-colors"
+                  className="hidden sm:flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-primary-800 hover:bg-primary-700 rounded-lg transition-colors"
                 >
                   <UserIcon className="h-4 w-4" />
                   Login

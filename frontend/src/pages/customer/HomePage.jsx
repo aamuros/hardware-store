@@ -3,10 +3,6 @@ import { Link } from 'react-router-dom'
 import { categoryApi, productApi, statsApi } from '../../services/api'
 import ProductCard from '../../components/ProductCard'
 import {
-  TruckIcon,
-  ShieldIcon,
-  CashIcon,
-  PhoneIcon,
   SearchIcon,
   CartIcon,
   CheckIcon,
@@ -92,8 +88,16 @@ export default function HomePage() {
                   <div className="h-12 w-40 bg-neutral-50 rounded-xl animate-pulse"></div>
                 </div>
               </div>
-              <div className="w-full lg:w-1/3">
-                <div className="aspect-[4/3] bg-neutral-50 rounded-3xl animate-pulse"></div>
+              <div className="w-full lg:w-[400px] xl:w-[440px] flex flex-col justify-center">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center gap-6 py-7 border-b border-neutral-100 last:border-0">
+                    <div className="w-1 h-12 bg-neutral-100 rounded-full animate-pulse flex-shrink-0"></div>
+                    <div className="flex-1">
+                      <div className="h-10 bg-neutral-100 rounded w-28 mb-2 animate-pulse"></div>
+                      <div className="h-3 bg-neutral-50 rounded w-36 animate-pulse"></div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -125,9 +129,8 @@ export default function HomePage() {
     <div>
       {/* ─── Hero Section ─── */}
       <section className="bg-white relative overflow-hidden">
-        {/* Decorative background elements */}
-        <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-96 h-96 bg-accent-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 translate-y-1/4 -translate-x-1/4 w-96 h-96 bg-primary-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+        {/* Decorative background element */}
+        <div className="absolute bottom-0 left-0 translate-y-1/3 -translate-x-1/4 w-[600px] h-[600px] bg-primary-50 rounded-full blur-3xl opacity-60 pointer-events-none"></div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="py-16 md:py-24 lg:py-28 flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
@@ -163,62 +166,44 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Right Column: Stats & Visuals */}
-            <div className="w-full lg:w-[420px] xl:w-[480px] z-10">
-              <div className="relative">
-                {/* Stats Card */}
-                <div className="bg-white/80 backdrop-blur-xl border border-white/40 shadow-2xl rounded-3xl p-8 sm:p-10 relative overflow-hidden group hover:shadow-soft-lg transition-shadow duration-500">
-                  <div className="absolute inset-0 bg-gradient-to-br from-white via-white/50 to-neutral-100/50 opacity-100"></div>
-
-                  {/* Decorative glass reflection */}
-                  <div className="absolute -inset-full top-0 block h-full w-1/2 -skew-x-12 bg-gradient-to-r from-transparent to-white opacity-40 group-hover:animate-shine" />
-
-                  <div className="relative z-10 space-y-8">
-                    <div className="flex items-center gap-6">
-                      <div className="w-14 h-14 rounded-2xl bg-primary-50 flex items-center justify-center text-primary-600 shadow-inner">
-                        <CategoryIcon category={{ name: 'Products' }} className="w-7 h-7" />
-                      </div>
-                      <div>
-                        <div className="text-4xl font-extrabold text-primary-900 tracking-tight">
-                          {animatedProducts.toLocaleString()}+
-                        </div>
-                        <div className="text-neutral-500 font-medium">Quality Products</div>
-                      </div>
+            {/* Right Column: Stats */}
+            <div className="w-full lg:w-[400px] xl:w-[440px] z-10">
+              <div className="divide-y divide-neutral-100">
+                <div className="flex items-center gap-5 pb-8">
+                  <div className="w-[3px] h-14 rounded-full bg-primary-500 flex-shrink-0"></div>
+                  <div>
+                    <div className="text-5xl xl:text-6xl font-black text-primary-900 tracking-tight leading-none tabular-nums">
+                      {animatedProducts.toLocaleString()}<span className="text-primary-400">+</span>
                     </div>
-
-                    <div className="w-full h-px bg-gradient-to-r from-transparent via-neutral-200 to-transparent"></div>
-
-                    <div className="flex items-center gap-6">
-                      <div className="w-14 h-14 rounded-2xl bg-accent-50 flex items-center justify-center text-accent-600 shadow-inner">
-                        <CheckIcon className="w-7 h-7" />
-                      </div>
-                      <div>
-                        <div className="text-4xl font-extrabold text-primary-900 tracking-tight">
-                          {animatedDelivered.toLocaleString()}+
-                        </div>
-                        <div className="text-neutral-500 font-medium">Orders Delivered</div>
-                      </div>
-                    </div>
-
-                    <div className="w-full h-px bg-gradient-to-r from-transparent via-neutral-200 to-transparent"></div>
-
-                    <div className="flex items-center gap-6">
-                      <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 shadow-inner">
-                        <ShieldIcon className="w-7 h-7" />
-                      </div>
-                      <div>
-                        <div className="text-4xl font-extrabold text-primary-900 tracking-tight">
-                          {animatedCustomers.toLocaleString()}+
-                        </div>
-                        <div className="text-neutral-500 font-medium">Happy Customers</div>
-                      </div>
+                    <div className="text-xs font-semibold text-neutral-400 uppercase tracking-widest mt-2.5">
+                      Quality Products
                     </div>
                   </div>
                 </div>
 
-                {/* Floating elements behind card */}
-                <div className="absolute -top-10 -right-10 w-24 h-24 bg-accent-400/10 rounded-full blur-2xl -z-10 animate-pulse"></div>
-                <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-primary-400/10 rounded-full blur-2xl -z-10 animate-pulse delay-700"></div>
+                <div className="flex items-center gap-5 py-8">
+                  <div className="w-[3px] h-14 rounded-full bg-accent-500 flex-shrink-0"></div>
+                  <div>
+                    <div className="text-5xl xl:text-6xl font-black text-primary-900 tracking-tight leading-none tabular-nums">
+                      {animatedDelivered.toLocaleString()}<span className="text-accent-400">+</span>
+                    </div>
+                    <div className="text-xs font-semibold text-neutral-400 uppercase tracking-widest mt-2.5">
+                      Orders Delivered
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-5 pt-8">
+                  <div className="w-[3px] h-14 rounded-full bg-emerald-500 flex-shrink-0"></div>
+                  <div>
+                    <div className="text-5xl xl:text-6xl font-black text-primary-900 tracking-tight leading-none tabular-nums">
+                      {animatedCustomers.toLocaleString()}<span className="text-emerald-400">+</span>
+                    </div>
+                    <div className="text-xs font-semibold text-neutral-400 uppercase tracking-widest mt-2.5">
+                      Happy Customers
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -241,24 +226,18 @@ export default function HomePage() {
               All Categories <span>→</span>
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
             {categories.map((category) => (
               <Link
                 key={category.id}
                 to={`/products?category=${category.id}`}
-                className="group relative bg-neutral-50 hover:bg-white border border-neutral-100 hover:border-neutral-200 rounded-2xl p-5 transition-colors duration-200 hover:shadow-soft"
+                className="group flex flex-col items-center text-center p-5 bg-white border border-neutral-200 hover:border-primary-300 rounded-2xl transition-all duration-200 hover:shadow-soft"
               >
-                <div className="flex items-start gap-3.5">
-                  <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center text-primary-700 border border-neutral-200 group-hover:border-accent-300 group-hover:text-accent-600 transition-colors flex-shrink-0">
-                    <CategoryIcon category={category} className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0 pt-0.5">
-                    <h3 className="font-semibold text-primary-800 text-sm leading-tight truncate group-hover:text-primary-900">{category.name}</h3>
-                    <p className="text-xs text-neutral-400 mt-1">
-                      {category._count?.products || 0} items
-                    </p>
-                  </div>
+                <div className="w-12 h-12 rounded-xl bg-neutral-50 flex items-center justify-center text-primary-600 group-hover:bg-primary-50 group-hover:text-primary-800 transition-colors mb-3">
+                  <CategoryIcon category={category} className="h-6 w-6" />
                 </div>
+                <h3 className="font-semibold text-primary-800 text-sm leading-snug group-hover:text-primary-900">{category.name}</h3>
+                <p className="text-xs text-neutral-400 mt-1">{category._count?.products || 0} items</p>
               </Link>
             ))}
           </div>
@@ -308,10 +287,10 @@ export default function HomePage() {
               ].map((item) => (
                 <div key={item.step} className="text-center relative">
                   <div className="relative inline-flex mb-4">
-                    <div className="w-16 h-16 bg-neutral-50 border-2 border-neutral-200 rounded-2xl flex items-center justify-center relative z-10 bg-white">
+                    <div className="w-16 h-16 bg-white border border-neutral-200 rounded-2xl flex items-center justify-center relative z-10">
                       <item.Icon className="h-7 w-7 text-primary-700" />
                     </div>
-                    <span className="absolute -top-2 -right-2 w-6 h-6 bg-accent-500 text-white rounded-full flex items-center justify-center text-xs font-bold z-20">
+                    <span className="absolute -top-2 -right-2 w-6 h-6 bg-primary-800 text-white rounded-full flex items-center justify-center text-xs font-bold z-20">
                       {item.step}
                     </span>
                   </div>

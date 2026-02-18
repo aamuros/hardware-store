@@ -4,6 +4,35 @@ import { TrashIcon, MinusIcon, PlusIcon, CartIcon, BoxIcon, CashIcon, CheckIcon 
 import { useCart } from '../../context/CartContext'
 import toast from 'react-hot-toast'
 
+// Clean custom checkbox — replaces all native browser checkboxes in the cart
+function CartCheckbox({ checked, indeterminate = false, onChange, label, size = 'md' }) {
+  const dim = size === 'sm' ? 'w-4 h-4 rounded' : 'w-[18px] h-[18px] rounded-md'
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={indeterminate ? 'mixed' : checked}
+      aria-label={label}
+      onClick={onChange}
+      className={`${dim} border-2 flex items-center justify-center flex-shrink-0 transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40 focus-visible:ring-offset-1 ${
+        checked || indeterminate
+          ? 'bg-primary-800 border-primary-800'
+          : 'bg-white border-neutral-300 hover:border-primary-500'
+      }`}
+    >
+      {indeterminate && !checked ? (
+        <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 10 10" fill="none">
+          <path d="M2 5h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+        </svg>
+      ) : checked ? (
+        <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 10 10" fill="none">
+          <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      ) : null}
+    </button>
+  )
+}
+
 // Checkout Progress Steps Component
 function CheckoutProgress({ currentStep }) {
   const steps = [
@@ -175,13 +204,13 @@ function QuantityInput({ item, updateQuantity, onRequestRemove }) {
   }
 
   return (
-    <div className="flex items-center border border-neutral-200 rounded-xl overflow-hidden">
+    <div className="flex items-center gap-1 bg-neutral-50 border border-neutral-200 rounded-xl overflow-hidden">
       <button
         onClick={handleDecrement}
-        className="p-2 hover:bg-neutral-100 transition-colors"
+        className="w-9 h-9 flex items-center justify-center text-neutral-500 hover:text-primary-800 hover:bg-neutral-100 transition-colors"
         aria-label={`Decrease quantity of ${item.name}`}
       >
-        <MinusIcon className="h-4 w-4" />
+        <MinusIcon className="h-3.5 w-3.5" />
       </button>
       <input
         type="text"
@@ -191,19 +220,20 @@ function QuantityInput({ item, updateQuantity, onRequestRemove }) {
         onFocus={handleFocus}
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
-        className="w-12 text-center text-sm font-medium bg-transparent outline-none border-none"
+        className="w-10 text-center text-sm font-semibold text-primary-900 bg-transparent outline-none border-none"
         aria-label={`Quantity of ${item.name}`}
       />
       <button
         onClick={handleIncrement}
         disabled={item.quantity >= maxStock}
-        className={`p-2 transition-colors ${item.quantity >= maxStock
-            ? 'opacity-40 cursor-not-allowed'
-            : 'hover:bg-neutral-100'
-          }`}
+        className={`w-9 h-9 flex items-center justify-center transition-colors ${
+          item.quantity >= maxStock
+            ? 'opacity-30 cursor-not-allowed text-neutral-400'
+            : 'text-neutral-500 hover:text-primary-800 hover:bg-neutral-100'
+        }`}
         aria-label={`Increase quantity of ${item.name}`}
       >
-        <PlusIcon className="h-4 w-4" />
+        <PlusIcon className="h-3.5 w-3.5" />
       </button>
     </div>
   )
@@ -279,35 +309,36 @@ export default function CartPage() {
       <CheckoutProgress currentStep={1} />
 
       {/* Select All / Clear Cart Bar */}
-      <div className="flex items-center justify-between mb-4 bg-neutral-50 rounded-xl px-4 py-3 border border-neutral-200">
-        <label className="flex items-center gap-3 cursor-pointer select-none group">
-          <div className="relative flex items-center">
-            <input
-              type="checkbox"
-              checked={allSelected}
-              ref={(el) => { if (el) el.indeterminate = someSelected }}
-              onChange={() => allSelected ? deselectAll() : selectAll()}
-              className="w-5 h-5 rounded border-neutral-300 text-accent-600 focus:ring-accent-500 cursor-pointer transition-colors"
-            />
-          </div>
-          <span className="text-sm font-medium text-primary-800 group-hover:text-accent-600 transition-colors">
-            {allSelected ? 'Deselect All' : someSelected ? `${selectedKeys.size} of ${items.length} selected` : `Select All (${items.length})`}
+      <div className="flex items-center justify-between mb-4 px-1 py-2">
+        <label className="flex items-center gap-3 cursor-pointer select-none">
+          <CartCheckbox
+            checked={allSelected}
+            indeterminate={someSelected}
+            onChange={() => allSelected ? deselectAll() : selectAll()}
+            label={allSelected ? 'Deselect all items' : 'Select all items'}
+          />
+          <span className="text-sm font-medium text-primary-800">
+            {allSelected
+              ? 'All selected'
+              : someSelected
+                ? `${selectedKeys.size} of ${items.length} selected`
+                : `Select all (${items.length})`}
           </span>
         </label>
-        <div className="flex items-center gap-3">
-          {selectedKeys.size > 0 && selectedKeys.size < items.length && (
+        <div className="flex items-center gap-4">
+          {someSelected && (
             <button
               onClick={deselectAll}
-              className="text-neutral-500 hover:text-neutral-700 text-sm transition-colors"
+              className="text-xs text-neutral-500 hover:text-neutral-700 transition-colors"
             >
               Clear selection
             </button>
           )}
           <button
             onClick={() => setShowClearCartModal(true)}
-            className="text-red-500 hover:text-red-600 text-sm font-medium flex items-center gap-1.5 transition-colors"
+            className="text-xs text-red-400 hover:text-red-600 font-medium flex items-center gap-1.5 transition-colors"
           >
-            <TrashIcon className="h-4 w-4" />
+            <TrashIcon className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Clear Cart</span>
           </button>
         </div>
@@ -323,100 +354,101 @@ export default function CartPage() {
             return (
               <div
                 key={itemKey}
-                className={`card p-4 flex gap-3 sm:gap-4 transition-all duration-200 cursor-pointer ${
+                className={`relative bg-white rounded-2xl border transition-all duration-150 cursor-pointer overflow-hidden ${
                   selected
-                    ? 'ring-2 ring-accent-500/40 bg-accent-50/40 border-accent-200'
-                    : 'hover:border-neutral-300 opacity-75 hover:opacity-100'
+                    ? 'border-primary-200 shadow-sm'
+                    : 'border-neutral-200 hover:border-neutral-300 opacity-70 hover:opacity-100'
                 }`}
                 onClick={(e) => {
-                  // Toggle selection when clicking the card background (not controls)
                   if (e.target.closest('button, a, input')) return
                   toggleSelectItem(item.id, item.variantId)
                 }}
               >
-                {/* Selection Checkbox */}
-                <div className="flex items-center self-stretch">
-                  <input
-                    type="checkbox"
-                    checked={selected}
-                    onChange={() => toggleSelectItem(item.id, item.variantId)}
-                    className="w-5 h-5 rounded border-neutral-300 text-accent-600 focus:ring-accent-500 cursor-pointer transition-colors"
-                    aria-label={`Select ${item.name} for checkout`}
-                  />
-                </div>
-                {/* Image */}
-                <div className="w-20 h-20 bg-neutral-100 rounded-xl flex-shrink-0 overflow-hidden">
-                  {item.imageUrl ? (
-                    <img
-                      src={item.imageUrl}
-                      alt={item.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-neutral-400">
-                      <BoxIcon className="h-8 w-8" />
-                    </div>
-                  )}
-                </div>
+                {/* Left selection accent bar */}
+                <div className={`absolute left-0 top-0 bottom-0 w-[3px] rounded-l-2xl transition-all duration-150 ${
+                  selected ? 'bg-primary-800' : 'bg-transparent'
+                }`} />
 
-                {/* Details */}
-                <div className="flex-1 min-w-0">
-                  <Link
-                    to={`/products/${item.id}`}
-                    className="font-medium text-primary-900 hover:text-accent-600 line-clamp-1 transition-colors"
-                  >
-                    {item.name}
-                  </Link>
-                  {item.variantName && (
-                    <p className="text-sm text-primary-600 font-medium">
-                      {item.variantName}
-                    </p>
-                  )}
-                  <p className="text-sm text-neutral-500">
-                    {formatPrice(item.price)} / {item.unit}
-                  </p>
-
-                  {/* Quantity Controls */}
-                  <div className="flex items-center gap-3 mt-2">
-                    <QuantityInput
-                      item={item}
-                      updateQuantity={updateQuantity}
-                      onRequestRemove={() => setItemToRemove(item)}
+                <div className="flex gap-3 sm:gap-4 p-4 pl-5">
+                  {/* Selection Checkbox */}
+                  <div className="flex items-center self-stretch">
+                    <CartCheckbox
+                      checked={selected}
+                      onChange={() => toggleSelectItem(item.id, item.variantId)}
+                      label={`Select ${item.name} for checkout`}
                     />
-                    <button
-                      onClick={() => setItemToRemove(item)}
-                      className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
-                      aria-label={`Remove ${item.name} from cart`}
-                    >
-                      <TrashIcon className="h-5 w-5" />
-                    </button>
                   </div>
 
-                  {/* Stock Availability Warning */}
-                  {item.stockQuantity && (
-                    <div className="mt-2">
-                      {item.quantity >= item.stockQuantity ? (
-                        <p className="text-xs text-amber-600 font-medium">
-                          Maximum stock reached ({item.stockQuantity} available)
-                        </p>
-                      ) : item.quantity >= item.stockQuantity * 0.8 ? (
-                        <p className="text-xs text-amber-600">
-                          Only {item.stockQuantity - item.quantity} more available
-                        </p>
-                      ) : (
-                        <p className="text-xs text-neutral-500">
-                          {item.stockQuantity} available in stock
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
+                  {/* Image */}
+                  <div className="w-20 h-20 bg-neutral-100 rounded-xl flex-shrink-0 overflow-hidden">
+                    {item.imageUrl ? (
+                      <img
+                        src={item.imageUrl}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-neutral-400">
+                        <BoxIcon className="h-8 w-8" />
+                      </div>
+                    )}
+                  </div>
 
-                {/* Subtotal */}
-                <div className="text-right">
-                  <p className="font-bold text-primary-800">
-                    {formatPrice(item.price * item.quantity)}
-                  </p>
+                  {/* Details */}
+                  <div className="flex-1 min-w-0">
+                    <Link
+                      to={`/products/${item.id}`}
+                      className="font-semibold text-primary-900 hover:text-primary-600 line-clamp-1 transition-colors text-sm"
+                    >
+                      {item.name}
+                    </Link>
+                    {item.variantName && (
+                      <p className="text-xs text-neutral-500 mt-0.5">{item.variantName}</p>
+                    )}
+                    <p className="text-xs text-neutral-400 mt-0.5">
+                      {formatPrice(item.price)} / {item.unit}
+                    </p>
+
+                    {/* Quantity Controls */}
+                    <div className="flex items-center gap-3 mt-3">
+                      <QuantityInput
+                        item={item}
+                        updateQuantity={updateQuantity}
+                        onRequestRemove={() => setItemToRemove(item)}
+                      />
+                      <button
+                        onClick={() => setItemToRemove(item)}
+                        className="w-9 h-9 flex items-center justify-center text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                        aria-label={`Remove ${item.name} from cart`}
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    {/* Stock Availability Warning */}
+                    {item.stockQuantity && (
+                      <div className="mt-2">
+                        {item.quantity >= item.stockQuantity ? (
+                          <p className="text-xs text-red-500 font-medium">
+                            Max stock reached ({item.stockQuantity} available)
+                          </p>
+                        ) : item.quantity >= item.stockQuantity * 0.8 ? (
+                          <p className="text-xs text-amber-600">
+                            Only {item.stockQuantity - item.quantity} more available
+                          </p>
+                        ) : null}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Subtotal */}
+                  <div className="text-right flex-shrink-0">
+                    <p className={`font-bold text-sm ${
+                      selected ? 'text-primary-900' : 'text-neutral-600'
+                    }`}>
+                      {formatPrice(item.price * item.quantity)}
+                    </p>
+                  </div>
                 </div>
               </div>
             )
@@ -426,36 +458,33 @@ export default function CartPage() {
 
         {/* Order Summary */}
         <div className="lg:col-span-1">
-          <div className="card p-6 sticky top-24">
-            <h2 className="text-lg font-bold text-primary-900 mb-4">Order Summary</h2>
+          <div className="bg-white rounded-2xl border border-neutral-200 p-6 sticky top-24">
+            <h2 className="text-base font-bold text-primary-900 mb-5">Order Summary</h2>
 
             <div className="space-y-3 mb-6">
-              {/* Selected items summary */}
               <div className="flex justify-between items-center">
-                <span className="text-neutral-600">
+                <span className="text-sm text-neutral-500">
                   Subtotal
-                  <span className="text-xs text-neutral-400 ml-1">
-                    ({selectedTotalItems} {selectedTotalItems === 1 ? 'item' : 'items'})
-                  </span>
+                  <span className="text-xs text-neutral-400 ml-1">({selectedTotalItems} {selectedTotalItems === 1 ? 'item' : 'items'})</span>
                 </span>
-                <span className="font-medium text-primary-800">{formatPrice(selectedTotalAmount)}</span>
+                <span className="font-semibold text-primary-900 text-sm">{formatPrice(selectedTotalAmount)}</span>
               </div>
 
-              {/* Show unselected count if any */}
               {selectedKeys.size < items.length && selectedKeys.size > 0 && (
                 <div className="flex justify-between text-xs text-neutral-400">
-                  <span>{items.length - selectedKeys.size} {items.length - selectedKeys.size === 1 ? 'item' : 'items'} not selected</span>
+                  <span>{items.length - selectedKeys.size} not selected</span>
                   <span>{formatPrice(totalAmount - selectedTotalAmount)}</span>
                 </div>
               )}
 
-              <div className="flex justify-between text-neutral-600">
-                <span>Delivery Fee</span>
-                <span className="text-emerald-600 text-sm">To be calculated</span>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-neutral-500">Delivery</span>
+                <span className="text-xs text-emerald-600 font-medium">Calculated at checkout</span>
               </div>
-              <div className="border-t border-neutral-200 pt-3 flex justify-between text-lg font-bold">
-                <span>Total</span>
-                <span className="text-primary-800">{formatPrice(selectedTotalAmount)}</span>
+
+              <div className="pt-3 border-t border-neutral-100 flex justify-between">
+                <span className="font-semibold text-primary-900">Total</span>
+                <span className="font-bold text-lg text-primary-900">{formatPrice(selectedTotalAmount)}</span>
               </div>
             </div>
 
@@ -467,7 +496,7 @@ export default function CartPage() {
                 >
                   Select items to checkout
                 </button>
-                <p className="text-xs text-neutral-400 mt-2">Check the items you want to order</p>
+                <p className="text-xs text-neutral-400 mt-2">Tick the items you want to order</p>
               </div>
             ) : (
               <Link to="/checkout" className="btn-primary w-full text-center block">
@@ -477,15 +506,15 @@ export default function CartPage() {
 
             <Link
               to="/products"
-              className="block text-center mt-4 text-neutral-600 hover:text-accent-600 text-sm transition-colors"
+              className="block text-center mt-4 text-neutral-500 hover:text-primary-800 text-sm transition-colors"
             >
               ← Continue Shopping
             </Link>
 
-            <div className="mt-6 p-4 bg-amber-50 rounded-xl border border-amber-100">
-              <p className="text-sm text-amber-800 flex items-center gap-2">
-                <CashIcon className="h-5 w-5 text-amber-600" />
-                <span><strong>Cash on Delivery</strong> - Payment upon delivery</span>
+            <div className="mt-5 p-3.5 bg-neutral-50 rounded-xl border border-neutral-100 flex items-center gap-3">
+              <CashIcon className="h-4 w-4 text-neutral-400 flex-shrink-0" />
+              <p className="text-xs text-neutral-600">
+                <span className="font-semibold text-primary-800">Cash on Delivery</span> — pay when your order arrives
               </p>
             </div>
           </div>
