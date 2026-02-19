@@ -19,8 +19,11 @@ if (config.nodeEnv === 'production') {
   app.set('trust proxy', 1);
 }
 
-// Security middleware
-app.use(helmet());
+// Security middleware — configured for cross-origin deployment (Vercel ↔ Railway)
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+}));
 
 // Enable gzip compression
 app.use(compression());
@@ -30,6 +33,9 @@ app.use(hpp());
 
 // CORS configuration
 app.use(cors(config.cors));
+
+// Explicitly handle preflight OPTIONS requests for all routes
+app.options('*', cors(config.cors));
 
 // General rate limiting (more lenient in development)
 const limiter = rateLimit({
