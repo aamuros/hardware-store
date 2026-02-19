@@ -11,4 +11,4 @@ cmds = ["npm ci"]
 cmds = ["npx prisma generate"]
 
 [start]
-cmd = "npx prisma migrate deploy && node src/server.js"
+cmd = "npx prisma migrate deploy && npx prisma db seed && node src/server.js"

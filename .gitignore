@@ -68,3 +68,20 @@ prisma/*.db-journal
 # Misc
 *.pem
 .cache/
+
+# ============================================
+# Deployment: Ignore large/generated assets
+# ============================================
+# Product images (originals) — not needed in repo
+product-images/
+
+# Uploaded files (generated at runtime via admin panel)
+backend/uploads/
+
+# Seed data CSV files (large, not needed for deployment)
+backend/prisma/data/
+
+# Full seed scripts (local dev tools, not for deployment)
+backend/prisma/seed-full.js
+backend/prisma/seed-data.js
+backend/prisma/generate-orders-csv.js
