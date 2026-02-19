@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, memo } from 'react'
+import { getImageUrl } from '../services/api'
 
 /**
  * OptimizedImage - A performance-optimized image component
@@ -51,7 +52,9 @@ const OptimizedImage = memo(function OptimizedImage({
     setHasError(true)
   }
 
-  if (hasError || !src) {
+  const resolvedSrc = getImageUrl(src)
+
+  if (hasError || !resolvedSrc) {
     return (
       <div
         ref={imgRef}
@@ -66,7 +69,7 @@ const OptimizedImage = memo(function OptimizedImage({
     <div ref={imgRef} className={`${aspectRatio} ${placeholderColor} relative overflow-hidden ${className}`}>
       {isInView && (
         <img
-          src={src}
+          src={resolvedSrc}
           alt={alt}
           className={`w-full h-full ${objectFit} transition-opacity duration-300 ${
             isLoaded ? 'opacity-100' : 'opacity-0'

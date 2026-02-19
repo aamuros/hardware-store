@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { adminApi } from '../../services/api'
+import { adminApi, getImageUrl } from '../../services/api'
 import {
   ShoppingBagIcon,
   CubeIcon,
@@ -543,7 +543,7 @@ export default function DashboardPage() {
                   <div key={product.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-neutral-50 transition-colors">
                     <div className="flex items-center gap-3 min-w-0">
                       {product.imageUrl ? (
-                        <img src={product.imageUrl} alt={product.name} className="w-9 h-9 rounded-lg object-cover shrink-0" />
+                        <img src={getImageUrl(product.imageUrl)} alt={product.name} className="w-9 h-9 rounded-lg object-cover shrink-0" />
                       ) : (
                         <div className="w-9 h-9 bg-neutral-100 rounded-lg flex items-center justify-center shrink-0">
                           <CubeIcon className="h-4 w-4 text-neutral-400" />

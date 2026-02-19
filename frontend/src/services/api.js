@@ -2,6 +2,21 @@ import axios from 'axios'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
+// Backend base URL (without /api) — used to resolve image/upload paths in production
+export const BACKEND_URL = API_URL.replace(/\/api\/?$/, '')
+
+/**
+ * Resolve an image path (e.g. "/uploads/product-123.jpg") to a full URL.
+ * In development the Vite proxy handles it, in production we prepend the backend origin.
+ */
+export const getImageUrl = (path) => {
+  if (!path) return null
+  // Already an absolute URL (http/https) — return as-is
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
+  // Relative path like /uploads/... — prepend backend origin
+  return `${BACKEND_URL}${path.startsWith('/') ? '' : '/'}${path}`
+}
+
 const api = axios.create({
   baseURL: API_URL,
   headers: {

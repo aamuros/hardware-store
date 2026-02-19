@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { adminApi } from '../../services/api'
+import { adminApi, getImageUrl } from '../../services/api'
 import {
   ArrowLeftIcon,
   PhoneIcon,
@@ -243,7 +243,7 @@ export default function OrderDetailPage() {
                 <div key={item.id} className="px-6 py-4 flex items-center gap-4">
                   {item.product?.imageUrl && (
                     <img
-                      src={item.product.imageUrl}
+                      src={getImageUrl(item.product.imageUrl)}
                       alt={item.product.name}
                       className="w-16 h-16 object-cover rounded"
                     />

@@ -17,7 +17,7 @@ import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, PieChart, Pie, Cell,
 } from 'recharts'
-import api from '../../services/api'
+import api, { getImageUrl } from '../../services/api'
 import toast from 'react-hot-toast'
 
 // ─── Shared UI primitives ─────────────────────────────────────────────────────
@@ -571,7 +571,7 @@ export default function ReportsPage() {
                       <td>
                         <div className="flex items-center gap-3">
                           {p.imageUrl
-                            ? <img src={p.imageUrl} alt={p.name} className="w-9 h-9 rounded-lg object-cover border border-neutral-200 shrink-0" />
+                            ? <img src={getImageUrl(p.imageUrl)} alt={p.name} className="w-9 h-9 rounded-lg object-cover border border-neutral-200 shrink-0" />
                             : <div className="w-9 h-9 rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-400 text-xs font-bold shrink-0">{(p.name || '?')[0].toUpperCase()}</div>
                           }
                           <div className="min-w-0">

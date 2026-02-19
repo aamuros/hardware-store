@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { MinusIcon, PlusIcon, CartIcon, HeartIcon, HeartSolidIcon, CloseIcon, ChevronLeftIcon, ChevronRightIcon, BoxIcon } from '../../components/icons'
-import { productApi } from '../../services/api'
+import { productApi, getImageUrl } from '../../services/api'
 import { useCart } from '../../context/CartContext'
 import { useCustomerAuth } from '../../context/CustomerAuthContext'
 import toast from 'react-hot-toast'
@@ -223,7 +223,7 @@ export default function ProductDetailPage() {
                   return (
                     <>
                       <img
-                        src={currentImage}
+                        src={getImageUrl(currentImage)}
                         alt={images[selectedImageIndex]?.altText || product.name}
                         className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
                       />
@@ -259,7 +259,7 @@ export default function ProductDetailPage() {
                     }`}
                   >
                     <img
-                      src={image.imageUrl}
+                      src={getImageUrl(image.imageUrl)}
                       alt={image.altText || `Image ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
@@ -564,7 +564,7 @@ export default function ProductDetailPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <img
-              src={product.images?.length > 0 ? product.images[selectedImageIndex]?.imageUrl : product.imageUrl}
+              src={getImageUrl(product.images?.length > 0 ? product.images[selectedImageIndex]?.imageUrl : product.imageUrl)}
               alt={product.images?.[selectedImageIndex]?.altText || product.name}
               className="max-w-full max-h-[85vh] object-contain rounded-xl"
             />

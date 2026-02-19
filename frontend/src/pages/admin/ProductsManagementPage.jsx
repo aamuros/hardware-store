@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { adminApi, categoryApi, productApi } from '../../services/api'
+import { adminApi, categoryApi, productApi, getImageUrl } from '../../services/api'
 import {
   PlusIcon,
   PencilIcon,
@@ -189,7 +189,7 @@ export default function ProductsManagementPage() {
         isAvailable: product.isAvailable,
         hasVariants: product.hasVariants || false,
       })
-      setImagePreview(product.imageUrl)
+      setImagePreview(getImageUrl(product.imageUrl))
     } else {
       setEditingProduct(null)
       setFormData({
@@ -625,7 +625,7 @@ export default function ProductsManagementPage() {
                       <div className="flex items-center gap-3.5">
                         {product.imageUrl ? (
                           <img
-                            src={product.imageUrl}
+                            src={getImageUrl(product.imageUrl)}
                             alt={product.name}
                             className="w-11 h-11 object-cover rounded-xl ring-1 ring-neutral-200 flex-shrink-0"
                           />

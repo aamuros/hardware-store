@@ -14,6 +14,11 @@ const { sanitizeInput } = require('./middleware/sanitizer');
 
 const app = express();
 
+// Trust first proxy (Railway, Render, etc.) — needed for correct client IPs in rate limiting
+if (config.nodeEnv === 'production') {
+  app.set('trust proxy', 1);
+}
+
 // Security middleware
 app.use(helmet());
 
@@ -40,10 +45,9 @@ const limiter = rateLimit({
 app.use('/api', limiter);
 
 // Stricter rate limiting for authentication endpoints
-// TEMPORARILY DISABLED - Rate limiting commented out for testing
-/* const authLimiter = rateLimit({
+const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 login attempts per windowMs
+  max: config.nodeEnv === 'development' ? 100 : 10, // lenient in dev, strict in prod
   message: {
     success: false,
     message: 'Too many login attempts, please try again after 15 minutes.',
@@ -51,7 +55,9 @@ app.use('/api', limiter);
   standardHeaders: true,
   legacyHeaders: false,
 });
-app.use('/api/admin/login', authLimiter); */
+app.use('/api/admin/login', authLimiter);
+app.use('/api/customers/login', authLimiter);
+app.use('/api/customers/register', authLimiter);
 
 // Body parsing
 app.use(express.json({ limit: '10mb' }));

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useCustomerAuth } from '../../context/CustomerAuthContext'
 import { useCart } from '../../context/CartContext'
-import { customerApi } from '../../services/api'
+import { customerApi, getImageUrl } from '../../services/api'
 import toast from 'react-hot-toast'
 import {
     HeartIcon,
@@ -108,7 +108,7 @@ export default function WishlistPage() {
                             <Link to={`/products/${item.product.id}`} className="block relative aspect-square bg-neutral-100">
                                 {item.product.imageUrl ? (
                                     <img
-                                        src={item.product.imageUrl}
+                                        src={getImageUrl(item.product.imageUrl)}
                                         alt={item.product.name}
                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                     />

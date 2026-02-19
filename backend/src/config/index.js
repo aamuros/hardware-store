@@ -80,11 +80,16 @@ const config = {
     address: process.env.STORE_ADDRESS || '',
   },
 
-  // CORS
+  // CORS — supports multiple comma-separated origins in FRONTEND_URL
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: (process.env.FRONTEND_URL || 'http://localhost:5173')
+      .split(',')
+      .map(u => u.trim()),
     credentials: true,
   },
+
+  // The primary frontend URL (first origin) — used for email links, password resets, etc.
+  frontendUrl: (process.env.FRONTEND_URL || 'http://localhost:5173').split(',')[0].trim(),
 
   // Upload
   upload: {

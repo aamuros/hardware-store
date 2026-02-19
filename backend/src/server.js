@@ -23,8 +23,8 @@ const validateEnvironment = () => {
     if (!process.env.DATABASE_URL) {
       errors.push('DATABASE_URL is required in production');
     }
-    if (config.cors.origin === 'http://localhost:5173') {
-      console.warn('[!] Warning: CORS origin is set to localhost in production');
+    if (config.frontendUrl === 'http://localhost:5173') {
+      console.warn('[!] Warning: FRONTEND_URL is set to localhost in production — set it to your real domain');
     }
   }
 
