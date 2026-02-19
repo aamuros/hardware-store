@@ -44,20 +44,7 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
-// Stricter rate limiting for authentication endpoints
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: config.nodeEnv === 'development' ? 100 : 10, // lenient in dev, strict in prod
-  message: {
-    success: false,
-    message: 'Too many login attempts, please try again after 15 minutes.',
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use('/api/admin/login', authLimiter);
-app.use('/api/customers/login', authLimiter);
-app.use('/api/customers/register', authLimiter);
+// Auth rate limiting removed for now — general limiter above still applies
 
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
