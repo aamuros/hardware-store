@@ -1,292 +1,219 @@
 # Deployment Guide
 
-This guide covers deploying the Hardware Store application to production using Railway (backend) and Vercel (frontend).
+This guide walks you through hosting the Hardware Store website for free using **Railway** (backend + database) and **Vercel** (frontend). Both are free under the GitHub Student Developer Pack.
+
+---
 
 ## Prerequisites
 
-- GitHub account with your code pushed to a repository
-- Railway account (https://railway.app)
-- Vercel account (https://vercel.com)
-- SMS provider API key (Semaphore recommended for Philippines)
+- Your code is pushed to GitHub (`aamuros/hardware-store`)
+- You have a GitHub account enrolled in [GitHub Education](https://education.github.com/)
 
-## Backend Deployment (Railway)
+## Part 1 — Deploy the Backend on Railway
 
-### 1. Create Railway Project
+### Step 1 — Create a Railway account
 
-1. Go to [Railway](https://railway.app) and sign in with GitHub
-2. Click **"New Project"** → **"Deploy from GitHub repo"**
-3. Select your repository
-4. Set the **root directory** to `backend`
+1. Go to [railway.app](https://railway.app)
+2. Click **Login** → **Login with GitHub**
+3. Authorize Railway to access your GitHub account
 
-### 2. Add PostgreSQL Database
+### Step 2 — Activate GitHub Student free credits
 
-1. In your Railway project, click **"New"** → **"Database"** → **"PostgreSQL"**
-2. Wait for the database to provision
-3. Click on the PostgreSQL service and copy the `DATABASE_URL` from the **Variables** tab
+1. After logging in, click your profile picture → **Account Settings**
+2. Go to the **Plans** tab
+3. Click **GitHub Student** and follow the prompts to verify your student status
+4. You will receive **$5/month** in free credits (more than enough)
 
-### 3. Configure Environment Variables
+### Step 3 — Create a new Railway project
 
-In your Railway backend service, go to **Variables** and add:
+1. From the Railway dashboard, click **+ New Project**
+2. Select **Deploy from GitHub repo**
+3. Find and select **aamuros/hardware-store**
+4. When asked for the root directory, type: `backend`
+5. Click **Deploy Now** — Railway will start an initial deployment. That is fine, you still need to add the database and environment variables.
 
-```env
-# Required
+### Step 4 — Add a PostgreSQL database
+
+1. Inside your Railway project, click **+ New** (top right)
+2. Select **Database** → **Add PostgreSQL**
+3. Railway will create a PostgreSQL database and automatically add the `DATABASE_URL` environment variable to your backend service. **Do not touch or change this variable.**
+
+### Step 5 — Add environment variables
+
+1. Click on your **backend service** (not the database)
+2. Go to the **Variables** tab
+3. Click **Raw Editor** and paste the following:
+
+```
 NODE_ENV=production
-DATABASE_URL=<your-postgresql-url-from-step-2>
-JWT_SECRET=<generate-with: openssl rand -base64 64>
-FRONTEND_URL=<your-vercel-url>  # Add after frontend deployment
-
-# SMS Configuration
-SMS_ENABLED=true
-SMS_TEST_MODE=false
-SEMAPHORE_API_KEY=<your-semaphore-api-key>
-SMS_SENDER_NAME=HARDWARE
-ADMIN_NOTIFICATION_PHONE=09171234567
-
-# Store Information
-STORE_NAME=Your Hardware Store
-STORE_PHONE=09171234567
+JWT_SECRET=<run: openssl rand -base64 32>
+JWT_EXPIRES_IN=7d
+SMS_ENABLED=false
+SMS_TEST_MODE=true
+SEMAPHORE_API_KEY=ac766256a5f652da185050a707d19a61
+STORE_NAME=Wena's Hardware Store
+STORE_PHONE=09660020335
+STORE_ADDRESS=123 Main St, Barangay Sample, City, Philippines
+FRONTEND_URL=https://PLACEHOLDER.vercel.app
 ```
 
-> [!IMPORTANT]
-> Generate a strong JWT_SECRET:
+> **JWT_SECRET** — generate a secure value by running this in your terminal:
 > ```bash
-> openssl rand -base64 64
+> openssl rand -base64 32
 > ```
+> Copy the output and paste it as the value.
 
-### 4. Deploy
+> **FRONTEND_URL** — leave it as the placeholder for now. You will update it after deploying the frontend in Part 2.
 
-Railway will automatically:
-1. Run `npm install`
-2. Run `prisma generate` (via postinstall script)
-3. Start the server with `npm start`
+4. Click **Save**
 
-### 5. Run Database Migrations
+### Step 6 — Trigger a new deployment
 
-Open the Railway CLI or use the Railway shell:
+1. Go to the **Deployments** tab
+2. Click **Deploy** (it may redeploy automatically after saving variables)
+3. Wait for the deployment to finish — it will run `prisma migrate deploy` automatically before starting the server
+4. Once it shows **Active**, click on the deployment to see the logs and confirm it started successfully
 
-```bash
-npx prisma migrate deploy
-```
+### Step 7 — Copy your Railway backend URL
 
-Optionally seed the database:
-```bash
-npx prisma db seed
-```
+1. Go to the **Settings** tab of your backend service
+2. Under the **Networking** section, click **Generate Domain**
+3. Copy the URL — it will look like:
+   ```
+   https://hardware-store-production-xxxx.up.railway.app
+   ```
+   Keep this URL — you will need it in Part 2.
 
-### 6. Get Your Backend URL
+### Step 8 — Seed the database with initial data
 
-Your backend will be available at: `https://your-project.railway.app`
+1. In Railway, go to your backend service
+2. Click the **Shell** tab (or "New Shell")
+3. Run:
+   ```bash
+   node prisma/seed.js
+   ```
+4. Wait for it to complete — this creates the default admin account and sample products
 
-Note this URL for frontend configuration.
+> **Default admin credentials after seeding:**
+> - Username: `admin`
+> - Password: `admin123`
+>
+> **Change this password immediately after your first login.**
 
 ---
 
-## Frontend Deployment (Vercel)
+## Part 2 — Deploy the Frontend on Vercel
 
-### 1. Import Project to Vercel
+### Step 1 — Create a Vercel account
 
-1. Go to [Vercel](https://vercel.com) and sign in with GitHub
-2. Click **"Add New..."** → **"Project"**
-3. Import your repository
-4. Set the **Root Directory** to `frontend`
+1. Go to [vercel.com](https://vercel.com)
+2. Click **Sign Up** → **Continue with GitHub**
+3. Authorize Vercel to access your GitHub account
 
-### 2. Configure Build Settings
+### Step 2 — Import the project
 
-| Setting | Value |
-|---------|-------|
-| Framework Preset | Vite |
-| Build Command | `npm run build` |
+1. From the Vercel dashboard, click **Add New** → **Project**
+2. Find **aamuros/hardware-store** and click **Import**
+
+### Step 3 — Configure the project settings
+
+Fill in the form as follows:
+
+| Field | Value |
+|---|---|
+| Project Name | `hardware-store` (or any name you like) |
+| Framework Preset | `Vite` |
+| Root Directory | `frontend` |
+| Build Command | `vite build` |
 | Output Directory | `dist` |
-| Install Command | `npm install` |
+| Install Command | leave as default |
 
-### 3. Set Environment Variables
+### Step 4 — Add environment variables
 
-Add these environment variables in Vercel:
+In the **Environment Variables** section, add these three:
 
-```env
-VITE_API_URL=https://your-backend.railway.app/api
-VITE_STORE_NAME=Your Hardware Store
-VITE_STORE_PHONE=09171234567
-```
+| Key | Value |
+|---|---|
+| `VITE_API_URL` | `https://hardware-store-production-xxxx.up.railway.app/api` |
+| `VITE_STORE_NAME` | `Wena's Hardware Store` |
+| `VITE_STORE_PHONE` | `09660020335` |
 
-### 4. Deploy
+> Replace `hardware-store-production-xxxx.up.railway.app` with the **actual Railway URL** you copied in Part 1, Step 7. Make sure to append `/api` at the end.
 
-Click **"Deploy"** and wait for the build to complete.
+### Step 5 — Deploy
 
-### 5. Update Backend CORS
-
-After getting your Vercel URL, go back to Railway and update:
-
-```env
-FRONTEND_URL=https://your-frontend.vercel.app
-```
-
----
-
-## Post-Deployment Checklist
-
-### Security
-
-- [ ] Changed default admin password
-- [ ] JWT_SECRET is a strong, unique value
-- [ ] Database credentials are secure
-- [ ] CORS is properly configured
-
-### SMS Setup
-
-- [ ] Semaphore account created and funded
-- [ ] API key configured in Railway
-- [ ] Test SMS by creating an order
-- [ ] Verify admin receives notifications
-
-### Testing
-
-- [ ] Customer can browse products
-- [ ] Customer can place an order
-- [ ] Admin can log in
-- [ ] Admin can update order status
-- [ ] SMS notifications are received
+1. Click **Deploy**
+2. Wait for the build to complete (usually 1–2 minutes)
+3. Once finished, Vercel will give you a URL like:
+   ```
+   https://hardware-store-xxxx.vercel.app
+   ```
+4. Copy this URL
 
 ---
 
-## Domain Configuration
+## Part 3 — Link Frontend and Backend
 
-### Custom Domain on Vercel
+### Step 1 — Update Railway with the Vercel URL
 
-1. Go to your Vercel project → **Settings** → **Domains**
-2. Add your custom domain
-3. Update DNS records as instructed
-4. Wait for SSL certificate provisioning
+1. Go back to [railway.app](https://railway.app) → your project → backend service
+2. Go to the **Variables** tab
+3. Find `FRONTEND_URL` and update its value to your Vercel URL:
+   ```
+   FRONTEND_URL=https://hardware-store-xxxx.vercel.app
+   ```
+4. Click **Save** — Railway will automatically redeploy
 
-### Custom Domain on Railway
+### Step 2 — Verify everything works
 
-1. Go to your Railway service → **Settings** → **Networking**
-2. Click **"Generate Domain"** or add custom domain
-3. Update DNS records as instructed
-
----
-
-## Database Management
-
-### Running Migrations
-
-```bash
-# Via Railway CLI
-railway run npx prisma migrate deploy
-
-# Or via Railway shell
-npx prisma migrate deploy
-```
-
-### Database Backups
-
-Railway PostgreSQL includes automatic daily backups. For manual backups:
-
-```bash
-# Export
-pg_dump DATABASE_URL > backup.sql
-
-# Import
-psql DATABASE_URL < backup.sql
-```
-
-### Direct Database Access
-
-Use Prisma Studio (locally with production database):
-
-```bash
-DATABASE_URL="postgresql://..." npx prisma studio
-```
+1. Open your Vercel URL in the browser
+2. The homepage should load with products
+3. Try refreshing a page like `/products` — it should not show a 404
+4. Go to `/admin/login` and log in with:
+   - Username: `admin`
+   - Password: `admin123`
 
 ---
 
-## Monitoring & Logs
+## Part 4 — After Deployment Checklist
 
-### Railway Logs
-
-1. Click on your service in Railway
-2. Go to the **"Logs"** tab
-3. View real-time or historical logs
-
-### Vercel Logs
-
-1. Go to your Vercel project
-2. Click **"Logs"** tab
-3. Filter by type (Runtime, Edge, Build)
-
----
-
-## Environment Variables Reference
-
-### Backend (Production)
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `NODE_ENV` | Yes | Set to `production` |
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `JWT_SECRET` | Yes | Secret for JWT signing (min 32 chars) |
-| `FRONTEND_URL` | Yes | Frontend URL for CORS |
-| `SMS_ENABLED` | Yes | Enable SMS sending |
-| `SEMAPHORE_API_KEY` | If SMS | Semaphore API key |
-| `ADMIN_NOTIFICATION_PHONE` | No | Admin phone for order alerts |
-| `STORE_NAME` | No | Store name in SMS messages |
-
-### Frontend (Production)
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `VITE_API_URL` | Yes | Backend API URL (with /api) |
-| `VITE_STORE_NAME` | No | Store name in UI |
-| `VITE_STORE_PHONE` | No | Contact phone in UI |
+- [ ] Change the admin password from `admin123` to something secure
+- [ ] Add real product data and categories through the admin panel
+- [ ] Upload product images through the admin panel
+- [ ] Test placing a sample order end-to-end
+- [ ] Share your live Vercel URL with your professor
 
 ---
 
 ## Troubleshooting
 
-### Backend Won't Start
+### The site loads but shows no products
+- Check that the Railway backend shows a green **Active** status
+- Check that `VITE_API_URL` in Vercel ends with `/api` (not just the domain)
+- Open browser DevTools → Network tab and look for failed API requests
 
-1. Check logs in Railway for errors
-2. Verify all required env variables are set
-3. Ensure DATABASE_URL is correct
-4. Run migrations: `npx prisma migrate deploy`
+### Admin login fails
+- Make sure you ran `node prisma/seed.js` in the Railway shell (Part 1, Step 8)
+- Check Railway deployment logs for any database connection errors
 
-### Database Connection Errors
+### Images are not showing after upload
+- Images are stored on Railway's server. They persist while the service is running.
+- If images disappear after a redeploy, Railway's filesystem resets on each deploy. For a school project this is fine — just re-upload images if needed.
 
-1. Verify DATABASE_URL format
-2. Check if PostgreSQL service is running
-3. Ensure DATABASE_URL uses the internal Railway URL
+### Page shows 404 when refreshing
+- Make sure the `vercel.json` file exists in the `frontend/` folder of your repo. It should already be there from the code setup.
 
-### CORS Errors
-
-1. Verify FRONTEND_URL matches exactly
-2. No trailing slash in FRONTEND_URL
-3. Redeploy backend after updating
-
-### SMS Not Sending
-
-1. Verify SMS_ENABLED=true
-2. Check SEMAPHORE_API_KEY is correct
-3. Verify account has SMS credits
-4. Check logs for SMS errors
+### Railway deployment fails
+- Go to the **Deployments** tab and click the failed deployment to read the error logs
+- The most common cause is a missing environment variable — double-check all variables in Part 1, Step 5
 
 ---
 
-## Cost Estimates
+## Summary
 
-### Railway (Backend + Database)
+| Service | URL | Purpose |
+|---|---|---|
+| Railway | `https://hardware-store-xxxx.up.railway.app` | Backend API + PostgreSQL database |
+| Vercel | `https://hardware-store-xxxx.vercel.app` | Frontend (customer and admin UI) |
 
-- **Hobby Plan**: $5/month
-- **Pro Plan**: Pay-per-use (~$5-20/month for small apps)
-- PostgreSQL: Included in plan limits
-
-### Vercel (Frontend)
-
-- **Hobby Plan**: Free
-- **Pro Plan**: $20/month (if needed)
-
-### SMS (Semaphore)
-
-- ~₱0.35 per SMS
-- 100 orders/month × 3 SMS = ~₱105/month
-
-**Estimated Total: $10-25/month + SMS costs**
+**Total cost: $0** — Railway is covered by your GitHub Student Pack ($5/month credit), and Vercel is free forever on the Hobby plan.
