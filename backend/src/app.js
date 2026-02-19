@@ -69,6 +69,12 @@ if (config.nodeEnv === 'development') {
 // Static files for uploads
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
+// Serve frontend static files in production (Railway full-stack deployment)
+if (config.nodeEnv === 'production') {
+  const frontendDistPath = path.join(__dirname, '..', '..', 'frontend', 'dist');
+  app.use(express.static(frontendDistPath));
+}
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({
@@ -82,7 +88,16 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api', routes);
 
-// 404 handler
+// SPA catch-all: serve index.html for any non-API route in production
+// This lets React Router handle client-side navigation
+if (config.nodeEnv === 'production') {
+  const frontendDistPath = path.join(__dirname, '..', '..', 'frontend', 'dist');
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(frontendDistPath, 'index.html'));
+  });
+}
+
+// 404 handler (only triggers for API routes in production)
 app.use(notFound);
 
 // Error handler
