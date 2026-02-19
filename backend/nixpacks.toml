@@ -11,4 +11,4 @@ cmds = ["npm ci"]
 cmds = ["DATABASE_URL=${DATABASE_URL:-postgresql://placeholder:5432/placeholder} npx prisma generate"]
 
 [start]
-cmd = "npx prisma migrate deploy && (npx prisma db seed || echo 'Seed skipped') && node src/server.js"
+cmd = "sh scripts/check-env.sh && npx prisma migrate deploy && (npx prisma db seed || echo 'Seed skipped') && node src/server.js"
