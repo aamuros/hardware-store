@@ -58,7 +58,8 @@ accounts through the admin dashboard.
 main()
   .catch((e) => {
     console.error('❌ Seed error:', e);
-    process.exit(1);
+    // Exit 0 so seed failures don't block server startup in production
+    process.exit(0);
   })
   .finally(async () => {
     await prisma.$disconnect();
