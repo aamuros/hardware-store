@@ -1,6 +1,8 @@
 const app = require('./app');
 const config = require('./config');
 const prisma = require('./utils/prismaClient');
+const { exec } = require('child_process');
+const path = require('path');
 
 const PORT = config.port;
 
@@ -97,6 +99,38 @@ const startServer = async () => {
 ║                                                    ║
 ╚════════════════════════════════════════════════════╝
       `);
+
+      // Run database seed in background after server is listening.
+      // This ensures the healthcheck passes immediately while the
+      // (potentially slow) seed runs asynchronously.
+      // The seed is idempotent — it skips if products already exist.
+      if (config.nodeEnv === 'production') {
+        console.log('[*] Starting database seed in background...');
+        const seedProc = exec('npx prisma db seed', {
+          cwd: path.join(__dirname, '..'),
+          env: { ...process.env },
+        });
+
+        seedProc.stdout.on('data', (data) => {
+          data.toString().trim().split('\n').forEach(line => {
+            if (line.trim()) console.log(`[seed] ${line}`);
+          });
+        });
+
+        seedProc.stderr.on('data', (data) => {
+          data.toString().trim().split('\n').forEach(line => {
+            if (line.trim()) console.error(`[seed] ${line}`);
+          });
+        });
+
+        seedProc.on('close', (code) => {
+          if (code === 0) {
+            console.log('[OK] Database seed completed successfully');
+          } else {
+            console.warn(`[!] Database seed exited with code ${code} (non-fatal)`);
+          }
+        });
+      }
     });
   } catch (error) {
     console.error('[X] Failed to start server:', error);
