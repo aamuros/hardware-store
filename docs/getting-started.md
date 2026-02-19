@@ -6,14 +6,14 @@ This guide will help you set up the Hardware Store application for local develop
 
 Before you begin, ensure you have the following installed:
 
-- **Node.js** 18.0.0 or higher
+- **Node.js** 20.0.0 or higher
 - **npm** 9.0.0 or higher (comes with Node.js)
 - **Git** for version control
 
 ### Verify Installation
 
 ```bash
-node --version    # Should be v18.x.x or higher
+node --version    # Should be v20.x.x or higher
 npm --version     # Should be 9.x.x or higher
 git --version     # Any recent version
 ```

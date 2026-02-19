@@ -38,7 +38,7 @@ The Hardware Store is a full-stack web application designed for local hardware s
 | Layer | Technology |
 |-------|------------|
 | Frontend | React 18, Vite, Tailwind CSS, React Router v6 |
-| Backend | Node.js 18+, Express.js, Prisma ORM |
+| Backend | Node.js 20+, Express.js, Prisma ORM |
 | Database | SQLite (dev), PostgreSQL (production) |
 | Authentication | JWT (JSON Web Tokens) |
 | SMS | Semaphore, Movider, Vonage |

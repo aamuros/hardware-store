@@ -276,6 +276,7 @@ Your store is deployed as a **blank slate**. Follow these steps to populate it:
 - Make sure the **Root Directory** is set to `backend` in your Railway service settings (Settings → General → Root Directory)
 - If you see a Prisma/database error, make sure the PostgreSQL plugin is added and `DATABASE_URL` is auto-populated in the Variables tab
 - If you see `prisma generate` errors, try redeploying — Railway sometimes has transient build issues
+- If you see "Node.js 18.x has reached End-Of-Life", the `nixpacks.toml` file needs to be updated to use Node.js 20 instead. Make sure `backend/nixpacks.toml` contains `nixPkgs = ["nodejs_20", "openssl"]`
 
 ### Railway build shows "no start command"
 - Make sure `railway.json` and `nixpacks.toml` are committed and pushed to the repo inside the `backend/` folder
