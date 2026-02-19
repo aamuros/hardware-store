@@ -35,9 +35,9 @@ export default function AdminForgotPasswordPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-100 py-12 px-4">
-        <div className="max-w-md w-full animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-soft p-8 text-center">
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50 py-12 px-4">
+        <div className="max-w-md w-full">
+          <div className="card p-8 text-center">
             {/* Success icon */}
             <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
               <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,20 +83,22 @@ export default function AdminForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-100 py-12 px-4">
-      <div className="max-w-md w-full animate-fade-in">
-        <div className="bg-white rounded-2xl shadow-soft p-8">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="text-4xl mb-3">🔧</div>
-            <h2 className="text-2xl font-bold text-primary-900">Forgot Password?</h2>
-            <p className="text-neutral-600 mt-1 text-sm">
-              Enter your admin username and we'll generate a reset link.
-            </p>
+    <div className="min-h-screen flex items-center justify-center bg-neutral-50 py-12 px-4">
+      <div className="w-full max-w-md">
+        {/* Brand header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-12 h-12 bg-primary-800 rounded-xl mb-4">
+            <WrenchIcon className="h-6 w-6 text-white" />
           </div>
+          <h2 className="text-2xl font-bold text-primary-900">Forgot Password?</h2>
+          <p className="text-neutral-500 mt-1 text-sm">
+            Enter your admin username to generate a reset link.
+          </p>
+        </div>
 
+        <div className="card p-8">
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
+            <div className="mb-5 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
               {error}
             </div>
           )}

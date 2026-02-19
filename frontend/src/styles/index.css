@@ -378,6 +378,45 @@
     @apply bg-primary-50/50;
   }
 
+  /* Consistent page-level loading state */
+  .loading-page {
+    @apply flex items-center justify-center min-h-64;
+  }
+
+  .spinner {
+    @apply animate-spin rounded-full h-9 w-9 border-2 border-neutral-200 border-t-primary-600;
+  }
+
+  /* Page header grouping */
+  .page-header {
+    @apply mb-6;
+  }
+
+  .page-title {
+    @apply text-2xl font-bold text-primary-900 tracking-tight;
+  }
+
+  .page-subtitle {
+    @apply text-sm text-neutral-500 mt-0.5;
+  }
+
+  /* Admin panel card styles */
+  .admin-card {
+    @apply bg-white rounded-2xl shadow-soft border border-neutral-100;
+  }
+
+  .admin-table thead th {
+    @apply px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider bg-neutral-50;
+  }
+
+  .admin-table tbody td {
+    @apply px-5 py-3.5;
+  }
+
+  .admin-table tbody tr {
+    @apply border-b border-neutral-100 last:border-0;
+  }
+
   /* Checkout progress step styles */
   .checkout-step {
     @apply flex items-center text-sm font-medium text-neutral-400 transition-colors duration-200;

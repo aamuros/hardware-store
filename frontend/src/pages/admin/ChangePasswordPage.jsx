@@ -77,14 +77,14 @@ export default function ChangePasswordPage() {
           <div className="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center">
             <LockIcon className="h-5 w-5 text-primary-600" />
           </div>
-          <h1 className="text-2xl font-bold text-neutral-900">Change Password</h1>
+          <h1 className="page-title">Change Password</h1>
         </div>
         <p className="text-neutral-500 text-sm ml-13 pl-0.5">
           Update your account password. You will remain logged in after changing it.
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-8">
+      <div className="card p-8">
         {success && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm font-medium">
             Password changed successfully!
@@ -109,7 +109,7 @@ export default function ChangePasswordPage() {
                 name="currentPassword"
                 value={formData.currentPassword}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 pr-10 border border-neutral-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition"
+                className="input w-full pr-10"
                 placeholder="Enter current password"
                 autoComplete="current-password"
               />
@@ -139,7 +139,7 @@ export default function ChangePasswordPage() {
                 name="newPassword"
                 value={formData.newPassword}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 pr-10 border border-neutral-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition"
+                className="input w-full pr-10"
                 placeholder="Enter new password"
                 autoComplete="new-password"
               />
@@ -195,12 +195,12 @@ export default function ChangePasswordPage() {
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className={`w-full px-4 py-2.5 pr-10 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition ${
+                className={`input w-full pr-10 ${
                   formData.confirmPassword && !passwordsMatch
-                    ? 'border-red-300 bg-red-50'
+                    ? 'input-error'
                     : formData.confirmPassword && passwordsMatch
-                    ? 'border-green-300 bg-green-50'
-                    : 'border-neutral-300'
+                    ? 'border-green-300 bg-green-50/50'
+                    : ''
                 }`}
                 placeholder="Confirm new password"
                 autoComplete="new-password"
@@ -229,7 +229,7 @@ export default function ChangePasswordPage() {
           <button
             type="submit"
             disabled={loading || !passwordRulesMet || !passwordsMatch}
-            className="w-full py-2.5 px-4 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm mt-2"
+            className="btn btn-primary w-full mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Changing password…' : 'Change Password'}
           </button>

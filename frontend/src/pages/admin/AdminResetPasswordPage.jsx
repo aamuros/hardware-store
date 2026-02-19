@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { adminApi } from '../../services/api'
-import { LockIcon, EyeIcon, EyeSlashIcon } from '../../components/icons'
+import { LockIcon, EyeIcon, EyeSlashIcon, WrenchIcon } from '../../components/icons'
 
 const PASSWORD_RULES = [
   { label: 'At least 8 characters', test: (p) => p.length >= 8 },
@@ -96,10 +96,9 @@ export default function AdminResetPasswordPage() {
   // ----- Loading state -----
   if (verifying) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-100">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
-          <p className="text-neutral-500 text-sm">Verifying reset link…</p>
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
+        <div className="loading-page">
+          <div className="spinner" />
         </div>
       </div>
     )
@@ -108,9 +107,9 @@ export default function AdminResetPasswordPage() {
   // ----- Invalid token -----
   if (!tokenValid) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-100 py-12 px-4">
-        <div className="max-w-md w-full animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-soft p-8 text-center">
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50 py-12 px-4">
+        <div className="max-w-md w-full">
+          <div className="card p-8 text-center">
             <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-6">
               <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -133,9 +132,9 @@ export default function AdminResetPasswordPage() {
   // ----- Success state -----
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-100 py-12 px-4">
-        <div className="max-w-md w-full animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-soft p-8 text-center">
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50 py-12 px-4">
+        <div className="max-w-md w-full">
+          <div className="card p-8 text-center">
             <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
               <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
@@ -159,18 +158,20 @@ export default function AdminResetPasswordPage() {
 
   // ----- Reset form -----
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-100 py-12 px-4">
-      <div className="max-w-md w-full animate-fade-in">
-        <div className="bg-white rounded-2xl shadow-soft p-8">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="text-4xl mb-3">🔧</div>
-            <h2 className="text-2xl font-bold text-primary-900">Set New Password</h2>
-            {adminName && (
-              <p className="text-neutral-500 mt-1 text-sm">for <strong>{adminName}</strong></p>
-            )}
+    <div className="min-h-screen flex items-center justify-center bg-neutral-50 py-12 px-4">
+      <div className="w-full max-w-md">
+        {/* Brand header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-12 h-12 bg-primary-800 rounded-xl mb-4">
+            <WrenchIcon className="h-6 w-6 text-white" />
           </div>
+          <h2 className="text-2xl font-bold text-primary-900">Set New Password</h2>
+          {adminName && (
+            <p className="text-neutral-500 mt-1 text-sm">for <strong>{adminName}</strong></p>
+          )}
+        </div>
 
+        <div className="card p-8">
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
               {error}
