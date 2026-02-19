@@ -28,6 +28,11 @@ const validateEnvironment = () => {
     }
   }
 
+  // General DATABASE_URL check (required for PostgreSQL)
+  if (!process.env.DATABASE_URL) {
+    console.warn('[!] Warning: DATABASE_URL is not set — database operations will fail');
+  }
+
   // If there are critical errors, fail fast
   if (errors.length > 0) {
     console.error('\n[X] Environment validation failed:\n');

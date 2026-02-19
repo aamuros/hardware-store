@@ -206,6 +206,23 @@ In the **Environment Variables** section, add these three:
 ### Railway deployment fails
 - Go to the **Deployments** tab and click the failed deployment to read the error logs
 - The most common cause is a missing environment variable — double-check all variables in Part 1, Step 5
+- Make sure the **Root Directory** is set to `backend` in your Railway service settings (Settings → General → Root Directory)
+- If you see a Prisma/database error, make sure the PostgreSQL plugin is added and `DATABASE_URL` is auto-populated in the Variables tab
+- If you see `prisma generate` errors, try redeploying — Railway sometimes has transient build issues
+
+### Railway build shows "no start command"
+- Make sure `railway.json` and `nixpacks.toml` are committed and pushed to the repo inside the `backend/` folder
+- In Railway Settings → General, confirm **Root Directory** is `backend`
+
+### Database migration errors on Railway
+- Open the Railway **Shell** on your backend service and run:
+  ```bash
+  npx prisma migrate deploy
+  ```
+- If the migration state is corrupt, you can reset (WARNING: deletes all data):
+  ```bash
+  npx prisma migrate reset --force
+  ```
 
 ---
 

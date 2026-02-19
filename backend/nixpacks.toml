@@ -1,0 +1,14 @@
+# Nixpacks configuration for Railway deployment
+# https://nixpacks.com/docs/configuration/file
+
+[phases.setup]
+nixPkgs = ["nodejs_18", "openssl"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["npx prisma generate"]
+
+[start]
+cmd = "npx prisma migrate deploy && node src/server.js"
