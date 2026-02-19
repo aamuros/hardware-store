@@ -619,7 +619,17 @@ export default function ReportsPage() {
               return (
                 <div key={category.id} className="group p-5 rounded-xl bg-gradient-to-br from-neutral-50 to-neutral-100/50 border border-neutral-200 hover:border-primary-300 hover:shadow-md transition-all duration-300">
                   <div className="flex items-center gap-3 mb-3">
-                    <span className="text-2xl">{category.icon || '📦'}</span>
+                    <div className="w-7 h-7 rounded-md bg-white flex items-center justify-center ring-1 ring-neutral-200 overflow-hidden flex-shrink-0">
+                      {category.imageUrl ? (
+                        <img
+                          src={`${(import.meta.env.VITE_API_URL || 'http://localhost:3001/api').replace('/api', '')}${category.imageUrl}`}
+                          alt={category.name}
+                          className="w-5 h-5 object-contain"
+                        />
+                      ) : (
+                        <span className="text-sm">{category.icon || '📦'}</span>
+                      )}
+                    </div>
                     <div>
                       <h3 className="font-semibold text-neutral-900 text-sm">{category.name}</h3>
                       <p className="text-xs text-neutral-400">{category.productCount} products</p>

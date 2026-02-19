@@ -122,8 +122,14 @@ export const adminApi = {
     api.patch(`/admin/products/${id}/availability`, { isAvailable }),
 
   // Categories
-  createCategory: (data) => api.post('/admin/categories', data),
-  updateCategory: (id, data) => api.patch(`/admin/categories/${id}`, data),
+  createCategory: (data) =>
+    api.post('/admin/categories', data, {
+      headers: data instanceof FormData ? { 'Content-Type': undefined } : {},
+    }),
+  updateCategory: (id, data) =>
+    api.patch(`/admin/categories/${id}`, data, {
+      headers: data instanceof FormData ? { 'Content-Type': undefined } : {},
+    }),
   deleteCategory: (id) => api.delete(`/admin/categories/${id}`),
 
   // Inventory/Stock

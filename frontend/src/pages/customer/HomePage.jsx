@@ -233,8 +233,16 @@ export default function HomePage() {
                 to={`/products?category=${category.id}`}
                 className="group flex flex-col items-center text-center p-5 bg-white border border-neutral-200 hover:border-primary-300 rounded-2xl transition-all duration-200 hover:shadow-soft"
               >
-                <div className="w-12 h-12 rounded-xl bg-neutral-50 flex items-center justify-center text-primary-600 group-hover:bg-primary-50 group-hover:text-primary-800 transition-colors mb-3">
-                  <CategoryIcon category={category} className="h-6 w-6" />
+                <div className="w-10 h-10 rounded-xl bg-neutral-50 flex items-center justify-center mb-3 ring-1 ring-neutral-200 group-hover:ring-primary-300 group-hover:bg-primary-50 transition-all overflow-hidden">
+                  {category.imageUrl ? (
+                    <img 
+                      src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001'}${category.imageUrl}`}
+                      alt={category.name}
+                      className="w-6 h-6 object-contain"
+                    />
+                  ) : (
+                    <CategoryIcon category={category} className="h-5 w-5 text-primary-600 group-hover:text-primary-800 transition-colors" />
+                  )}
                 </div>
                 <h3 className="font-semibold text-primary-800 text-sm leading-snug group-hover:text-primary-900">{category.name}</h3>
                 <p className="text-xs text-neutral-400 mt-1">{category._count?.products || 0} items</p>

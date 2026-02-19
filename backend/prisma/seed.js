@@ -40,16 +40,16 @@ async function main() {
 
   // ─── CATEGORIES ───────────────────────────────────────────────────
   const categoriesData = [
-    { name: 'Steel & Metal', description: 'Steel bars, angle bars, flat bars, tubular bars, and metal structural components', icon: '🔩' },
-    { name: 'Lumber & Wood', description: 'Coco lumber, good lumber, KD wood, plywood, and phenolic boards', icon: '🪵' },
-    { name: 'Roofing & Ceiling', description: 'Longspan roofing, metal furring, metal studs, purlins, and ceiling accessories', icon: '🏠' },
-    { name: 'Cement & Masonry', description: 'Cement, hollow blocks, sand, gravel, and masonry supplies', icon: '🧱' },
-    { name: 'Plumbing', description: 'PVC pipes, PPR pipes, fittings, traps, and plumbing accessories', icon: '🚿' },
-    { name: 'Electrical', description: 'Wires, circuit breakers, electrical pipes, and electrical accessories', icon: '⚡' },
-    { name: 'Paint & Coatings', description: 'Paints, primers, thinners, sealers, and coating products', icon: '🎨' },
-    { name: 'Fasteners & Nails', description: 'Screws, nails, teks screws, tox, wire clips, and fastening hardware', icon: '📌' },
-    { name: 'Tools', description: 'Hand tools, power tool accessories, and workshop equipment', icon: '🔧' },
-    { name: 'Hardware & Accessories', description: 'Locks, welding supplies, wire brushes, and general hardware items', icon: '🔒' },
+    { name: 'Steel & Metal', description: 'Steel bars, angle bars, flat bars, tubular bars, and metal structural components', icon: '🔩', imageUrl: '/uploads/steel-metal.svg' },
+    { name: 'Lumber & Wood', description: 'Coco lumber, good lumber, KD wood, plywood, and phenolic boards', icon: '🪵', imageUrl: '/uploads/lumber-wood.svg' },
+    { name: 'Roofing & Ceiling', description: 'Longspan roofing, metal furring, metal studs, purlins, and ceiling accessories', icon: '🏠', imageUrl: '/uploads/roofing-ceiling.svg' },
+    { name: 'Cement & Masonry', description: 'Cement, hollow blocks, sand, gravel, and masonry supplies', icon: '🧱', imageUrl: '/uploads/cement-masonry.svg' },
+    { name: 'Plumbing', description: 'PVC pipes, PPR pipes, fittings, traps, and plumbing accessories', icon: '🚿', imageUrl: '/uploads/plumbing.svg' },
+    { name: 'Electrical', description: 'Wires, circuit breakers, electrical pipes, and electrical accessories', icon: '⚡', imageUrl: '/uploads/electrical.svg' },
+    { name: 'Paint & Coatings', description: 'Paints, primers, thinners, sealers, and coating products', icon: '🎨', imageUrl: '/uploads/paint-coatings.svg' },
+    { name: 'Fasteners & Nails', description: 'Screws, nails, teks screws, tox, wire clips, and fastening hardware', icon: '📌', imageUrl: '/uploads/fasteners-nails.svg' },
+    { name: 'Tools', description: 'Hand tools, power tool accessories, and workshop equipment', icon: '🔧', imageUrl: '/uploads/tools.svg' },
+    { name: 'Hardware & Accessories', description: 'Locks, welding supplies, wire brushes, and general hardware items', icon: '🔒', imageUrl: '/uploads/hardware-accessories.svg' },
   ];
 
   for (const cat of categoriesData) {

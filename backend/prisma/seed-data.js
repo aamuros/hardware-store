@@ -79,12 +79,12 @@ async function main() {
 
   // Create categories
   const categories = [
-    { name: 'Plumbing', description: 'Pipes, fittings, faucets, and plumbing supplies', icon: '🚿' },
-    { name: 'Electrical', description: 'Wires, switches, outlets, and electrical components', icon: '⚡' },
-    { name: 'Tools', description: 'Hand tools, power tools, and accessories', icon: '🔧' },
-    { name: 'Paint', description: 'Paints, brushes, rollers, and painting supplies', icon: '🎨' },
-    { name: 'Hardware', description: 'Nails, screws, bolts, hinges, and fasteners', icon: '🔩' },
-    { name: 'Building Materials', description: 'Cement, sand, hollow blocks, and construction materials', icon: '🧱' },
+    { name: 'Plumbing', description: 'Pipes, fittings, faucets, and plumbing supplies', icon: '🚿', imageUrl: '/uploads/plumbing.svg' },
+    { name: 'Electrical', description: 'Wires, switches, outlets, and electrical components', icon: '⚡', imageUrl: '/uploads/electrical.svg' },
+    { name: 'Tools', description: 'Hand tools, power tools, and accessories', icon: '🔧', imageUrl: '/uploads/tools.svg' },
+    { name: 'Paint', description: 'Paints, brushes, rollers, and painting supplies', icon: '🎨', imageUrl: '/uploads/paint-coatings.svg' },
+    { name: 'Hardware', description: 'Nails, screws, bolts, hinges, and fasteners', icon: '🔩', imageUrl: '/uploads/hardware-accessories.svg' },
+    { name: 'Building Materials', description: 'Cement, sand, hollow blocks, and construction materials', icon: '🧱', imageUrl: '/uploads/cement-masonry.svg' },
     { name: 'Safety Equipment', description: 'Safety gear, protective equipment, and work wear', icon: '🦺' },
     { name: 'Garden & Outdoor', description: 'Garden tools, hoses, and outdoor supplies', icon: '🌱' },
     { name: 'Lighting', description: 'Bulbs, fixtures, and lighting accessories', icon: '💡' },

@@ -226,7 +226,15 @@ export default function ProductsPage() {
                     : 'bg-white text-neutral-500 border-neutral-200 hover:border-primary-300 hover:text-primary-800'
                 }`}
               >
-                <CategoryIcon category={category} className="h-3 w-3" />
+                {category.imageUrl ? (
+                  <img 
+                    src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001'}${category.imageUrl}`}
+                    alt={category.name}
+                    className="h-3.5 w-3.5 object-contain"
+                  />
+                ) : (
+                  <CategoryIcon category={category} className="h-3.5 w-3.5" />
+                )}
                 {category.name}
               </button>
             ))}

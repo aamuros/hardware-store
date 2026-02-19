@@ -15,7 +15,9 @@ const { sanitizeInput } = require('./middleware/sanitizer');
 const app = express();
 
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
 
 // Enable gzip compression
 app.use(compression());
@@ -68,7 +70,11 @@ if (config.nodeEnv === 'development') {
 }
 
 // Static files for uploads
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+// Set Cross-Origin-Resource-Policy to allow frontend (different port) to load images
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+}, express.static(path.join(__dirname, '..', 'uploads')));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
