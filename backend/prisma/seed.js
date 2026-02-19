@@ -5,8 +5,123 @@ const path = require('path');
 
 const prisma = new PrismaClient();
 
+// ─── COPY SEED IMAGES TO UPLOADS ──────────────────────────────────
+// Ensures all seed-referenced images exist in backend/uploads/
+// regardless of which branch or device the code is cloned on.
+function copySeedImages() {
+  const uploadsDir = path.resolve(__dirname, '..', 'uploads');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+
+  let copied = 0;
+
+  // 1. Copy category SVG icons from seed-images/categories/
+  const categorySeedDir = path.resolve(__dirname, 'seed-images', 'categories');
+  if (fs.existsSync(categorySeedDir)) {
+    const categoryFiles = fs.readdirSync(categorySeedDir);
+    for (const file of categoryFiles) {
+      const src = path.join(categorySeedDir, file);
+      const dest = path.join(uploadsDir, file);
+      if (!fs.existsSync(dest)) {
+        fs.copyFileSync(src, dest);
+        copied++;
+      }
+    }
+  }
+
+  // 2. Copy extra product images from seed-images/products/ (no source in product-images/)
+  const productSeedDir = path.resolve(__dirname, 'seed-images', 'products');
+  if (fs.existsSync(productSeedDir)) {
+    const productSeedFiles = fs.readdirSync(productSeedDir);
+    for (const file of productSeedFiles) {
+      const src = path.join(productSeedDir, file);
+      const dest = path.join(uploadsDir, file);
+      if (!fs.existsSync(dest)) {
+        fs.copyFileSync(src, dest);
+        copied++;
+      }
+    }
+  }
+
+  // 3. Copy product images from product-images/ folder (root of project)
+  const productImagesDir = path.resolve(__dirname, '..', '..', 'product-images');
+  const productImageMapping = {
+    'Adjustable Hacksaw.jpg': 'adjustable-hacksaw.jpg',
+    'Angle Bar.jpg': 'angle-bar.jpg',
+    'Bistay per Sack.jpg': 'bistay-per-sack.jpg',
+    'Black Screw Metal.jpg': 'black-screw-metal.jpg',
+    'Black Screw Pointed.jpg': 'black-screw-pointed.jpg',
+    'Boysen Lacquer Thinner B50.jpg': 'boysen-lacquer-thinner-b50.jpg',
+    'Boysen Permacoat Flat Latex White.jpg': 'boysen-permacoat-flat-latex-white.jpg',
+    'C-Purlins GI.jpg': 'c-purlins-gi.jpg',
+    'Camel Drawer Lock.jpg': 'camel-drawer-lock.jpg',
+    'Carrying Channel.jpg': 'carrying-channel.jpg',
+    'Circuit Breaker Bolt-On.jpg': 'circuit-breaker-bolt-on.jpg',
+    'Claw Hammer Wood Handle.jpg': 'claw-hammer-wood-handle.jpg',
+    'Coco Lumber.jpg': 'coco-lumber.jpg',
+    'Common Wire Nail.jpg': 'common-wire-nail.jpg',
+    'Concrete Hollow Block.jpg': 'concrete-hollow-block.jpg',
+    'Concrete Nail.jpg': 'concrete-nail.jpg',
+    'Deformed Bar G33.jpg': 'deformed-bar-g33.jpg',
+    'Eagle Cement Advance.jpg': 'eagle-cement-advance.jpg',
+    'Electrical Pipe Thickwall.jpg': 'electrical-pipe-thickwall.jpg',
+    'Flat Bar.jpg': 'flat-bar.jpg',
+    'G.I Pipe Local S20.jpg': 'g.i-pipe-local-s20.jpg',
+    'Gardener.png': 'gardener.png',
+    'GI Wire #16.jpg': 'gi-wire-16.jpg',
+    'Good Lumber S4S.jpg': 'good-lumber-s4s.jpg',
+    'Gravel THREE FOURTH.jpg': 'gravel-three-fourth.jpg',
+    'Hardiflex Screw 1\u2033.jpg': 'hardiflex-screw-1.jpg',
+    'Longspan RIB22.png': 'longspan-rib22.png',
+    'Lucky PPR Elbow Female ONE HALF.jpg': 'lucky-ppr-elbow-female-one-half.jpg',
+    'Marine Plywood Local.jpg': 'marine-plywood-local.jpg',
+    'Metal Furring.jpg': 'metal-furring.jpg',
+    'Metal Studs.png': 'metal-studs.png',
+    'Neltex Electrical Pipe Thinwall.jpg': 'neltex-electrical-pipe-thinwall.jpg',
+    'Neltex PPR PVC Pipe.jpg': 'neltex-ppr-pvc-pipe.jpg',
+    'Neltex PVC Sanitary P-Trap.jpg': 'neltex-pvc-sanitary-p-trap.jpg',
+    'Neltex Sanitary PVC Pipe S600.jpg': 'neltex-sanitary-pvc-pipe-s600.jpg',
+    'Nihonweld Welding Rod N6013.jpg': 'nihonweld-welding-rod-n6013.jpg',
+    'Novtek Concrete Sealer 4 Liters.jpg': 'novtek-concrete-sealer-4-liters.jpg',
+    'Phenolic Board 18mm.jpg': 'phenolic-board-18mm.jpg',
+    'Plywood Ordinary.jpg': 'plywood-ordinary.jpg',
+    'Republic Cement.jpg': 'republic-cement.jpg',
+    'Royu THHN Wire 8.0mm.jpg': 'royu-thhn-wire-8.0mm.jpg',
+    'Shadow Line.jpg': 'shadow-line.jpg',
+    'Tekscrew.jpg': 'tekscrew.jpg',
+    'Tox.jpg': 'tox.jpg',
+    'Tubular Bar GI.jpg': 'tubular-bar-gi.jpg',
+    'Twisted Wire Cup Brush 4\u2033.jpg': 'twisted-wire-cup-brush-4.jpg',
+    'W-Clip.jpg': 'w-clip.jpg',
+    'White Sand.jpg': 'white-sand.jpg',
+    'Wood Screw Flat Head.jpg': 'wood-screw-flat-head.jpg',
+  };
+
+  if (fs.existsSync(productImagesDir)) {
+    for (const [srcName, destName] of Object.entries(productImageMapping)) {
+      const src = path.join(productImagesDir, srcName);
+      const dest = path.join(uploadsDir, destName);
+      if (fs.existsSync(src) && !fs.existsSync(dest)) {
+        fs.copyFileSync(src, dest);
+        copied++;
+      }
+    }
+  }
+
+  return copied;
+}
+
 async function main() {
   console.log('🌱 Starting database seed...');
+
+  // ─── COPY SEED IMAGES TO UPLOADS ────────────────────────────────
+  const copiedImages = copySeedImages();
+  if (copiedImages > 0) {
+    console.log(`📸 Copied ${copiedImages} seed images to uploads/`);
+  } else {
+    console.log('📸 All seed images already in uploads/');
+  }
 
   // ─── CLEAR ALL EXISTING DATA ──────────────────────────────────────
   console.log('🗑️  Clearing existing data...');
