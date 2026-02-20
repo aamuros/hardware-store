@@ -619,18 +619,8 @@ const deleteUser = async (req, res, next) => {
       }
     }
 
-    // Hard delete staff accounts; soft-delete admin accounts to preserve audit trail
-    if (existingUser.role === 'staff') {
-      await prisma.user.delete({
-        where: { id: parseInt(id, 10) },
-      });
-      return res.json({
-        success: true,
-        message: 'Staff account deleted successfully',
-      });
-    }
-
-    // Soft delete admin by marking as inactive
+    // Soft-delete all users by marking as inactive to preserve audit trail
+    // and prevent foreign key constraint violations on order_status_history
     await prisma.user.update({
       where: { id: parseInt(id, 10) },
       data: { isActive: false },

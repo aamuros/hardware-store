@@ -48,11 +48,20 @@ const errorHandler = (err, req, res, next) => {
   }
 
   if (err.code === 'P2003') {
+    const field = err.meta?.field_name || '';
+    let message = 'A related record was not found. Please refresh and try again.';
+    if (field.includes('changedById')) {
+      message = 'Your account session is invalid. Please log in again.';
+    } else if (field.includes('productId')) {
+      message = 'One or more products in this order no longer exist.';
+    } else if (field.includes('orderId')) {
+      message = 'The order could not be found. It may have been deleted.';
+    }
     return res.status(400).json({
       success: false,
-      message: 'Foreign key constraint failed',
+      message,
       code: 'FOREIGN_KEY_ERROR',
-      field: err.meta?.field_name,
+      field,
     });
   }
   

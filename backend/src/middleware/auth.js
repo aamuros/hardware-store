@@ -3,7 +3,7 @@ const config = require('../config');
 const prisma = require('../utils/prismaClient');
 
 // Verify JWT token middleware
-const authenticate = (req, res, next) => {
+const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -17,6 +17,28 @@ const authenticate = (req, res, next) => {
     const token = authHeader.split(' ')[1];
 
     const decoded = jwt.verify(token, config.jwt.secret);
+
+    // Reject customer tokens on admin routes
+    if (decoded.type === 'customer') {
+      return res.status(401).json({
+        success: false,
+        message: 'Admin authentication required',
+      });
+    }
+
+    // Verify the admin/staff user still exists and is active in the database
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: { id: true, username: true, role: true, isActive: true },
+    });
+
+    if (!user || !user.isActive) {
+      return res.status(401).json({
+        success: false,
+        message: 'Account not found or deactivated. Please log in again.',
+      });
+    }
+
     req.user = decoded;
 
     next();
