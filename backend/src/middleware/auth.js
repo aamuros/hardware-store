@@ -3,7 +3,7 @@ const config = require('../config');
 const prisma = require('../utils/prismaClient');
 
 // Verify JWT token middleware
-const authenticate = (req, res, next) => {
+const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -17,6 +17,18 @@ const authenticate = (req, res, next) => {
     const token = authHeader.split(' ')[1];
 
     const decoded = jwt.verify(token, config.jwt.secret);
+
+    // Verify the user still exists in the database (handles re-seeded DBs)
+    if (decoded.id) {
+      const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          message: 'User no longer exists. Please log in again.',
+        });
+      }
+    }
+
     req.user = decoded;
 
     next();

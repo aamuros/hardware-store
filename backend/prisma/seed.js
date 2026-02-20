@@ -16,17 +16,15 @@ function copySeedImages() {
 
   let copied = 0;
 
-  // 1. Copy category SVG icons from seed-images/categories/
+  // 1. Copy category SVG icons from seed-images/categories/ (always overwrite to keep built-in icons current)
   const categorySeedDir = path.resolve(__dirname, 'seed-images', 'categories');
   if (fs.existsSync(categorySeedDir)) {
     const categoryFiles = fs.readdirSync(categorySeedDir);
     for (const file of categoryFiles) {
       const src = path.join(categorySeedDir, file);
       const dest = path.join(uploadsDir, file);
-      if (!fs.existsSync(dest)) {
-        fs.copyFileSync(src, dest);
-        copied++;
-      }
+      fs.copyFileSync(src, dest);
+      copied++;
     }
   }
 

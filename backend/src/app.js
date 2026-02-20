@@ -7,10 +7,34 @@ const compression = require('compression');
 const hpp = require('hpp');
 const path = require('path');
 
+const fs = require('fs');
+
 const config = require('./config');
 const routes = require('./routes');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 const { sanitizeInput } = require('./middleware/sanitizer');
+
+// ─── ENSURE BUILT-IN CATEGORY ICONS ARE IN UPLOADS ─────────────────
+// Copies seed category icons so they are always available on startup,
+// even without running `npx prisma db seed`.
+(function ensureCategoryIcons() {
+  const uploadsDir = path.join(__dirname, '..', 'uploads');
+  const seedCategoriesDir = path.join(__dirname, '..', 'prisma', 'seed-images', 'categories');
+  if (!fs.existsSync(seedCategoriesDir)) return;
+
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+
+  for (const file of fs.readdirSync(seedCategoriesDir)) {
+    const src = path.join(seedCategoriesDir, file);
+    const dest = path.join(uploadsDir, file);
+    // Only copy if missing – don't overwrite admin-uploaded replacements
+    if (!fs.existsSync(dest)) {
+      fs.copyFileSync(src, dest);
+    }
+  }
+})();
 
 const app = express();
 
