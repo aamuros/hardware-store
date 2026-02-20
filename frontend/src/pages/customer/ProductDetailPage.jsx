@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { MinusIcon, PlusIcon, CartIcon, HeartIcon, HeartSolidIcon, CloseIcon, ChevronLeftIcon, ChevronRightIcon, BoxIcon } from '../../components/icons'
-import { productApi } from '../../services/api'
+import { productApi, getImageUrl } from '../../services/api'
 import { useCart } from '../../context/CartContext'
 import { useCustomerAuth } from '../../context/CustomerAuthContext'
 import toast from 'react-hot-toast'
@@ -173,7 +173,7 @@ export default function ProductDetailPage() {
           </div>
           <h1 className="text-lg font-bold text-primary-900 mb-2">Product Not Found</h1>
           <p className="text-sm text-neutral-400 mb-6">This product may have been removed or doesn't exist.</p>
-          <Link to="/products" className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-900 text-white text-sm font-medium rounded-xl hover:bg-primary-800 transition-colors">
+          <Link to="/products" className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-900 text-white text-sm font-medium rounded-lg hover:bg-primary-800 transition-colors">
             ← Back to Products
           </Link>
         </div>
@@ -182,32 +182,32 @@ export default function ProductDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 animate-fade-in">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-neutral-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         {/* Breadcrumb */}
-        <nav className="mb-8">
-          <ol className="flex items-center gap-2 text-xs text-neutral-400">
-            <li><Link to="/" className="hover:text-primary-700 transition-colors">Home</Link></li>
-            <li>/</li>
-            <li><Link to="/products" className="hover:text-primary-700 transition-colors">Products</Link></li>
-            <li>/</li>
+        <nav className="mb-6">
+          <ol className="flex items-center gap-1.5 text-xs text-neutral-400">
+            <li><Link to="/" className="hover:text-primary-700 transition-colors font-medium">Home</Link></li>
+            <li><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg></li>
+            <li><Link to="/products" className="hover:text-primary-700 transition-colors font-medium">Products</Link></li>
             {product.category?.name && (
               <>
+                <li><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg></li>
                 <li>
-                  <Link to={`/products?category=${product.categoryId}`} className="hover:text-primary-700 transition-colors">
+                  <Link to={`/products?category=${product.categoryId}`} className="hover:text-primary-700 transition-colors font-medium">
                     {product.category.name}
                   </Link>
                 </li>
-                <li>/</li>
               </>
             )}
-            <li className="text-primary-800 font-medium truncate max-w-[180px]">{product.name}</li>
+            <li><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg></li>
+            <li className="text-primary-800 font-medium truncate max-w-[200px]">{product.name}</li>
           </ol>
         </nav>
 
-        <div className="grid md:grid-cols-2 gap-8 lg:gap-14 items-start">
+        <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-start">
           {/* ── Left: Image Gallery ── */}
-          <div className="space-y-3">
+          <div className="space-y-3 md:sticky md:top-6">
             {/* Main Image */}
             <div
               className="aspect-square bg-white border border-neutral-100 rounded-2xl overflow-hidden cursor-zoom-in relative group shadow-sm"
@@ -223,12 +223,13 @@ export default function ProductDetailPage() {
                   return (
                     <>
                       <img
-                        src={currentImage}
+                        src={getImageUrl(currentImage)}
                         alt={images[selectedImageIndex]?.altText || product.name}
-                        className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-400"
+                        className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
                       />
-                      <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <span className="bg-black/60 text-white text-[11px] font-medium px-2.5 py-1 rounded-full backdrop-blur-sm">
+                      <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <span className="bg-black/50 text-white text-[11px] font-medium px-2.5 py-1 rounded-full backdrop-blur-sm flex items-center gap-1.5">
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
                           Zoom
                         </span>
                       </div>
@@ -246,19 +247,19 @@ export default function ProductDetailPage() {
 
             {/* Thumbnails */}
             {product.images && product.images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto">
+              <div className="flex gap-2 overflow-x-auto pb-0.5">
                 {product.images.map((image, index) => (
                   <button
                     key={image.id}
                     onClick={() => setSelectedImageIndex(index)}
-                    className={`flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all ${
+                    className={`flex-shrink-0 w-[68px] h-[68px] rounded-xl overflow-hidden border-2 transition-all ${
                       selectedImageIndex === index
-                        ? 'border-primary-700 shadow-sm'
-                        : 'border-transparent hover:border-neutral-300'
+                        ? 'border-primary-700 shadow-sm ring-2 ring-primary-700/10'
+                        : 'border-neutral-200 hover:border-neutral-300'
                     }`}
                   >
                     <img
-                      src={image.imageUrl}
+                      src={getImageUrl(image.imageUrl)}
                       alt={image.altText || `Image ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
@@ -269,9 +270,10 @@ export default function ProductDetailPage() {
           </div>
 
           {/* ── Right: Product Info ── */}
-          <div className="bg-white rounded-2xl border border-neutral-100 p-6 shadow-sm">
+          <div className="space-y-0">
+            <div className="bg-white rounded-2xl border border-neutral-100 p-6 shadow-sm">
             {/* Category + SKU row */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3">
               {product.category?.name && (
                 <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest">
                   {product.category.name}
@@ -286,10 +288,10 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Product Name */}
-            <h1 className="text-2xl font-bold text-primary-900 leading-snug mb-1">{product.name}</h1>
+            <h1 className="text-2xl font-bold text-primary-900 leading-tight mb-3">{product.name}</h1>
 
             {/* Price */}
-            <div className="flex items-baseline gap-1.5 mt-3 mb-5">
+            <div className="flex items-baseline gap-2 mb-5">
               <span className="text-3xl font-extrabold text-primary-900 tracking-tight">
                 {formatPrice(effectivePrice)}
               </span>
@@ -356,7 +358,7 @@ export default function ProductDetailPage() {
                       key={variant.id}
                       onClick={() => setSelectedVariant(variant)}
                       disabled={variant.stockQuantity <= 0}
-                      className={`px-3.5 py-2 rounded-xl text-sm font-medium border transition-all ${
+                      className={`px-3.5 py-2 rounded-lg text-sm font-medium border transition-all ${
                         selectedVariant?.id === variant.id
                           ? 'border-primary-800 bg-primary-900 text-white shadow-sm'
                           : variant.stockQuantity <= 0
@@ -375,7 +377,7 @@ export default function ProductDetailPage() {
             {/* Bulk Pricing */}
             {product.hasBulkPricing && product.bulkPricingTiers?.length > 0 && (
               <div className="mb-5 p-4 bg-emerald-50 border border-emerald-100 rounded-xl">
-                <p className="text-[11px] font-bold text-emerald-700 uppercase tracking-widest mb-3">Volume Discounts</p>
+                <p className="text-[11px] font-bold text-emerald-700 uppercase tracking-widest mb-2.5">Volume Discounts</p>
                 <div className="space-y-1.5">
                   {product.bulkPricingTiers.map((tier) => {
                     const discountedPrice = tier.discountType === 'percentage'
@@ -412,7 +414,7 @@ export default function ProductDetailPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center border border-neutral-200 bg-neutral-50 rounded-xl overflow-hidden">
+                  <div className="flex items-center border border-neutral-200 bg-neutral-50 rounded-lg overflow-hidden">
                     <button
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
                       className="w-10 h-10 flex items-center justify-center text-neutral-500 hover:text-primary-800 hover:bg-neutral-100 transition-colors"
@@ -462,7 +464,7 @@ export default function ProductDetailPage() {
 
                   <button
                     onClick={handleAddToCart}
-                    className="flex-1 flex items-center justify-center gap-2 h-10 bg-primary-900 text-white text-sm font-semibold rounded-xl hover:bg-primary-800 active:scale-[0.98] transition-all shadow-sm"
+                    className="flex-1 flex items-center justify-center gap-2 h-10 bg-primary-900 text-white text-sm font-semibold rounded-lg hover:bg-primary-800 active:scale-[0.99] transition-all shadow-sm"
                   >
                     <CartIcon className="h-4 w-4" />
                     Add to Cart
@@ -487,12 +489,12 @@ export default function ProductDetailPage() {
               </div>
             ) : null}
 
-            {/* Wishlist */}
-            <div className="mt-4 pt-4 border-t border-neutral-100">
+            {/* Wishlist + Back */}
+            <div className="mt-5 pt-4 border-t border-neutral-100 flex items-center gap-3">
               <button
                 onClick={handleWishlistToggle}
                 disabled={wishlistLoading}
-                className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border text-sm font-medium transition-all ${
                   isInWishlist(product.id)
                     ? 'bg-pink-50 border-pink-200 text-pink-600 hover:bg-pink-100'
                     : 'bg-white border-neutral-200 text-neutral-500 hover:border-neutral-300 hover:text-primary-800'
@@ -503,18 +505,18 @@ export default function ProductDetailPage() {
                 ) : (
                   <HeartIcon className="h-4 w-4" />
                 )}
-                {isInWishlist(product.id) ? 'Saved to Wishlist' : 'Save to Wishlist'}
+                {isInWishlist(product.id) ? 'Saved' : 'Wishlist'}
               </button>
-            </div>
-
-            {/* Back */}
-            <div className="mt-4 text-center">
               <Link
                 to="/products"
-                className="text-xs text-neutral-400 hover:text-primary-700 transition-colors"
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-neutral-200 text-sm font-medium text-neutral-500 hover:border-neutral-300 hover:text-primary-800 transition-all bg-white"
               >
-                ← Continue Shopping
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+                Shop
               </Link>
+            </div>
             </div>
           </div>
         </div>
@@ -562,7 +564,7 @@ export default function ProductDetailPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <img
-              src={product.images?.length > 0 ? product.images[selectedImageIndex]?.imageUrl : product.imageUrl}
+              src={getImageUrl(product.images?.length > 0 ? product.images[selectedImageIndex]?.imageUrl : product.imageUrl)}
               alt={product.images?.[selectedImageIndex]?.altText || product.name}
               className="max-w-full max-h-[85vh] object-contain rounded-xl"
             />

@@ -46,7 +46,7 @@ const forgotPassword = async (req, res, next) => {
         },
       });
 
-      const frontendUrl = config.cors.origin || 'http://localhost:5173';
+      const frontendUrl = config.frontendUrl || 'http://localhost:5173';
       resetLink = `${frontendUrl}/admin/reset-password?token=${resetToken}`;
     }
 

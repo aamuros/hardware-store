@@ -7,40 +7,22 @@ const compression = require('compression');
 const hpp = require('hpp');
 const path = require('path');
 
-const fs = require('fs');
-
 const config = require('./config');
 const routes = require('./routes');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 const { sanitizeInput } = require('./middleware/sanitizer');
 
-// ─── ENSURE BUILT-IN CATEGORY ICONS ARE IN UPLOADS ─────────────────
-// Copies seed category icons so they are always available on startup,
-// even without running `npx prisma db seed`.
-(function ensureCategoryIcons() {
-  const uploadsDir = path.join(__dirname, '..', 'uploads');
-  const seedCategoriesDir = path.join(__dirname, '..', 'prisma', 'seed-images', 'categories');
-  if (!fs.existsSync(seedCategoriesDir)) return;
-
-  if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-  }
-
-  for (const file of fs.readdirSync(seedCategoriesDir)) {
-    const src = path.join(seedCategoriesDir, file);
-    const dest = path.join(uploadsDir, file);
-    // Only copy if missing – don't overwrite admin-uploaded replacements
-    if (!fs.existsSync(dest)) {
-      fs.copyFileSync(src, dest);
-    }
-  }
-})();
-
 const app = express();
 
-// Security middleware
+// Trust first proxy (Railway, Render, etc.) — needed for correct client IPs in rate limiting
+if (config.nodeEnv === 'production') {
+  app.set('trust proxy', 1);
+}
+
+// Security middleware — configured for cross-origin deployment (Vercel ↔ Railway)
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
+  crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
 }));
 
 // Enable gzip compression
@@ -51,6 +33,9 @@ app.use(hpp());
 
 // CORS configuration
 app.use(cors(config.cors));
+
+// Explicitly handle preflight OPTIONS requests for all routes
+app.options('*', cors(config.cors));
 
 // General rate limiting (more lenient in development)
 const limiter = rateLimit({
@@ -65,19 +50,7 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
-// Stricter rate limiting for authentication endpoints
-// TEMPORARILY DISABLED - Rate limiting commented out for testing
-/* const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 login attempts per windowMs
-  message: {
-    success: false,
-    message: 'Too many login attempts, please try again after 15 minutes.',
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use('/api/admin/login', authLimiter); */
+// Auth rate limiting removed for now — general limiter above still applies
 
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
@@ -94,11 +67,13 @@ if (config.nodeEnv === 'development') {
 }
 
 // Static files for uploads
-// Set Cross-Origin-Resource-Policy to allow frontend (different port) to load images
-app.use('/uploads', (req, res, next) => {
-  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-  next();
-}, express.static(path.join(__dirname, '..', 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+
+// Serve frontend static files in production (Railway full-stack deployment)
+if (config.nodeEnv === 'production') {
+  const frontendDistPath = path.join(__dirname, '..', '..', 'frontend', 'dist');
+  app.use(express.static(frontendDistPath));
+}
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -113,7 +88,16 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api', routes);
 
-// 404 handler
+// SPA catch-all: serve index.html for any non-API route in production
+// This lets React Router handle client-side navigation
+if (config.nodeEnv === 'production') {
+  const frontendDistPath = path.join(__dirname, '..', '..', 'frontend', 'dist');
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(frontendDistPath, 'index.html'));
+  });
+}
+
+// 404 handler (only triggers for API routes in production)
 app.use(notFound);
 
 // Error handler

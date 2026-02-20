@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { adminApi, categoryApi, productApi } from '../../services/api'
+import { adminApi, categoryApi, productApi, getImageUrl } from '../../services/api'
 import {
   PlusIcon,
   PencilIcon,
@@ -7,7 +7,6 @@ import {
   MagnifyingGlassIcon,
   PhotoIcon,
   XMarkIcon,
-  FunnelIcon,
   TagIcon,
   CubeIcon,
   ChevronLeftIcon,
@@ -190,7 +189,7 @@ export default function ProductsManagementPage() {
         isAvailable: product.isAvailable,
         hasVariants: product.hasVariants || false,
       })
-      setImagePreview(product.imageUrl)
+      setImagePreview(getImageUrl(product.imageUrl))
     } else {
       setEditingProduct(null)
       setFormData({
@@ -498,114 +497,95 @@ export default function ProductsManagementPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
+    <div className="space-y-5">
+      {/* ── Page Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-primary-900">Products</h1>
-          <p className="text-neutral-500 mt-1">Manage your product catalog &middot; {pagination.total || 0} total products</p>
+          <h1 className="page-title">Products</h1>
+          <p className="page-subtitle">
+            {!loading
+              ? <>
+                  <span className="font-semibold text-primary-800">{pagination.total || 0}</span>
+                  {' '}product{pagination.total !== 1 ? 's' : ''} in your catalog
+                </>
+              : 'Manage your product catalog'
+            }
+          </p>
         </div>
-        <button onClick={() => openModal()} className="btn btn-primary flex items-center gap-2 shrink-0">
-          <PlusIcon className="h-5 w-5" />
+        <button onClick={() => openModal()} className="btn btn-primary flex items-center gap-2 self-start sm:self-auto shrink-0">
+          <PlusIcon className="h-4 w-4" />
           Add Product
         </button>
       </div>
 
-      {/* Search & Filters Bar */}
-      <div className="bg-white rounded-2xl shadow-soft border border-neutral-100 p-5">
-        {/* Search Input — Full Width */}
-        <div className="relative">
-          <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 pointer-events-none" />
-          <input
-            ref={searchInputRef}
-            type="text"
-            value={searchInput}
-            onChange={(e) => handleSearchInput(e.target.value)}
-            placeholder="Search products by name, description, or SKU..."
-            className="block w-full pl-12 pr-12 py-3 text-base bg-neutral-50 border border-neutral-200 rounded-xl placeholder-neutral-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 focus:bg-white"
-          />
-          {searchInput && (
-            <button
-              onClick={clearSearch}
-              className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-lg text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition-colors"
-              title="Clear search"
-            >
-              <XMarkIcon className="h-5 w-5" />
-            </button>
-          )}
-        </div>
-
-        {/* Filter Row */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mt-4">
-          <div className="flex items-center gap-2 text-sm text-neutral-500">
-            <FunnelIcon className="h-4 w-4" />
-            <span className="font-medium">Filter:</span>
-          </div>
-          <select
-            value={categoryFilter}
-            onChange={(e) => handleCategoryChange(e.target.value)}
-            className="px-3 py-2 text-sm bg-neutral-50 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 transition-all min-w-[180px]"
-          >
-            <option value="">All Categories</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-
-          {/* Active filter chips */}
-          {(searchQuery || categoryFilter) && (
-            <div className="flex items-center gap-2 flex-wrap">
-              {searchQuery && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-primary-50 text-primary-700 border border-primary-200 rounded-full">
-                  <MagnifyingGlassIcon className="h-3.5 w-3.5" />
-                  &ldquo;{searchQuery}&rdquo;
-                  <button onClick={clearSearch} className="ml-0.5 hover:text-primary-900">
-                    <XMarkIcon className="h-3.5 w-3.5" />
-                  </button>
-                </span>
-              )}
-              {categoryFilter && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-accent-50 text-accent-700 border border-accent-200 rounded-full">
-                  <TagIcon className="h-3.5 w-3.5" />
-                  {categories.find(c => c.id.toString() === categoryFilter)?.name || 'Category'}
-                  <button onClick={() => setCategoryFilter('')} className="ml-0.5 hover:text-accent-900">
-                    <XMarkIcon className="h-3.5 w-3.5" />
-                  </button>
-                </span>
-              )}
+      {/* ── Search & Filters Bar ── */}
+      <div className="bg-white rounded-2xl shadow-soft border border-neutral-100 overflow-hidden">
+        {/* Search */}
+        <div className="px-4 pt-4 pb-3">
+          <div className="relative">
+            <MagnifyingGlassIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchInput}
+              onChange={(e) => handleSearchInput(e.target.value)}
+              placeholder="Search by name, description, or SKU… (press / to focus)"
+              className="input pl-9 pr-10 py-2.5 text-sm w-full bg-neutral-50 border-neutral-200 focus:bg-white"
+            />
+            {searchInput && (
               <button
-                onClick={() => { clearSearch(); setCategoryFilter('') }}
-                className="text-xs text-neutral-500 hover:text-neutral-700 underline underline-offset-2 ml-1"
+                onClick={clearSearch}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition-colors"
               >
-                Clear all
+                <XMarkIcon className="h-4 w-4" />
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
-        {/* Results count */}
-        {(searchQuery || categoryFilter) && (
-          <p className="text-sm text-neutral-500 mt-3 pt-3 border-t border-neutral-100">
-            Showing <span className="font-semibold text-primary-700">{products.length}</span> of{' '}
-            <span className="font-semibold text-primary-700">{pagination.total || 0}</span> products
-          </p>
-        )}
+        {/* Divider */}
+        <div className="border-t border-neutral-100" />
+
+        {/* Category pill tabs */}
+        <div className="flex items-center gap-1.5 px-4 py-3 overflow-x-auto scrollbar-hide">
+          <button
+            type="button"
+            onClick={() => handleCategoryChange('')}
+            className={`flex-shrink-0 px-3.5 py-1.5 rounded-xl text-sm font-medium transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/30
+              ${!categoryFilter ? 'bg-primary-800 text-white shadow-sm' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'}`}
+          >
+            All
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => handleCategoryChange(cat.id.toString())}
+              className={`flex-shrink-0 px-3.5 py-1.5 rounded-xl text-sm font-medium transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/30
+                ${categoryFilter === cat.id.toString() ? 'bg-primary-800 text-white shadow-sm' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'}`}
+            >
+              {cat.name}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Products Table */}
+      {/* ── Products Table ── */}
       <div className="bg-white rounded-2xl shadow-soft border border-neutral-100 overflow-hidden">
         {loading ? (
-          <div className="flex flex-col items-center justify-center h-64 gap-3">
-            <div className="animate-spin rounded-full h-10 w-10 border-2 border-neutral-200 border-t-primary-600"></div>
-            <p className="text-sm text-neutral-500">Loading products...</p>
+          <div className="flex items-center justify-center py-20">
+            <div className="flex flex-col items-center gap-3">
+              <div className="spinner" />
+              <p className="text-sm text-neutral-400">Loading products…</p>
+            </div>
           </div>
         ) : products.length === 0 ? (
-          <div className="text-center py-16 px-4">
-            <CubeIcon className="h-12 w-12 text-neutral-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-neutral-700 mb-1">No products found</h3>
-            <p className="text-neutral-500 text-sm mb-6">
+          <div className="flex flex-col items-center justify-center py-20 text-center px-4">
+            <div className="w-14 h-14 bg-neutral-100 rounded-2xl flex items-center justify-center mb-4">
+              <CubeIcon className="h-7 w-7 text-neutral-400" />
+            </div>
+            <h3 className="text-base font-semibold text-neutral-700 mb-1">No products found</h3>
+            <p className="text-sm text-neutral-400 max-w-sm">
               {searchQuery || categoryFilter
                 ? 'Try adjusting your search or filters to find what you\'re looking for.'
                 : 'Get started by adding your first product to the catalog.'}
@@ -613,13 +593,13 @@ export default function ProductsManagementPage() {
             {searchQuery || categoryFilter ? (
               <button
                 onClick={() => { clearSearch(); setCategoryFilter('') }}
-                className="btn btn-secondary text-sm"
+                className="mt-4 btn btn-secondary btn-sm"
               >
                 Clear Filters
               </button>
             ) : (
-              <button onClick={() => openModal()} className="btn btn-primary text-sm">
-                <PlusIcon className="h-4 w-4 mr-2" />
+              <button onClick={() => openModal()} className="mt-4 btn btn-primary btn-sm">
+                <PlusIcon className="h-4 w-4 mr-1.5" />
                 Add Your First Product
               </button>
             )}
@@ -628,56 +608,45 @@ export default function ProductsManagementPage() {
           <div className="overflow-x-auto">
             <table className="min-w-full">
               <thead>
-                <tr className="bg-neutral-50 border-b border-neutral-200">
-                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-                    Product
-                  </th>
-                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-                    Category
-                  </th>
-                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-                    Price
-                  </th>
-                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-                    Stock
-                  </th>
-                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3.5 text-right text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-                    Actions
-                  </th>
+                <tr className="border-b border-neutral-100 bg-neutral-50/60">
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">Product</th>
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">Category</th>
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">Price</th>
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">Stock</th>
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">Status</th>
+                  <th className="px-5 py-3.5 text-right text-xs font-semibold text-neutral-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
                 {products.map((product) => (
-                  <tr key={product.id} className="hover:bg-neutral-50/60 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-4">
+                  <tr key={product.id} className="group hover:bg-neutral-50/60 transition-colors duration-100">
+                    {/* Product */}
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3.5">
                         {product.imageUrl ? (
                           <img
-                            src={product.imageUrl}
+                            src={getImageUrl(product.imageUrl)}
                             alt={product.name}
-                            className="w-12 h-12 object-cover rounded-lg ring-1 ring-neutral-200"
+                            className="w-11 h-11 object-cover rounded-xl ring-1 ring-neutral-200 flex-shrink-0"
                           />
                         ) : (
-                          <div className="w-12 h-12 bg-neutral-100 rounded-lg flex items-center justify-center ring-1 ring-neutral-200">
-                            <PhotoIcon className="h-6 w-6 text-neutral-400" />
+                          <div className="w-11 h-11 bg-neutral-100 rounded-xl flex items-center justify-center ring-1 ring-neutral-200 flex-shrink-0">
+                            <PhotoIcon className="h-5 w-5 text-neutral-400" />
                           </div>
                         )}
                         <div className="min-w-0">
-                          <p className="font-semibold text-primary-900 truncate">{product.name}</p>
+                          <p className="font-semibold text-sm text-primary-900 truncate max-w-[200px]">{product.name}</p>
                           {product.sku && (
                             <p className="text-xs text-neutral-400 mt-0.5 font-mono">SKU: {product.sku}</p>
                           )}
-                          <div className="flex items-center gap-1.5 mt-1">
+                          <div className="flex items-center gap-1 mt-1">
                             {product.hasVariants && (
-                              <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-blue-50 text-blue-600 border border-blue-100 rounded">
+                              <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold bg-blue-50 text-blue-600 border border-blue-100 rounded-md">
                                 Variants
                               </span>
                             )}
-                            {product.bulkPricingTiers && product.bulkPricingTiers.length > 0 && (
-                              <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-emerald-50 text-emerald-600 border border-emerald-100 rounded">
+                            {product.bulkPricingTiers?.length > 0 && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-md">
                                 Bulk
                               </span>
                             )}
@@ -685,59 +654,91 @@ export default function ProductsManagementPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+
+                    {/* Category */}
+                    <td className="px-5 py-4 whitespace-nowrap">
                       {product.category?.name ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-neutral-100 text-neutral-600 rounded-lg">
                           <TagIcon className="h-3 w-3" />
                           {product.category.name}
                         </span>
                       ) : (
-                        <span className="text-sm text-neutral-400">&mdash;</span>
+                        <span className="text-sm text-neutral-300">—</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+
+                    {/* Price */}
+                    <td className="px-5 py-4 whitespace-nowrap">
                       <span className="text-sm font-semibold text-primary-900">
-                        ₱{product.price.toLocaleString()}
+                        ₱{Number(product.price).toLocaleString()}
                       </span>
                       <span className="text-xs text-neutral-400 ml-0.5">/{product.unit}</span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-sm font-semibold ${
-                          product.stockQuantity <= 0
-                            ? 'text-red-600'
-                            : product.stockQuantity <= product.lowStockThreshold
-                              ? 'text-amber-600'
-                              : 'text-primary-900'
-                        }`}>
-                          {product.stockQuantity || 0}
-                        </span>
-                        {product.stockQuantity <= 0 && (
-                          <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-red-100 text-red-700 rounded">
-                            Out
+
+                    {/* Stock */}
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      {product.hasVariants && product.variants?.length > 0 ? (() => {
+                        const totalVariantStock = product.variants.reduce((sum, v) => sum + (v.stockQuantity || 0), 0)
+                        const availableVariants = product.variants.filter(v => v.isAvailable && v.stockQuantity > 0).length
+                        const totalVariants = product.variants.length
+                        const allOut = totalVariantStock <= 0
+                        const someOut = availableVariants < totalVariants && availableVariants > 0
+                        return (
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-1.5">
+                              <span className={`text-sm font-semibold ${
+                                allOut ? 'text-red-600' : someOut ? 'text-amber-600' : 'text-primary-900'
+                              }`}>
+                                {totalVariantStock}
+                              </span>
+                              {allOut ? (
+                                <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-red-50 text-red-600 border border-red-100 rounded-md">Out</span>
+                              ) : someOut ? (
+                                <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-amber-50 text-amber-600 border border-amber-100 rounded-md">Partial</span>
+                              ) : null}
+                            </div>
+                            <span className="text-[10px] text-neutral-400">
+                              {availableVariants}/{totalVariants} variants in stock
+                            </span>
+                          </div>
+                        )
+                      })() : (
+                        <div className="flex items-center gap-1.5">
+                          <span className={`text-sm font-semibold ${
+                            product.stockQuantity <= 0
+                              ? 'text-red-600'
+                              : product.stockQuantity <= product.lowStockThreshold
+                                ? 'text-amber-600'
+                                : 'text-primary-900'
+                          }`}>
+                            {product.stockQuantity || 0}
                           </span>
-                        )}
-                        {product.stockQuantity > 0 && product.stockQuantity <= product.lowStockThreshold && (
-                          <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-amber-100 text-amber-700 rounded">
-                            Low
-                          </span>
-                        )}
-                      </div>
+                          {product.stockQuantity <= 0 ? (
+                            <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-red-50 text-red-600 border border-red-100 rounded-md">Out</span>
+                          ) : product.stockQuantity <= product.lowStockThreshold ? (
+                            <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-amber-50 text-amber-600 border border-amber-100 rounded-md">Low</span>
+                          ) : null}
+                        </div>
+                      )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+
+                    {/* Status */}
+                    <td className="px-5 py-4 whitespace-nowrap">
                       <button
                         onClick={() => toggleAvailability(product)}
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full transition-colors ${
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-xl transition-colors ${
                           product.isAvailable
-                            ? 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100'
-                            : 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                            : 'bg-neutral-100 text-neutral-500 border border-neutral-200 hover:bg-neutral-200'
                         }`}
                       >
-                        <span className={`w-1.5 h-1.5 rounded-full ${product.isAvailable ? 'bg-green-500' : 'bg-red-500'}`} />
-                        {product.isAvailable ? 'Available' : 'Unavailable'}
+                        <span className={`w-1.5 h-1.5 rounded-full ${product.isAvailable ? 'bg-emerald-500' : 'bg-neutral-400'}`} />
+                        {product.isAvailable ? 'Available' : 'Hidden'}
                       </button>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
+
+                    {/* Actions */}
+                    <td className="px-5 py-4 whitespace-nowrap text-right">
                       <div className="flex items-center justify-end gap-1">
                         {product.hasVariants && (
                           <button
@@ -762,7 +763,7 @@ export default function ProductsManagementPage() {
                         <button
                           onClick={() => openModal(product)}
                           className="p-1.5 rounded-lg text-accent-600 hover:bg-accent-50 transition-colors"
-                          title="Edit Product"
+                          title="Edit"
                         >
                           <PencilIcon className="h-4 w-4" />
                         </button>
@@ -770,7 +771,7 @@ export default function ProductsManagementPage() {
                           onClick={() => handleDelete(product)}
                           disabled={deleting === product.id}
                           className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
-                          title="Delete Product"
+                          title="Delete"
                         >
                           <TrashIcon className="h-4 w-4" />
                         </button>
@@ -783,240 +784,246 @@ export default function ProductsManagementPage() {
           </div>
         )}
 
-        {/* Pagination */}
-        {pagination.totalPages > 1 && (
-          <div className="bg-neutral-50/50 px-6 py-4 flex items-center justify-between border-t border-neutral-200">
-            <p className="text-sm text-neutral-500">
-              Page <span className="font-medium text-primary-700">{pagination.page}</span> of{' '}
-              <span className="font-medium text-primary-700">{pagination.totalPages}</span>
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}
-                disabled={pagination.page === 1}
-                className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                <ChevronLeftIcon className="h-4 w-4" />
-                Previous
-              </button>
-              <button
-                onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
-                disabled={pagination.page === pagination.totalPages}
-                className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                Next
-                <ChevronRightIcon className="h-4 w-4" />
-              </button>
+        {/* ── Pagination ── */}
+        {pagination.totalPages > 1 && (() => {
+          const getPageNumbers = (current, total) => {
+            if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+            const pages = []
+            pages.push(1)
+            if (current > 3) pages.push('...')
+            for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) pages.push(i)
+            if (current < total - 2) pages.push('...')
+            pages.push(total)
+            return pages
+          }
+          const pageNums = getPageNumbers(pagination.page, pagination.totalPages)
+          return (
+            <div className="px-5 py-4 border-t border-neutral-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <p className="text-sm text-neutral-500 order-2 sm:order-1">
+                Page <span className="font-medium text-primary-900">{pagination.page}</span> of{' '}
+                <span className="font-medium text-primary-900">{pagination.totalPages}</span>
+                {' '}·{' '}
+                <span className="font-medium text-primary-900">{pagination.total || 0}</span> total
+              </p>
+              <nav className="flex items-center gap-1 order-1 sm:order-2">
+                <button
+                  onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}
+                  disabled={pagination.page === 1}
+                  className="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-neutral-200 bg-white text-neutral-500 hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeftIcon className="h-4 w-4" />
+                </button>
+                {pageNums.map((p, idx) =>
+                  p === '...'
+                    ? <span key={`el-${idx}`} className="w-8 h-8 flex items-center justify-center text-neutral-400 text-sm">…</span>
+                    : (
+                      <button
+                        key={p}
+                        onClick={() => setPagination((prev) => ({ ...prev, page: p }))}
+                        className={`inline-flex items-center justify-center w-8 h-8 rounded-lg text-sm font-medium transition-colors
+                          ${pagination.page === p
+                            ? 'bg-primary-800 text-white border border-primary-800 shadow-sm'
+                            : 'border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50'
+                          }`}
+                      >
+                        {p}
+                      </button>
+                    )
+                )}
+                <button
+                  onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
+                  disabled={pagination.page === pagination.totalPages}
+                  className="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-neutral-200 bg-white text-neutral-500 hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronRightIcon className="h-4 w-4" />
+                </button>
+              </nav>
             </div>
-          </div>
-        )}
+          )
+        })()}
       </div>
 
-      {/* Product Modal */}
+      {/* ── Product Modal ── */}
       {showModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4 py-8">
             <div className="fixed inset-0 bg-primary-900/30 backdrop-blur-sm" onClick={closeModal} />
             <div className="relative bg-white rounded-2xl shadow-soft-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 sticky top-0 bg-white z-10 rounded-t-2xl">
+              {/* Modal header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 sticky top-0 bg-white z-10 rounded-t-2xl">
                 <div>
-                  <h3 className="text-lg font-semibold text-primary-900">
+                  <h3 className="text-base font-semibold text-primary-900">
                     {editingProduct ? 'Edit Product' : 'Add New Product'}
                   </h3>
-                  <p className="text-sm text-neutral-500 mt-0.5">
-                    {editingProduct ? 'Update product details below' : 'Fill in the details to create a new product'}
+                  <p className="text-xs text-neutral-400 mt-0.5">
+                    {editingProduct ? 'Update product details' : 'Fill in the details to add to your catalog'}
                   </p>
                 </div>
-                <button onClick={closeModal} className="p-1 rounded-lg text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition-colors">
-                  <XMarkIcon className="h-6 w-6" />
+                <button onClick={closeModal} className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition-colors">
+                  <XMarkIcon className="h-5 w-5" />
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-6 space-y-5">
-                {/* Image Upload */}
-                <div className="p-4 bg-neutral-50 rounded-xl border border-neutral-100">
-                  <label className="block text-sm font-semibold text-primary-700 mb-3">
+              <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                {/* ── Image Upload ── */}
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">
                     Product Image
                   </label>
-                  <div className="flex items-center gap-4">
-                    {imagePreview ? (
-                      <img
-                        src={imagePreview}
-                        alt="Preview"
-                        className="w-20 h-20 object-cover rounded-lg ring-1 ring-neutral-200"
-                      />
-                    ) : (
-                      <div className="w-20 h-20 bg-white rounded-lg flex items-center justify-center ring-1 ring-neutral-200">
-                        <PhotoIcon className="h-8 w-8 text-neutral-300" />
+                  <div className="flex items-start gap-4">
+                    {/* Preview */}
+                    <div className="w-24 h-24 rounded-xl overflow-hidden ring-1 ring-neutral-200 bg-neutral-50 flex-shrink-0 flex items-center justify-center">
+                      {imagePreview
+                        ? <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                        : <PhotoIcon className="h-8 w-8 text-neutral-300" />
+                      }
+                    </div>
+                    {/* Upload area */}
+                    <label className="flex-1 flex flex-col items-center justify-center gap-2 min-h-[96px] border-2 border-dashed border-neutral-200 rounded-xl bg-neutral-50 hover:bg-neutral-100 hover:border-neutral-300 cursor-pointer transition-colors group">
+                      <PhotoIcon className="h-6 w-6 text-neutral-300 group-hover:text-neutral-400 transition-colors" />
+                      <div className="text-center">
+                        <span className="text-sm font-medium text-primary-700">Click to upload</span>
+                        <p className="text-xs text-neutral-400 mt-0.5">JPG, PNG or WebP · max 5MB</p>
                       </div>
-                    )}
+                      <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                    </label>
+                  </div>
+                </div>
+
+                {/* ── Basic Info ── */}
+                <div className="space-y-4">
+                  <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Basic Info</p>
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+                      Product Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      required
+                      className="input w-full"
+                      placeholder="e.g., Steel Hammer 16oz"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-700 mb-1.5">Description</label>
+                    <textarea
+                      name="description"
+                      value={formData.description}
+                      onChange={handleInputChange}
+                      rows="3"
+                      className="input w-full resize-none"
+                      placeholder="Describe the product…"
+                    />
+                  </div>
+                </div>
+
+                {/* ── Pricing & Category ── */}
+                <div className="space-y-4">
+                  <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Pricing & Category</p>
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="btn btn-secondary btn-sm cursor-pointer">
-                        Choose Image
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageChange}
-                          className="hidden"
-                        />
+                      <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+                        Price (₱) <span className="text-red-500">*</span>
                       </label>
-                      <p className="text-xs text-neutral-400 mt-2">JPG, PNG or WebP. Max 5MB.</p>
+                      <input
+                        type="number"
+                        name="price"
+                        value={formData.price}
+                        onChange={handleInputChange}
+                        required min="0" step="1"
+                        className="input w-full"
+                        placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+                        Unit <span className="text-red-500">*</span>
+                      </label>
+                      <select name="unit" value={formData.unit} onChange={handleInputChange} className="input w-full">
+                        <option value="piece">piece</option>
+                        <option value="kg">kg</option>
+                        <option value="meter">meter</option>
+                        <option value="liter">liter</option>
+                        <option value="box">box</option>
+                        <option value="pack">pack</option>
+                        <option value="set">set</option>
+                        <option value="bag">bag</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+                        Category <span className="text-red-500">*</span>
+                      </label>
+                      <select name="categoryId" value={formData.categoryId} onChange={handleInputChange} required className="input w-full">
+                        <option value="">Select Category</option>
+                        {categories.map((category) => (
+                          <option key={category.id} value={category.id}>{category.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 mb-1.5">SKU</label>
+                      <input
+                        type="text"
+                        name="sku"
+                        value={formData.sku}
+                        onChange={handleInputChange}
+                        className="input w-full"
+                        placeholder="e.g., HMR-STL-16"
+                      />
                     </div>
                   </div>
                 </div>
 
-                {/* Name */}
-                <div>
-                  <label className="block text-sm font-medium text-primary-700 mb-1.5">
-                    Product Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                    className="input w-full"
-                    placeholder="e.g., Steel Hammer 16oz"
-                  />
-                </div>
-
-                {/* Description */}
-                <div>
-                  <label className="block text-sm font-medium text-primary-700 mb-1.5">
-                    Description
-                  </label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    rows="3"
-                    className="input w-full resize-none"
-                    placeholder="Describe the product..."
-                  />
-                </div>
-
-                {/* Price and Unit */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-primary-700 mb-1.5">
-                      Price (₱) <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      name="price"
-                      value={formData.price}
-                      onChange={handleInputChange}
-                      required
-                      min="0"
-                      step="1"
-                      className="input w-full"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-primary-700 mb-1.5">
-                      Unit <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      name="unit"
-                      value={formData.unit}
-                      onChange={handleInputChange}
-                      className="input w-full"
-                    >
-                      <option value="piece">piece</option>
-                      <option value="kg">kg</option>
-                      <option value="meter">meter</option>
-                      <option value="liter">liter</option>
-                      <option value="box">box</option>
-                      <option value="pack">pack</option>
-                      <option value="set">set</option>
-                      <option value="bag">bag</option>
-                    </select>
+                {/* ── Inventory ── */}
+                <div className="space-y-4">
+                  <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Inventory</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+                        Stock Quantity <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        name="stockQuantity"
+                        value={formData.stockQuantity}
+                        onChange={handleInputChange}
+                        required min="0"
+                        className="input w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 mb-1.5">Low Stock Alert</label>
+                      <input
+                        type="number"
+                        name="lowStockThreshold"
+                        value={formData.lowStockThreshold}
+                        onChange={handleInputChange}
+                        min="0"
+                        className="input w-full"
+                        placeholder="Alert when stock ≤ this"
+                      />
+                    </div>
                   </div>
                 </div>
 
-                {/* Category and SKU */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-primary-700 mb-1.5">
-                      Category <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      name="categoryId"
-                      value={formData.categoryId}
-                      onChange={handleInputChange}
-                      required
-                      className="input w-full"
-                    >
-                      <option value="">Select Category</option>
-                      {categories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-primary-700 mb-1.5">
-                      SKU
-                    </label>
-                    <input
-                      type="text"
-                      name="sku"
-                      value={formData.sku}
-                      onChange={handleInputChange}
-                      className="input w-full"
-                      placeholder="e.g., HMR-STL-16"
-                    />
-                  </div>
-                </div>
-
-                {/* Stock Quantity and Low Stock Threshold */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-primary-700 mb-1.5">
-                      Stock Quantity <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      name="stockQuantity"
-                      value={formData.stockQuantity}
-                      onChange={handleInputChange}
-                      required
-                      min="0"
-                      className="input w-full"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-primary-700 mb-1.5">
-                      Low Stock Alert
-                    </label>
-                    <input
-                      type="number"
-                      name="lowStockThreshold"
-                      value={formData.lowStockThreshold}
-                      onChange={handleInputChange}
-                      min="0"
-                      className="input w-full"
-                      placeholder="Alert when stock ≤ this"
-                    />
-                  </div>
-                </div>
-
-                {/* Toggles section */}
-                <div className="space-y-3 pt-1">
+                {/* ── Settings ── */}
+                <div className="space-y-3">
+                  <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Settings</p>
                   {/* Has Variants Toggle */}
                   <label
                     htmlFor="hasVariants"
                     className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-colors ${
-                      formData.hasVariants
-                        ? 'bg-blue-50 border-blue-200'
-                        : 'bg-neutral-50 border-neutral-200 hover:border-neutral-300'
+                      formData.hasVariants ? 'bg-blue-50 border-blue-200' : 'bg-neutral-50 border-neutral-200 hover:border-neutral-300'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`flex items-center justify-center w-8 h-8 rounded-lg ${formData.hasVariants ? 'bg-blue-100 text-blue-600' : 'bg-neutral-200 text-neutral-500'}`}>
+                      <div className={`flex items-center justify-center w-8 h-8 rounded-xl ${formData.hasVariants ? 'bg-blue-100 text-blue-600' : 'bg-neutral-200 text-neutral-500'}`}>
                         <AdjustmentsHorizontalIcon className="h-4 w-4" />
                       </div>
                       <div>
@@ -1024,21 +1031,10 @@ export default function ProductsManagementPage() {
                         <p className={`text-xs mt-0.5 ${formData.hasVariants ? 'text-blue-600' : 'text-neutral-500'}`}>Enable sizes, colors, or other options</p>
                       </div>
                     </div>
-                    <div className="relative">
-                      <input
-                        type="checkbox"
-                        name="hasVariants"
-                        id="hasVariants"
-                        checked={formData.hasVariants}
-                        onChange={handleInputChange}
-                        className="sr-only peer"
-                      />
-                      <div className={`w-11 h-6 rounded-full transition-colors ${
-                        formData.hasVariants ? 'bg-blue-500' : 'bg-neutral-300'
-                      }`}></div>
-                      <div className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${
-                        formData.hasVariants ? 'translate-x-5' : 'translate-x-0'
-                      }`}></div>
+                    <div className="relative flex-shrink-0">
+                      <input type="checkbox" name="hasVariants" id="hasVariants" checked={formData.hasVariants} onChange={handleInputChange} className="sr-only peer" />
+                      <div className={`w-11 h-6 rounded-full transition-colors ${formData.hasVariants ? 'bg-blue-500' : 'bg-neutral-300'}`} />
+                      <div className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${formData.hasVariants ? 'translate-x-5' : 'translate-x-0'}`} />
                     </div>
                   </label>
 
@@ -1046,52 +1042,35 @@ export default function ProductsManagementPage() {
                   <label
                     htmlFor="isAvailable"
                     className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-colors ${
-                      formData.isAvailable
-                        ? 'bg-green-50 border-green-200'
-                        : 'bg-neutral-50 border-neutral-200 hover:border-neutral-300'
+                      formData.isAvailable ? 'bg-emerald-50 border-emerald-200' : 'bg-neutral-50 border-neutral-200 hover:border-neutral-300'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`flex items-center justify-center w-8 h-8 rounded-lg ${formData.isAvailable ? 'bg-green-100 text-green-600' : 'bg-neutral-200 text-neutral-500'}`}>
+                      <div className={`flex items-center justify-center w-8 h-8 rounded-xl ${formData.isAvailable ? 'bg-emerald-100 text-emerald-600' : 'bg-neutral-200 text-neutral-500'}`}>
                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
                       <div>
-                        <p className={`text-sm font-semibold ${formData.isAvailable ? 'text-green-800' : 'text-neutral-700'}`}>Available for Ordering</p>
-                        <p className={`text-xs mt-0.5 ${formData.isAvailable ? 'text-green-600' : 'text-neutral-500'}`}>{formData.isAvailable ? 'Customers can order this product' : 'Product is hidden from customers'}</p>
+                        <p className={`text-sm font-semibold ${formData.isAvailable ? 'text-emerald-800' : 'text-neutral-700'}`}>Available for Ordering</p>
+                        <p className={`text-xs mt-0.5 ${formData.isAvailable ? 'text-emerald-600' : 'text-neutral-500'}`}>
+                          {formData.isAvailable ? 'Customers can order this product' : 'Product is hidden from customers'}
+                        </p>
                       </div>
                     </div>
-                    <div className="relative">
-                      <input
-                        type="checkbox"
-                        name="isAvailable"
-                        id="isAvailable"
-                        checked={formData.isAvailable}
-                        onChange={handleInputChange}
-                        className="sr-only peer"
-                      />
-                      <div className={`w-11 h-6 rounded-full transition-colors ${
-                        formData.isAvailable ? 'bg-green-500' : 'bg-neutral-300'
-                      }`}></div>
-                      <div className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${
-                        formData.isAvailable ? 'translate-x-5' : 'translate-x-0'
-                      }`}></div>
+                    <div className="relative flex-shrink-0">
+                      <input type="checkbox" name="isAvailable" id="isAvailable" checked={formData.isAvailable} onChange={handleInputChange} className="sr-only peer" />
+                      <div className={`w-11 h-6 rounded-full transition-colors ${formData.isAvailable ? 'bg-emerald-500' : 'bg-neutral-300'}`} />
+                      <div className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${formData.isAvailable ? 'translate-x-5' : 'translate-x-0'}`} />
                     </div>
                   </label>
                 </div>
 
                 {/* Actions */}
-                <div className="flex justify-end gap-3 pt-4 border-t border-neutral-100">
-                  <button
-                    type="button"
-                    onClick={closeModal}
-                    className="btn btn-secondary"
-                  >
-                    Cancel
-                  </button>
-                  <button type="submit" disabled={saving} className="btn btn-primary">
-                    {saving ? 'Saving...' : editingProduct ? 'Update Product' : 'Add Product'}
+                <div className="flex justify-end gap-3 pt-2 border-t border-neutral-100">
+                  <button type="button" onClick={closeModal} className="btn btn-secondary">Cancel</button>
+                  <button type="submit" disabled={saving} className="btn btn-primary min-w-[130px]">
+                    {saving ? 'Saving…' : editingProduct ? 'Update Product' : 'Add Product'}
                   </button>
                 </div>
               </form>

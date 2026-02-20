@@ -138,8 +138,8 @@ export default function CategoriesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-primary-900">Categories</h1>
-          <p className="text-neutral-600">Organize your products into categories</p>
+          <h1 className="page-title">Categories</h1>
+          <p className="page-subtitle">Organize your products into categories</p>
         </div>
         <button onClick={() => openModal()} className="btn btn-primary flex items-center gap-2">
           <PlusIcon className="h-5 w-5" />
@@ -148,8 +148,8 @@ export default function CategoriesPage() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-800"></div>
+        <div className="loading-page">
+          <div className="spinner" />
         </div>
       ) : categories.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-soft p-12 text-center">

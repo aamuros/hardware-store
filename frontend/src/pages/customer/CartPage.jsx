@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { TrashIcon, MinusIcon, PlusIcon, CartIcon, BoxIcon, CashIcon, CheckIcon } from '../../components/icons'
+import { getImageUrl } from '../../services/api'
 import { useCart } from '../../context/CartContext'
 import toast from 'react-hot-toast'
 
@@ -383,7 +384,7 @@ export default function CartPage() {
                   <div className="w-20 h-20 bg-neutral-100 rounded-xl flex-shrink-0 overflow-hidden">
                     {item.imageUrl ? (
                       <img
-                        src={item.imageUrl}
+                        src={getImageUrl(item.imageUrl)}
                         alt={item.name}
                         className="w-full h-full object-cover"
                       />

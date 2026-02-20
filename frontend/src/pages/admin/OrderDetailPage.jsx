@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { adminApi } from '../../services/api'
+import { adminApi, getImageUrl } from '../../services/api'
 import {
   ArrowLeftIcon,
   PhoneIcon,
@@ -12,14 +12,14 @@ import {
 } from '../../components/icons'
 
 const ORDER_STATUSES = {
-  pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
-  accepted: { label: 'Accepted', color: 'bg-blue-100 text-blue-800' },
-  preparing: { label: 'Preparing', color: 'bg-purple-100 text-purple-800' },
-  out_for_delivery: { label: 'Out for Delivery', color: 'bg-indigo-100 text-indigo-800' },
-  delivered: { label: 'Delivered', color: 'bg-green-100 text-green-800' },
-  completed: { label: 'Completed', color: 'bg-green-100 text-green-800' },
-  cancelled: { label: 'Cancelled', color: 'bg-red-100 text-red-800' },
-  rejected: { label: 'Rejected', color: 'bg-red-100 text-red-800' },
+  pending: { label: 'Pending', color: 'badge-pending' },
+  accepted: { label: 'Accepted', color: 'badge-accepted' },
+  preparing: { label: 'Preparing', color: 'badge-preparing' },
+  out_for_delivery: { label: 'Out for Delivery', color: 'badge-delivery' },
+  delivered: { label: 'Delivered', color: 'badge-completed' },
+  completed: { label: 'Completed', color: 'badge-completed' },
+  cancelled: { label: 'Cancelled', color: 'badge-cancelled' },
+  rejected: { label: 'Rejected', color: 'badge-cancelled' },
 }
 
 const STATUS_TRANSITIONS = {
@@ -40,6 +40,7 @@ export default function OrderDetailPage() {
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
   const [error, setError] = useState(null)
+  const [updateError, setUpdateError] = useState(null)
   const [showRejectModal, setShowRejectModal] = useState(false)
   const [rejectReason, setRejectReason] = useState('')
 
@@ -51,8 +52,14 @@ export default function OrderDetailPage() {
     try {
       const response = await adminApi.getOrder(id)
       setOrder(response.data.data)
+      setError(null)
     } catch (err) {
-      setError('Failed to load order details')
+      // Only set the page-level error if we never loaded order data
+      if (!order) {
+        setError('Failed to load order details')
+      } else {
+        setUpdateError('Failed to refresh order details')
+      }
       console.error('Error fetching order:', err)
     } finally {
       setLoading(false)
@@ -61,13 +68,20 @@ export default function OrderDetailPage() {
 
   const handleStatusUpdate = async (newStatus, message = '') => {
     setUpdating(true)
+    setUpdateError(null)
     try {
       await adminApi.updateOrderStatus(id, newStatus, message)
       await fetchOrder() // Refresh order data
       setShowRejectModal(false)
       setRejectReason('')
     } catch (err) {
-      setError('Failed to update order status')
+      const serverMessage = err.response?.data?.message
+      const errorCode = err.response?.data?.code
+      if (err.response?.status === 401 || errorCode === 'FOREIGN_KEY_ERROR') {
+        setUpdateError(serverMessage || 'Session error. Please log in again.')
+      } else {
+        setUpdateError(serverMessage || 'Failed to update order status')
+      }
       console.error('Error updating status:', err)
     } finally {
       setUpdating(false)
@@ -96,16 +110,16 @@ export default function OrderDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-800"></div>
+      <div className="loading-page">
+        <div className="spinner" />
       </div>
     )
   }
 
-  if (error || !order) {
+  if (!order) {
     return (
-      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-        {error || 'Order not found'}
+      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center justify-between">
+        <span>{error || 'Order not found'}</span>
         <Link to="/admin/orders" className="ml-4 underline">
           Back to Orders
         </Link>
@@ -114,7 +128,7 @@ export default function OrderDetailPage() {
   }
 
   const availableTransitions = STATUS_TRANSITIONS[order.status] || []
-  const statusInfo = ORDER_STATUSES[order.status] || { label: order.status, color: 'bg-neutral-100 text-neutral-800' }
+  const statusInfo = ORDER_STATUSES[order.status] || { label: order.status, color: 'badge bg-neutral-50 text-neutral-600 border border-neutral-200' }
 
   return (
     <div className="space-y-6">
@@ -136,7 +150,7 @@ export default function OrderDetailPage() {
             </p>
           </div>
         </div>
-        <span className={`px-3 py-1 text-sm font-medium rounded-full ${statusInfo.color}`}>
+        <span className={statusInfo.color || 'badge bg-neutral-50 text-neutral-600 border border-neutral-200'}>
           {statusInfo.label}
         </span>
       </div>
@@ -145,6 +159,11 @@ export default function OrderDetailPage() {
       {availableTransitions.length > 0 && (
         <div className="bg-white rounded-2xl shadow-soft p-4">
           <h3 className="text-sm font-medium text-primary-700 mb-3">Update Order Status</h3>
+          {updateError && (
+            <div className="mb-3 bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
+              {updateError}
+            </div>
+          )}
           <div className="flex flex-wrap gap-3">
             {availableTransitions.includes('accepted') && (
               <button
@@ -229,7 +248,7 @@ export default function OrderDetailPage() {
                 <div key={item.id} className="px-6 py-4 flex items-center gap-4">
                   {item.product?.imageUrl && (
                     <img
-                      src={item.product.imageUrl}
+                      src={getImageUrl(item.product.imageUrl)}
                       alt={item.product.name}
                       className="w-16 h-16 object-cover rounded"
                     />

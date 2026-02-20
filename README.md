@@ -2,7 +2,7 @@
 
 A full-stack web ordering system for local hardware stores in the Philippines, featuring a customer storefront, admin dashboard, and SMS notifications.
 
-![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?logo=node.js)
+![Node.js](https://img.shields.io/badge/Node.js-20%2B-339933?logo=node.js)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)
 ![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma)
 ![License](https://img.shields.io/badge/License-Proprietary-red)
@@ -37,7 +37,7 @@ A full-stack web ordering system for local hardware stores in the Philippines, f
 | Layer | Technology |
 |-------|------------|
 | **Frontend** | React 18, Vite, Tailwind CSS, React Router v6 |
-| **Backend** | Node.js 18+, Express.js, Prisma ORM |
+| **Backend** | Node.js 20+, Express.js, Prisma ORM |
 | **Database** | SQLite (development), PostgreSQL (production) |
 | **Auth** | JWT (JSON Web Tokens) |
 | **SMS** | Semaphore (primary for Philippines) |
@@ -46,7 +46,7 @@ A full-stack web ordering system for local hardware stores in the Philippines, f
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 20+
 - npm 9+
 
 ### Installation

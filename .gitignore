@@ -68,3 +68,17 @@ prisma/*.db-journal
 # Misc
 *.pem
 .cache/
+
+# ============================================
+# Deployment: Ignore large/generated assets
+# ============================================
+# Product images (originals) — not needed in repo
+product-images/
+
+# Dev-only seed scripts (not needed in production)
+backend/prisma/seed-data.js
+backend/prisma/generate-orders-csv.js
+
+# NOTE: backend/uploads/ and backend/prisma/seed-full.js are intentionally
+# tracked so that product images and seed data deploy correctly to Railway.
+# backend/prisma/data/ CSV files are also tracked for the full seed.

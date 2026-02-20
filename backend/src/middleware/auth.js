@@ -18,15 +18,25 @@ const authenticate = async (req, res, next) => {
 
     const decoded = jwt.verify(token, config.jwt.secret);
 
-    // Verify the user still exists in the database (handles re-seeded DBs)
-    if (decoded.id) {
-      const user = await prisma.user.findUnique({ where: { id: decoded.id } });
-      if (!user) {
-        return res.status(401).json({
-          success: false,
-          message: 'User no longer exists. Please log in again.',
-        });
-      }
+    // Reject customer tokens on admin routes
+    if (decoded.type === 'customer') {
+      return res.status(401).json({
+        success: false,
+        message: 'Admin authentication required',
+      });
+    }
+
+    // Verify the admin/staff user still exists and is active in the database
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: { id: true, username: true, role: true, isActive: true },
+    });
+
+    if (!user || !user.isActive) {
+      return res.status(401).json({
+        success: false,
+        message: 'Account not found or deactivated. Please log in again.',
+      });
     }
 
     req.user = decoded;

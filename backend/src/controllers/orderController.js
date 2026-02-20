@@ -586,6 +586,18 @@ const updateOrderStatus = async (req, res, next) => {
       }
 
       // Create status history entry
+      // Verify the user exists before setting changedById to avoid FK constraint errors
+      let changedById = null;
+      if (req.user?.id) {
+        const userExists = await tx.user.findUnique({
+          where: { id: req.user.id },
+          select: { id: true },
+        });
+        if (userExists) {
+          changedById = req.user.id;
+        }
+      }
+
       await tx.orderStatusHistory.create({
         data: {
           orderId: parseInt(id, 10),

@@ -1,6 +1,8 @@
 const app = require('./app');
 const config = require('./config');
 const prisma = require('./utils/prismaClient');
+const { exec } = require('child_process');
+const path = require('path');
 
 const PORT = config.port;
 
@@ -23,9 +25,14 @@ const validateEnvironment = () => {
     if (!process.env.DATABASE_URL) {
       errors.push('DATABASE_URL is required in production');
     }
-    if (config.cors.origin === 'http://localhost:5173') {
-      console.warn('[!] Warning: CORS origin is set to localhost in production');
+    if (config.frontendUrl === 'http://localhost:5173') {
+      console.warn('[!] Warning: FRONTEND_URL is set to localhost in production — set it to your real domain');
     }
+  }
+
+  // General DATABASE_URL check (required for PostgreSQL)
+  if (!process.env.DATABASE_URL) {
+    console.warn('[!] Warning: DATABASE_URL is not set — database operations will fail');
   }
 
   // If there are critical errors, fail fast
@@ -92,6 +99,38 @@ const startServer = async () => {
 ║                                                    ║
 ╚════════════════════════════════════════════════════╝
       `);
+
+      // Run database seed in background after server is listening.
+      // This ensures the healthcheck passes immediately while the
+      // (potentially slow) seed runs asynchronously.
+      // The seed is idempotent — it skips if products already exist.
+      if (config.nodeEnv === 'production') {
+        console.log('[*] Starting database seed in background...');
+        const seedProc = exec('npx prisma db seed', {
+          cwd: path.join(__dirname, '..'),
+          env: { ...process.env },
+        });
+
+        seedProc.stdout.on('data', (data) => {
+          data.toString().trim().split('\n').forEach(line => {
+            if (line.trim()) console.log(`[seed] ${line}`);
+          });
+        });
+
+        seedProc.stderr.on('data', (data) => {
+          data.toString().trim().split('\n').forEach(line => {
+            if (line.trim()) console.error(`[seed] ${line}`);
+          });
+        });
+
+        seedProc.on('close', (code) => {
+          if (code === 0) {
+            console.log('[OK] Database seed completed successfully');
+          } else {
+            console.warn(`[!] Database seed exited with code ${code} (non-fatal)`);
+          }
+        });
+      }
     });
   } catch (error) {
     console.error('[X] Failed to start server:', error);

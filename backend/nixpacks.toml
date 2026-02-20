@@ -1,0 +1,14 @@
+# Nixpacks configuration for Railway deployment
+# https://nixpacks.com/docs/configuration/file
+
+[phases.setup]
+nixPkgs = ["nodejs_20", "openssl"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["DATABASE_URL=${DATABASE_URL:-postgresql://placeholder:5432/placeholder} npx prisma generate"]
+
+[start]
+cmd = "sh scripts/check-env.sh && npx prisma migrate deploy && (npx prisma db seed || echo 'Seed skipped') && node src/server.js"

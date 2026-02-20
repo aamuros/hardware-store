@@ -76,13 +76,13 @@ const ProductCard = memo(function ProductCard({ product }) {
   }, [isInStock, addToCart, product, hasVariants, navigate, getItemQuantity])
 
   return (
-    <Link to={`/products/${product.id}`} className="group block bg-white rounded-2xl border border-neutral-100 overflow-hidden hover:border-neutral-200 hover:shadow-soft-lg transition-all duration-200">
+    <Link to={`/products/${product.id}`} className="group block bg-white rounded-2xl border border-neutral-100 overflow-hidden hover:border-neutral-200 hover:shadow-soft transition-all duration-200">
       {/* Product Image */}
       <div className="relative aspect-square overflow-hidden bg-neutral-50">
         <OptimizedImage
           src={product.imageUrl}
           alt={product.name}
-          className="group-hover:scale-[1.03] transition-transform duration-300"
+          className="group-hover:scale-[1.04] transition-transform duration-500"
           fallback={<BoxIcon className="h-16 w-16 text-neutral-300" />}
         />
 
@@ -127,26 +127,28 @@ const ProductCard = memo(function ProductCard({ product }) {
       {/* Product Info */}
       <div className="p-3.5">
         {product.category?.name && (
-          <div className="text-[10px] text-neutral-400 mb-1 font-semibold uppercase tracking-widest">{product.category.name}</div>
+          <div className="text-[10px] text-neutral-400 mb-1 font-semibold uppercase tracking-widest leading-none">{product.category.name}</div>
         )}
-        <h3 className="font-semibold text-primary-900 mb-2.5 line-clamp-2 text-sm leading-snug">
+        <h3 className="font-semibold text-primary-900 mb-3 line-clamp-2 text-sm leading-snug">
           {product.name}
         </h3>
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
             {hasVariants && (
-              <span className="text-[10px] text-neutral-400 font-medium">From </span>
+              <span className="text-[10px] text-neutral-400 font-medium block leading-none mb-0.5">From</span>
             )}
-            <span className="text-sm font-bold text-primary-900">
-              {formattedPrice}
-            </span>
-            <span className="text-[10px] text-neutral-400 ml-0.5">/{product.unit}</span>
+            <div className="flex items-baseline gap-0.5">
+              <span className="text-sm font-bold text-primary-900">
+                {formattedPrice}
+              </span>
+              <span className="text-[10px] text-neutral-400 ml-0.5">/{product.unit}</span>
+            </div>
           </div>
 
           {isInStock ? (
             <button
               onClick={handleAddToCart}
-              className="w-8 h-8 flex items-center justify-center bg-primary-900 text-white rounded-xl hover:bg-primary-800 active:scale-95 transition-all duration-150 shadow-sm"
+              className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-primary-900 text-white rounded-lg hover:bg-primary-800 active:scale-95 transition-all duration-150 shadow-sm"
               aria-label={hasVariants ? 'View options' : 'Add to cart'}
               title={hasVariants ? 'View options' : 'Add to cart'}
             >

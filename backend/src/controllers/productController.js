@@ -76,6 +76,14 @@ const getAllProducts = async (req, res, next) => {
               name: true,
             },
           },
+          variants: {
+            select: {
+              id: true,
+              name: true,
+              stockQuantity: true,
+              isAvailable: true,
+            },
+          },
         },
         skip,
         take: parsedLimit,
@@ -564,16 +572,29 @@ const getLowStockProducts = async (req, res, next) => {
             name: true,
           },
         },
+        variants: {
+          where: { isDeleted: false },
+          select: { stockQuantity: true },
+        },
       },
       orderBy: {
         stockQuantity: 'asc',
       },
     });
 
-    // Filter products where stockQuantity <= lowStockThreshold
-    const lowStockProducts = allAvailableProducts.filter(
-      p => p.stockQuantity <= p.lowStockThreshold
-    );
+    // Compute effective stock: for products with variants, sum variant stock
+    const withEffectiveStock = allAvailableProducts.map(p => {
+      let effectiveStock = p.stockQuantity;
+      if (p.hasVariants && p.variants && p.variants.length > 0) {
+        effectiveStock = p.variants.reduce((sum, v) => sum + v.stockQuantity, 0);
+      }
+      return { ...p, effectiveStock };
+    });
+
+    // Filter products where effectiveStock <= lowStockThreshold
+    const lowStockProducts = withEffectiveStock
+      .filter(p => p.effectiveStock <= p.lowStockThreshold)
+      .sort((a, b) => a.effectiveStock - b.effectiveStock);
 
     res.json({
       success: true,

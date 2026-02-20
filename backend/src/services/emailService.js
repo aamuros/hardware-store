@@ -60,7 +60,7 @@ const getTransporter = () => {
  */
 const sendPasswordResetEmail = async (email, resetToken, customerName) => {
     try {
-        const frontendUrl = config.cors.origin || 'http://localhost:5173';
+        const frontendUrl = config.frontendUrl || 'http://localhost:5173';
         const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
         const storeName = config.store.name;
         const expiryMinutes = config.passwordReset.tokenExpiryMinutes;

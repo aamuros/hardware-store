@@ -18,6 +18,7 @@ import {
 } from '../icons'
 import { useCart } from '../../context/CartContext'
 import { useCustomerAuth } from '../../context/CustomerAuthContext'
+import { getImageUrl } from '../../services/api'
 import { productApi } from '../../services/api'
 import { useDebounce } from '../../hooks/useDebounce'
 
@@ -249,7 +250,7 @@ export default function CustomerLayout() {
                           >
                             <div className="w-10 h-10 bg-neutral-100 rounded-lg overflow-hidden flex-shrink-0">
                               {product.imageUrl ? (
-                                <img src={product.imageUrl} alt="" className="w-full h-full object-cover" />
+                                <img src={getImageUrl(product.imageUrl)} alt="" className="w-full h-full object-cover" />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center text-neutral-400">
                                   <WrenchIcon className="h-5 w-5" />

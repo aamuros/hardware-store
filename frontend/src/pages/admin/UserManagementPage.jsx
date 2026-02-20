@@ -224,8 +224,8 @@ export default function UserManagementPage() {
             {/* Page Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-primary-900">Staff Management</h1>
-                    <p className="text-neutral-600">Manage admin and staff accounts</p>
+                    <h1 className="page-title">Staff Management</h1>
+                    <p className="page-subtitle">Manage admin and staff accounts</p>
                 </div>
                 <button onClick={openCreateModal} className="btn btn-primary flex items-center gap-2">
                     <PlusIcon className="h-5 w-5" />
@@ -235,7 +235,7 @@ export default function UserManagementPage() {
 
             {/* Success message */}
             {successMsg && (
-                <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm animate-fade-in">
+                <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm">
                     <CheckIcon className="h-5 w-5 text-green-500 flex-shrink-0" />
                     {successMsg}
                 </div>
@@ -250,8 +250,8 @@ export default function UserManagementPage() {
 
             {/* Users table */}
             {loading ? (
-                <div className="flex items-center justify-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-800"></div>
+                <div className="loading-page">
+                    <div className="spinner" />
                 </div>
             ) : users.filter(u => u.id !== currentUser?.id).length === 0 ? (
                 <div className="bg-white rounded-2xl shadow-soft p-12 text-center">
