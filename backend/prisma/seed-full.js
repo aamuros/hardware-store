@@ -101,23 +101,21 @@ async function main() {
     return;
   }
 
-  // ─── CLEAR ANY PARTIAL DATA ───────────────────────────────────────
-  console.log('🗑️  Clearing any partial existing data...');
+  // ─── CLEAR PARTIAL DATA (preserve customers & their data) ─────────
+  console.log('🗑️  Clearing partial existing data (preserving customer accounts)...');
   await prisma.orderStatusHistory.deleteMany();
   await prisma.smsLog.deleteMany();
   await prisma.orderItem.deleteMany();
   await prisma.order.deleteMany();
-  await prisma.wishlistItem.deleteMany();
-  await prisma.savedAddress.deleteMany();
-  await prisma.passwordReset.deleteMany();
-  await prisma.customer.deleteMany();
+  // NOTE: Customer accounts, saved addresses, wishlist items, and password
+  // resets are NOT deleted so that real user registrations survive re-seeds.
   await prisma.bulkPricingTier.deleteMany();
   await prisma.productImage.deleteMany();
   await prisma.productVariant.deleteMany();
   await prisma.product.deleteMany();
   await prisma.category.deleteMany();
   await prisma.user.deleteMany();
-  console.log('✅ Existing data cleared');
+  console.log('✅ Existing data cleared (customer accounts preserved)');
 
   // ─── ADMIN USER ───────────────────────────────────────────────────
   const hashedPassword = await bcrypt.hash('admin123', 10);
@@ -1179,8 +1177,10 @@ async function main() {
 
   const createdCustomers = [];
   for (const cust of customerDataList) {
-    const c = await prisma.customer.create({
-      data: {
+    const c = await prisma.customer.upsert({
+      where: { email: cust.email },
+      update: {}, // Don't overwrite existing accounts
+      create: {
         email: cust.email,
         password: customerPassword,
         name: cust.name,
@@ -1190,7 +1190,7 @@ async function main() {
     });
     createdCustomers.push(c);
   }
-  console.log(`✅ Customers created: ${createdCustomers.length}`);
+  console.log(`✅ Customers upserted: ${createdCustomers.length}`);
 
   // ═══════════════════════════════════════════════════════════════════
   // SAVED ADDRESSES — give customers saved delivery addresses
@@ -1256,7 +1256,7 @@ async function main() {
   console.log('\n🔄 Loading orders from CSV files...');
 
   const ordersCSVPath = path.join(__dirname, 'data', 'orders.csv');
-  const itemsCSVPath  = path.join(__dirname, 'data', 'order-items.csv');
+  const itemsCSVPath = path.join(__dirname, 'data', 'order-items.csv');
 
   if (!fs.existsSync(ordersCSVPath) || !fs.existsSync(itemsCSVPath)) {
     console.log('⚠️  CSV files not found! Generate them first:');
@@ -1324,12 +1324,12 @@ async function main() {
     }
 
     const orderRows = parseCSV(ordersCSVPath);
-    const itemRows  = parseCSV(itemsCSVPath);
+    const itemRows = parseCSV(itemsCSVPath);
     console.log(`   📄 Loaded ${orderRows.length} orders and ${itemRows.length} items from CSV`);
 
     // ── Build lookup maps ────────────────────────────────────────────
     const allProducts = await prisma.product.findMany({ include: { variants: true } });
-    const allUsers    = await prisma.user.findMany();
+    const allUsers = await prisma.user.findMany();
 
     // product name → { id, variants: { variantName → { id } } }
     const productMap = {};
@@ -1362,10 +1362,10 @@ async function main() {
 
     // ── Insert orders in batches ─────────────────────────────────────
     let totalOrderCount = 0;
-    let totalItemCount  = 0;
-    let skippedItems    = 0;
-    const batchSize     = 60;
-    let batch           = [];
+    let totalItemCount = 0;
+    let skippedItems = 0;
+    const batchSize = 60;
+    let batch = [];
 
     for (const row of orderRows) {
       const items = itemsByOrder[row.order_number] || [];
@@ -1387,12 +1387,12 @@ async function main() {
           continue;
         }
 
-        let variantId   = null;
+        let variantId = null;
         let variantName = null;
         if (it.variant_name) {
           const variant = product.variants[it.variant_name];
           if (variant) {
-            variantId   = variant.id;
+            variantId = variant.id;
             variantName = it.variant_name;
           }
         }
@@ -1401,34 +1401,34 @@ async function main() {
           productId: product.id,
           variantId,
           variantName,
-          quantity:  parseInt(it.quantity, 10) || 1,
+          quantity: parseInt(it.quantity, 10) || 1,
           unitPrice: parseFloat(it.unit_price) || 0,
-          subtotal:  parseFloat(it.subtotal)   || 0,
+          subtotal: parseFloat(it.subtotal) || 0,
         });
       }
 
       if (resolvedItems.length === 0) continue;
 
       batch.push({
-        orderNumber:  row.order_number,
-        customerId:   customer ? customer.id : null,
+        orderNumber: row.order_number,
+        customerId: customer ? customer.id : null,
         customerName: row.customer_name || 'Walk-in Customer',
-        phone:        row.phone || '',
-        address:      row.address || '',
-        barangay:     row.barangay || '',
-        landmarks:    row.landmarks || '',
-        status:       row.status || 'pending',
-        totalAmount:  parseFloat(row.total_amount) || 0,
-        notes:        row.notes || null,
-        createdAt:    orderDate,
-        updatedAt:    orderDate,
-        items:        resolvedItems,
+        phone: row.phone || '',
+        address: row.address || '',
+        barangay: row.barangay || '',
+        landmarks: row.landmarks || '',
+        status: row.status || 'pending',
+        totalAmount: parseFloat(row.total_amount) || 0,
+        notes: row.notes || null,
+        createdAt: orderDate,
+        updatedAt: orderDate,
+        items: resolvedItems,
       });
 
       if (batch.length >= batchSize) {
         await flushOrderBatch(batch, allUsers);
         totalOrderCount += batch.length;
-        totalItemCount  += batch.reduce((s, o) => s + o.items.length, 0);
+        totalItemCount += batch.reduce((s, o) => s + o.items.length, 0);
         batch = [];
 
         if (totalOrderCount % 500 < batchSize) {
@@ -1441,7 +1441,7 @@ async function main() {
     if (batch.length > 0) {
       await flushOrderBatch(batch, allUsers);
       totalOrderCount += batch.length;
-      totalItemCount  += batch.reduce((s, o) => s + o.items.length, 0);
+      totalItemCount += batch.reduce((s, o) => s + o.items.length, 0);
     }
 
     console.log(`\n✅ Orders created: ${totalOrderCount}`);
@@ -1531,7 +1531,7 @@ async function flushOrderBatch(batch, allUsers) {
           toStatus: flowStatus,
           changedById: allUsers[Math.floor(Math.random() * allUsers.length)].id,
           notes: flowStatus === 'rejected' ? 'Out of stock items' :
-                 flowStatus === 'cancelled' ? 'Customer requested cancellation' : null,
+            flowStatus === 'cancelled' ? 'Customer requested cancellation' : null,
           createdAt: historyDate,
         },
       });
