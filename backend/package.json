@@ -4,8 +4,8 @@
   "description": "Backend API for Hardware Store Ordering System",
   "main": "src/server.js",
   "scripts": {
-    "start": "sh scripts/check-env.sh && npx prisma migrate deploy && node src/server.js",
-    "start:prod": "npx prisma migrate deploy && node src/server.js",
+    "start": "sh scripts/check-env.sh && sh scripts/deploy-db.sh && node src/server.js",
+    "start:prod": "sh scripts/deploy-db.sh && node src/server.js",
     "dev": "nodemon src/server.js",
     "build": "npx prisma generate",
     "postinstall": "npx prisma generate",
