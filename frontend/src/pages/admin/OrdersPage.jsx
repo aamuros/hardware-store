@@ -604,7 +604,7 @@ export default function OrdersPage() {
                       {/* Order # */}
                       <td className="px-5 py-4 whitespace-nowrap">
                         <span className="text-sm font-semibold text-primary-900 font-mono">
-                          #{order.orderNumber}
+                          {order.orderNumber}
                         </span>
                       </td>
 

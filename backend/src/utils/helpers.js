@@ -1,14 +1,14 @@
 /**
  * Generate a unique order number
- * Format: HW-YYYYMMDD-XXXX (e.g., HW-20241211-0001)
+ * Format: ORD-YYMMDD-NNNNN (e.g., ORD-260212-52418)
  */
 const generateOrderNumber = () => {
   const date = new Date();
-  const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
-  // Use timestamp + random for better uniqueness
-  const timestamp = Date.now().toString(36).toUpperCase();
-  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-  return `HW-${dateStr}-${timestamp}${random}`.substring(0, 24);
+  const yy = String(date.getFullYear()).slice(2);
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  const random = Math.floor(10000 + Math.random() * 90000); // 5-digit number
+  return `ORD-${yy}${mm}${dd}-${random}`;
 };
 
 /**

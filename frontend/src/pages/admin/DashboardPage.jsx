@@ -617,7 +617,7 @@ export default function DashboardPage() {
                   recentOrders.map((order) => (
                     <tr key={order.id} className="hover:bg-neutral-50 transition-colors">
                       <td>
-                        <span className="font-semibold text-primary-900 text-sm">#{order.orderNumber}</span>
+                        <span className="font-semibold text-primary-900 text-sm">{order.orderNumber}</span>
                       </td>
                       <td>
                         <span className="text-sm font-medium text-primary-900">{order.customerName}</span>

@@ -138,7 +138,7 @@ export default function OrderDetailPage() {
           </button>
           <div>
             <h1 className="text-2xl font-bold text-primary-900">
-              Order #{order.orderNumber}
+              Order {order.orderNumber}
             </h1>
             <p className="text-neutral-600">
               Placed on {formatDate(order.createdAt)}

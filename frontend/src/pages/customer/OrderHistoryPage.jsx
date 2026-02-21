@@ -114,7 +114,7 @@ export default function OrderHistoryPage() {
                         >
                             <div className="flex items-center justify-between mb-3">
                                 <div>
-                                    <span className="font-bold text-primary-900">#{order.orderNumber}</span>
+                                    <span className="font-bold text-primary-900">{order.orderNumber}</span>
                                     <span className="text-neutral-500 text-sm ml-3">
                                         {formatDate(order.createdAt)}
                                     </span>

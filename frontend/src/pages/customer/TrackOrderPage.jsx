@@ -118,7 +118,7 @@ export default function TrackOrderPage() {
             <SearchIcon className="h-5 w-5 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Enter your order number (e.g., HW-20241211-0001)"
+              placeholder="Enter your order number (e.g., ORD-260212-52418)"
               value={orderNumber}
               onChange={(e) => setOrderNumber(e.target.value)}
               className="input pl-10"
@@ -260,7 +260,7 @@ export default function TrackOrderPage() {
       {!order && !loading && (
         <div className="text-center text-neutral-500 mt-8">
           <p className="mb-2">Your order number was sent via SMS when you placed your order.</p>
-          <p>Example format: HW-20241211-0001</p>
+          <p>Example format: ORD-260212-52418</p>
         </div>
       )}
     </div>
