@@ -51,8 +51,9 @@ fi
 
 echo "=== Database migration complete ==="
 
-# Step 4: Run idempotent seed (skips if products already exist)
+# Step 4: Run idempotent seed in the BACKGROUND so the server starts immediately.
+# The seed inserts thousands of records and can take several minutes on first deploy.
+# Running it synchronously would block the server and cause health-check timeouts.
 echo ""
-echo "=== Database Seed (idempotent) ==="
-npx prisma db seed || echo "WARNING: Seed failed (non-fatal) — server will still start"
-echo "=== Seed complete ==="
+echo "=== Database Seed (background, idempotent) ==="
+(npx prisma db seed && echo "=== Seed complete ===" || echo "WARNING: Seed failed (non-fatal)") &
