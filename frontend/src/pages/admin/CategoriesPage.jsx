@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react'
-import { adminApi, categoryApi } from '../../services/api'
+import { adminApi, categoryApi, getImageUrl } from '../../services/api'
 import {
   PlusIcon,
   PencilIcon,
@@ -20,7 +20,6 @@ const CATEGORY_ICONS = [
   { value: '📦', label: 'Other' },
 ]
 
-const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3001/api').replace('/api', '')
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState([])
@@ -52,7 +51,7 @@ export default function CategoriesPage() {
     if (category) {
       setEditingCategory(category)
       setFormData({ name: category.name, description: category.description || '', icon: category.icon || '📦' })
-      setImagePreview(category.imageUrl ? `${API_BASE}${category.imageUrl}` : null)
+      setImagePreview(category.imageUrl ? getImageUrl(category.imageUrl) : null)
       setImageFile(null)
       setRemoveImage(false)
     } else {
@@ -164,7 +163,7 @@ export default function CategoriesPage() {
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-neutral-50 flex items-center justify-center ring-1 ring-neutral-200 overflow-hidden flex-shrink-0">
                     {category.imageUrl ? (
-                      <img src={`${API_BASE}${category.imageUrl}`} alt={category.name} className="w-6 h-6 object-contain" />
+                      <img src={getImageUrl(category.imageUrl)} alt={category.name} className="w-6 h-6 object-contain" />
                     ) : (
                       <span className="text-lg">{category.icon || '📦'}</span>
                     )}

@@ -16,7 +16,7 @@ import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell
 } from 'recharts'
-import api from '../../services/api'
+import api, { getImageUrl } from '../../services/api'
 import toast from 'react-hot-toast'
 
 const STATUS_COLORS = {
@@ -197,8 +197,8 @@ export default function ReportsPage() {
                 key={opt.value}
                 onClick={() => setDateRange(opt.value)}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${dateRange === opt.value
-                    ? 'bg-white text-primary-700 shadow-sm'
-                    : 'text-neutral-500 hover:text-neutral-700'
+                  ? 'bg-white text-primary-700 shadow-sm'
+                  : 'text-neutral-500 hover:text-neutral-700'
                   }`}
               >
                 {opt.label}
@@ -332,8 +332,8 @@ export default function ReportsPage() {
                   key={tab}
                   onClick={() => setActiveChart(tab)}
                   className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all capitalize ${activeChart === tab
-                      ? 'bg-white text-primary-700 shadow-sm'
-                      : 'text-neutral-500 hover:text-neutral-700'
+                    ? 'bg-white text-primary-700 shadow-sm'
+                    : 'text-neutral-500 hover:text-neutral-700'
                     }`}
                 >
                   {tab}
@@ -541,8 +541,8 @@ export default function ReportsPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       {index < 3 ? (
                         <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${index === 0 ? 'bg-yellow-100 text-yellow-700 ring-2 ring-yellow-300' :
-                            index === 1 ? 'bg-neutral-100 text-neutral-600 ring-2 ring-neutral-300' :
-                              'bg-orange-100 text-orange-700 ring-2 ring-orange-300'
+                          index === 1 ? 'bg-neutral-100 text-neutral-600 ring-2 ring-neutral-300' :
+                            'bg-orange-100 text-orange-700 ring-2 ring-orange-300'
                           }`}>
                           {index + 1}
                         </span>
@@ -622,7 +622,7 @@ export default function ReportsPage() {
                     <div className="w-7 h-7 rounded-md bg-white flex items-center justify-center ring-1 ring-neutral-200 overflow-hidden flex-shrink-0">
                       {category.imageUrl ? (
                         <img
-                          src={`${(import.meta.env.VITE_API_URL || 'http://localhost:3001/api').replace('/api', '')}${category.imageUrl}`}
+                          src={getImageUrl(category.imageUrl)}
                           alt={category.name}
                           className="w-5 h-5 object-contain"
                         />

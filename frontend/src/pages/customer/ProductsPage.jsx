@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { SearchIcon, CategoryIcon, BoxIcon } from '../../components/icons'
-import { productApi, categoryApi } from '../../services/api'
+import { productApi, categoryApi, getImageUrl } from '../../services/api'
 import ProductCard from '../../components/ProductCard'
 import { useDebounce } from '../../hooks/useDebounce'
 
@@ -208,11 +208,10 @@ export default function ProductsPage() {
           <div className="flex flex-wrap gap-1.5 mt-3">
             <button
               onClick={() => handleCategoryChange('')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
-                !selectedCategory
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-all ${!selectedCategory
                   ? 'bg-primary-900 text-white border-primary-900'
                   : 'bg-white text-neutral-500 border-neutral-200 hover:border-primary-300 hover:text-primary-800'
-              }`}
+                }`}
             >
               All
             </button>
@@ -220,15 +219,14 @@ export default function ProductsPage() {
               <button
                 key={category.id}
                 onClick={() => handleCategoryChange(category.id.toString())}
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
-                  selectedCategory === category.id.toString()
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-all ${selectedCategory === category.id.toString()
                     ? 'bg-primary-900 text-white border-primary-900'
                     : 'bg-white text-neutral-500 border-neutral-200 hover:border-primary-300 hover:text-primary-800'
-                }`}
+                  }`}
               >
                 {category.imageUrl ? (
-                  <img 
-                    src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001'}${category.imageUrl}`}
+                  <img
+                    src={getImageUrl(category.imageUrl)}
                     alt={category.name}
                     className="h-3.5 w-3.5 object-contain"
                   />
@@ -329,11 +327,10 @@ export default function ProductsPage() {
                       <button
                         key={p}
                         onClick={() => handlePageChange(p)}
-                        className={`w-9 h-9 text-sm font-medium rounded-xl transition-all ${
-                          p === pagination.page
+                        className={`w-9 h-9 text-sm font-medium rounded-xl transition-all ${p === pagination.page
                             ? 'bg-primary-900 text-white shadow-sm'
                             : 'border border-neutral-200 bg-white text-neutral-600 hover:border-primary-300 hover:text-primary-800'
-                        }`}
+                          }`}
                       >
                         {p}
                       </button>

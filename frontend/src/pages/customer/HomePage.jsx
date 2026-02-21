@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { categoryApi, productApi, statsApi } from '../../services/api'
+import { categoryApi, productApi, statsApi, getImageUrl } from '../../services/api'
 import ProductCard from '../../components/ProductCard'
 import {
   SearchIcon,
@@ -235,8 +235,8 @@ export default function HomePage() {
               >
                 <div className="w-10 h-10 rounded-xl bg-neutral-50 flex items-center justify-center mb-3 ring-1 ring-neutral-200 group-hover:ring-primary-300 group-hover:bg-primary-50 transition-all overflow-hidden">
                   {category.imageUrl ? (
-                    <img 
-                      src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001'}${category.imageUrl}`}
+                    <img
+                      src={getImageUrl(category.imageUrl)}
                       alt={category.name}
                       className="w-6 h-6 object-contain"
                     />
