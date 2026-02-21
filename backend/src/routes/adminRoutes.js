@@ -8,6 +8,7 @@ const orderController = require('../controllers/orderController');
 const { authenticate, isAdmin } = require('../middleware/auth');
 const { validateProduct, validateCategory, validateOrderStatus } = require('../middleware/validators');
 const upload = require('../middleware/upload');
+const { categoryUpload } = require('../middleware/upload');
 
 // Public admin routes
 router.post('/login', adminController.login);
@@ -41,8 +42,8 @@ router.get('/inventory/low-stock', productController.getLowStockProducts);
 
 // Category management
 router.get('/categories', categoryController.getAllCategories);
-router.post('/categories', validateCategory, categoryController.createCategory);
-router.patch('/categories/:id', categoryController.updateCategory);
+router.post('/categories', categoryUpload.single('image'), validateCategory, categoryController.createCategory);
+router.patch('/categories/:id', categoryUpload.single('image'), categoryController.updateCategory);
 router.delete('/categories/:id', categoryController.deleteCategory);
 
 // Reports

@@ -5,8 +5,85 @@ const path = require('path');
 
 const prisma = new PrismaClient();
 
+// ─── COPY SEED IMAGES TO UPLOADS ──────────────────────────────────
+// Ensures all seed-referenced images exist in backend/uploads/
+// regardless of which branch or device the code is cloned on.
+function copySeedImages() {
+  const uploadsDir = path.resolve(__dirname, '..', 'uploads');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+
+  let copied = 0;
+
+  // 1. Copy category SVG icons from seed-images/categories/ (always overwrite to keep built-in icons current)
+  const categorySeedDir = path.resolve(__dirname, 'seed-images', 'categories');
+  if (fs.existsSync(categorySeedDir)) {
+    const categoryFiles = fs.readdirSync(categorySeedDir);
+    for (const file of categoryFiles) {
+      const src = path.join(categorySeedDir, file);
+      const dest = path.join(uploadsDir, file);
+      fs.copyFileSync(src, dest);
+      copied++;
+    }
+  }
+
+  // 2. Copy extra product images from seed-images/products/
+  const productSeedDir = path.resolve(__dirname, 'seed-images', 'products');
+  if (fs.existsSync(productSeedDir)) {
+    const productSeedFiles = fs.readdirSync(productSeedDir);
+    for (const file of productSeedFiles) {
+      const src = path.join(productSeedDir, file);
+      const dest = path.join(uploadsDir, file);
+      if (!fs.existsSync(dest)) {
+        fs.copyFileSync(src, dest);
+        copied++;
+      }
+    }
+  }
+
+  return copied;
+}
+
+// Category-to-image mapping used during seeding and image-url patching
+const CATEGORY_IMAGE_MAP = {
+  'Steel & Metal': '/uploads/steel-metal.svg',
+  'Lumber & Wood': '/uploads/lumber-wood.svg',
+  'Roofing & Ceiling': '/uploads/roofing-ceiling.svg',
+  'Cement & Masonry': '/uploads/cement-masonry.svg',
+  'Plumbing': '/uploads/plumbing.svg',
+  'Electrical': '/uploads/electrical.svg',
+  'Paint & Coatings': '/uploads/paint-coatings.svg',
+  'Fasteners & Nails': '/uploads/fasteners-nails.svg',
+  'Tools': '/uploads/tools.svg',
+  'Hardware & Accessories': '/uploads/hardware-accessories.svg',
+};
+
 async function main() {
   console.log('🌱 Starting database seed...');
+
+  // ─── COPY SEED IMAGES TO UPLOADS ────────────────────────────────
+  const copiedImages = copySeedImages();
+  if (copiedImages > 0) {
+    console.log(`📸 Copied ${copiedImages} seed images to uploads/`);
+  } else {
+    console.log('📸 All seed images already in uploads/');
+  }
+
+  // ─── ENSURE CATEGORY IMAGES ARE SET ─────────────────────────────
+  // Always patch category imageUrl so icons appear even on existing DBs
+  const existingCategories = await prisma.category.findMany();
+  let patched = 0;
+  for (const cat of existingCategories) {
+    const expectedUrl = CATEGORY_IMAGE_MAP[cat.name];
+    if (expectedUrl && cat.imageUrl !== expectedUrl) {
+      await prisma.category.update({ where: { id: cat.id }, data: { imageUrl: expectedUrl } });
+      patched++;
+    }
+  }
+  if (patched > 0) {
+    console.log(`🖼️  Patched imageUrl for ${patched} categories`);
+  }
 
   // ─── IDEMPOTENCY CHECK ────────────────────────────────────────────
   // Skip seeding if products already exist. This protects production data
@@ -56,16 +133,16 @@ async function main() {
 
   // ─── CATEGORIES ───────────────────────────────────────────────────
   const categoriesData = [
-    { name: 'Steel & Metal', description: 'Steel bars, angle bars, flat bars, tubular bars, and metal structural components', icon: '🔩' },
-    { name: 'Lumber & Wood', description: 'Coco lumber, good lumber, KD wood, plywood, and phenolic boards', icon: '🪵' },
-    { name: 'Roofing & Ceiling', description: 'Longspan roofing, metal furring, metal studs, purlins, and ceiling accessories', icon: '🏠' },
-    { name: 'Cement & Masonry', description: 'Cement, hollow blocks, sand, gravel, and masonry supplies', icon: '🧱' },
-    { name: 'Plumbing', description: 'PVC pipes, PPR pipes, fittings, traps, and plumbing accessories', icon: '🚿' },
-    { name: 'Electrical', description: 'Wires, circuit breakers, electrical pipes, and electrical accessories', icon: '⚡' },
-    { name: 'Paint & Coatings', description: 'Paints, primers, thinners, sealers, and coating products', icon: '🎨' },
-    { name: 'Fasteners & Nails', description: 'Screws, nails, teks screws, tox, wire clips, and fastening hardware', icon: '📌' },
-    { name: 'Tools', description: 'Hand tools, power tool accessories, and workshop equipment', icon: '🔧' },
-    { name: 'Hardware & Accessories', description: 'Locks, welding supplies, wire brushes, and general hardware items', icon: '🔒' },
+    { name: 'Steel & Metal', description: 'Steel bars, angle bars, flat bars, tubular bars, and metal structural components', icon: '🔩', imageUrl: CATEGORY_IMAGE_MAP['Steel & Metal'] },
+    { name: 'Lumber & Wood', description: 'Coco lumber, good lumber, KD wood, plywood, and phenolic boards', icon: '🪵', imageUrl: CATEGORY_IMAGE_MAP['Lumber & Wood'] },
+    { name: 'Roofing & Ceiling', description: 'Longspan roofing, metal furring, metal studs, purlins, and ceiling accessories', icon: '🏠', imageUrl: CATEGORY_IMAGE_MAP['Roofing & Ceiling'] },
+    { name: 'Cement & Masonry', description: 'Cement, hollow blocks, sand, gravel, and masonry supplies', icon: '🧱', imageUrl: CATEGORY_IMAGE_MAP['Cement & Masonry'] },
+    { name: 'Plumbing', description: 'PVC pipes, PPR pipes, fittings, traps, and plumbing accessories', icon: '🚿', imageUrl: CATEGORY_IMAGE_MAP['Plumbing'] },
+    { name: 'Electrical', description: 'Wires, circuit breakers, electrical pipes, and electrical accessories', icon: '⚡', imageUrl: CATEGORY_IMAGE_MAP['Electrical'] },
+    { name: 'Paint & Coatings', description: 'Paints, primers, thinners, sealers, and coating products', icon: '🎨', imageUrl: CATEGORY_IMAGE_MAP['Paint & Coatings'] },
+    { name: 'Fasteners & Nails', description: 'Screws, nails, teks screws, tox, wire clips, and fastening hardware', icon: '📌', imageUrl: CATEGORY_IMAGE_MAP['Fasteners & Nails'] },
+    { name: 'Tools', description: 'Hand tools, power tool accessories, and workshop equipment', icon: '🔧', imageUrl: CATEGORY_IMAGE_MAP['Tools'] },
+    { name: 'Hardware & Accessories', description: 'Locks, welding supplies, wire brushes, and general hardware items', icon: '🔒', imageUrl: CATEGORY_IMAGE_MAP['Hardware & Accessories'] },
   ];
 
   for (const cat of categoriesData) {

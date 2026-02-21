@@ -92,11 +92,14 @@ const createCategory = async (req, res, next) => {
       });
     }
 
+    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
     const category = await prisma.category.create({
       data: {
         name,
         description,
         icon,
+        imageUrl,
       },
     });
 
@@ -138,12 +141,17 @@ const updateCategory = async (req, res, next) => {
       });
     }
 
-    const { name, description, icon } = req.body;
+    const { name, description, icon, removeImage } = req.body;
 
     const updateData = {};
     if (name) updateData.name = name;
     if (description !== undefined) updateData.description = description;
     if (icon !== undefined) updateData.icon = icon;
+    if (req.file) {
+      updateData.imageUrl = `/uploads/${req.file.filename}`;
+    } else if (removeImage === 'true') {
+      updateData.imageUrl = null;
+    }
 
     const category = await prisma.category.update({
       where: { id: parsedId },

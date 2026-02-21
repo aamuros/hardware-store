@@ -76,7 +76,12 @@ export default function OrderDetailPage() {
       setRejectReason('')
     } catch (err) {
       const serverMessage = err.response?.data?.message
-      setUpdateError(serverMessage || 'Failed to update order status')
+      const errorCode = err.response?.data?.code
+      if (err.response?.status === 401 || errorCode === 'FOREIGN_KEY_ERROR') {
+        setUpdateError(serverMessage || 'Session error. Please log in again.')
+      } else {
+        setUpdateError(serverMessage || 'Failed to update order status')
+      }
       console.error('Error updating status:', err)
     } finally {
       setUpdating(false)

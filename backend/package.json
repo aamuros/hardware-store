@@ -8,7 +8,7 @@
     "start:prod": "npx prisma migrate deploy && node src/server.js",
     "dev": "nodemon src/server.js",
     "build": "npx prisma generate",
-    "postinstall": "DATABASE_URL=${DATABASE_URL:-postgresql://placeholder:5432/placeholder} npx prisma generate",
+    "postinstall": "npx prisma generate",
     "test": "jest --coverage --runInBand",
     "test:watch": "jest --watch",
     "test:setup": "dotenv -e .env.test -- npx prisma migrate deploy && dotenv -e .env.test -- npx prisma db seed",
