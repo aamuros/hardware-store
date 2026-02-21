@@ -103,7 +103,9 @@ const getDashboard = async (req, res, next) => {
       prisma.order.count({
         where: { status: 'pending' },
       }),
-      prisma.product.count(),
+      prisma.product.count({
+        where: { isDeleted: false },
+      }),
       prisma.order.aggregate({
         where: {
           createdAt: { gte: today },

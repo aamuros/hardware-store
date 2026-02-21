@@ -1,4 +1,5 @@
 const prisma = require('../utils/prismaClient');
+const { invalidateProducts } = require('../utils/cache');
 
 // GET /api/customers/orders
 const getOrderHistory = async (req, res, next) => {
@@ -178,6 +179,9 @@ const cancelOrder = async (req, res, next) => {
 
             return updated;
         });
+
+        // Invalidate product cache so storefront reflects restored stock immediately
+        invalidateProducts();
 
         res.json({
             success: true,

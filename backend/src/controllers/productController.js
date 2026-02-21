@@ -45,9 +45,9 @@ const getAllProducts = async (req, res, next) => {
       const searchTerm = search.trim();
       // If we already have an OR for inStock, we need to use AND to combine
       const searchConditions = [
-        { name: { contains: searchTerm } },
-        { description: { contains: searchTerm } },
-        { sku: { contains: searchTerm } },
+        { name: { contains: searchTerm, mode: 'insensitive' } },
+        { description: { contains: searchTerm, mode: 'insensitive' } },
+        { sku: { contains: searchTerm, mode: 'insensitive' } },
       ];
       if (where.OR) {
         // Move the existing OR (inStock filter) into an AND clause
@@ -77,6 +77,7 @@ const getAllProducts = async (req, res, next) => {
             },
           },
           variants: {
+            where: { isDeleted: false },
             select: {
               id: true,
               name: true,
@@ -126,13 +127,11 @@ const searchProducts = async (req, res, next) => {
     const skip = (parsedPage - 1) * parsedLimit;
     const searchTerm = q.trim();
 
-    // Note: SQLite's LIKE is case-insensitive by default for ASCII characters
-    // PostgreSQL would need mode: 'insensitive', but that's not supported in SQLite
     const searchWhere = {
       OR: [
-        { name: { contains: searchTerm } },
-        { description: { contains: searchTerm } },
-        { sku: { contains: searchTerm } },
+        { name: { contains: searchTerm, mode: 'insensitive' } },
+        { description: { contains: searchTerm, mode: 'insensitive' } },
+        { sku: { contains: searchTerm, mode: 'insensitive' } },
       ],
       isAvailable: true,
       isDeleted: false,
