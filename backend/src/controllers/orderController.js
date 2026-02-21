@@ -578,22 +578,13 @@ const updateOrderStatus = async (req, res, next) => {
         },
       });
 
-<<<<<<< HEAD
-      // Create status history entry
-      // Verify the admin user still exists to avoid FK constraint violation
+      // Resolve changedById – ensure the user still exists to avoid FK errors
       let changedById = null;
       if (req.user?.id) {
         const adminUser = await tx.user.findUnique({ where: { id: req.user.id }, select: { id: true } });
         if (adminUser) {
           changedById = adminUser.id;
         }
-=======
-      // Resolve changedById – ensure the user still exists to avoid FK errors
-      let changedById = null;
-      if (req.user?.id) {
-        const userExists = await tx.user.findUnique({ where: { id: req.user.id }, select: { id: true } });
-        if (userExists) changedById = userExists.id;
->>>>>>> 5b42107b1b38f3101ff65c1e3262c4ce0e0f2cb4
       }
 
       await tx.orderStatusHistory.create({
