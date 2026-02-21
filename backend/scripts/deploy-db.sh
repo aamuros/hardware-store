@@ -54,5 +54,5 @@ echo "=== Database migration complete ==="
 # Step 4: Run idempotent seed (skips if products already exist)
 echo ""
 echo "=== Database Seed (idempotent) ==="
-npx prisma db seed
+npx prisma db seed || echo "WARNING: Seed failed (non-fatal) — server will still start"
 echo "=== Seed complete ==="
