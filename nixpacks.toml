@@ -12,8 +12,9 @@ cmds = [
 ]
 
 [phases.build]
+# Set NODE_ENV to development temporarily so vite (a devDependency) is available
 cmds = [
-  "cd frontend && VITE_API_URL=/api npm run build",
+  "cd frontend && NODE_ENV=development npm install && VITE_API_URL=/api npm run build",
   "cd backend && DATABASE_URL=${DATABASE_URL:-postgresql://placeholder:5432/placeholder} npx prisma generate"
 ]
 
