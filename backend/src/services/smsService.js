@@ -1,10 +1,10 @@
 const axios = require('axios');
 const config = require('../config');
 const prisma = require('../utils/prismaClient');
-const { 
-  PH_TELCO_PREFIXES, 
-  ALL_VALID_PREFIXES, 
-  getTelcoFromPrefix 
+const {
+  PH_TELCO_PREFIXES,
+  ALL_VALID_PREFIXES,
+  getTelcoFromPrefix
 } = require('../config/smsPrefixes');
 
 // ============================================================================
@@ -101,32 +101,83 @@ const getTelco = (phone) => {
 };
 
 // ============================================================================
+// SMS HELPERS
+// ============================================================================
+
+/**
+ * Format order items into a compact summary string for SMS
+ * e.g. "Cement x2, Nails x5" — truncated with "+N more" if too long
+ */
+const formatItemsSummary = (items, maxLength = 60) => {
+  if (!items || items.length === 0) return '';
+
+  const itemStrings = items.map(item => {
+    const name = item.product?.name || item.variantName || 'Item';
+    // Shorten long product names
+    const shortName = name.length > 15 ? name.substring(0, 14) + '.' : name;
+    return `${shortName} x${item.quantity}`;
+  });
+
+  let result = '';
+  let includedCount = 0;
+
+  for (const itemStr of itemStrings) {
+    const separator = includedCount > 0 ? ', ' : '';
+    const remaining = items.length - includedCount - 1;
+    const moreText = remaining > 0 ? ` +${remaining} more` : '';
+
+    if ((result + separator + itemStr + moreText).length > maxLength && includedCount > 0) {
+      result += ` +${items.length - includedCount} more`;
+      return result;
+    }
+
+    result += separator + itemStr;
+    includedCount++;
+  }
+
+  return result;
+};
+
+/**
+ * Format amount with commas (e.g. 1500 -> "1,500.00")
+ */
+const formatAmount = (amount) => {
+  return Number(amount).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+// ============================================================================
 // SMS TEMPLATES
 // ============================================================================
 const SMS_TEMPLATES = {
-  ORDER_CONFIRMATION: (orderNumber, amount, storeName) =>
-    `[${storeName}] Order ${orderNumber} received! Total: P${amount.toFixed(2)}. We'll notify you when accepted. Salamat po!`,
+  ORDER_CONFIRMATION: (orderNumber, amount, storeName, items) => {
+    const itemsSummary = formatItemsSummary(items, 50);
+    const itemsLine = itemsSummary ? `\nItems: ${itemsSummary}` : '';
+    return `[${storeName}] Order ${orderNumber} received!${itemsLine}\nTotal: P${formatAmount(amount)}. We'll update you soon!`;
+  },
 
-  ORDER_ACCEPTED: (orderNumber, storeName) =>
-    `[${storeName}] Good news! Order ${orderNumber} ACCEPTED & being prepared. We'll update you when out for delivery.`,
+  ORDER_ACCEPTED: (orderNumber, storeName, items, amount) => {
+    const itemsSummary = formatItemsSummary(items, 50);
+    const itemsLine = itemsSummary ? `\nItems: ${itemsSummary}` : '';
+    return `[${storeName}] Order ${orderNumber} ACCEPTED!${itemsLine}\nTotal: P${formatAmount(amount)}. Now being prepared!`;
+  },
 
   ORDER_REJECTED: (orderNumber, reason, storePhone) =>
-    `Order ${orderNumber} cannot be processed${reason ? `: ${reason}` : ''}. Contact ${storePhone} for help. Sorry for inconvenience.`,
+    `[WenasHW] Sorry, order ${orderNumber} was not approved.${reason ? `\nReason: ${reason}` : ''}\nContact ${storePhone} for help.`,
 
   ORDER_PREPARING: (orderNumber, storeName) =>
-    `[${storeName}] Order ${orderNumber} is being prepared! We'll notify you when out for delivery.`,
+    `[${storeName}] Order ${orderNumber} is being prepared! We'll notify you when it's out for delivery. Salamat po!`,
 
-  ORDER_OUT_FOR_DELIVERY: (orderNumber, estimate) =>
-    `Your order ${orderNumber} is ON THE WAY!${estimate ? ` ETA: ${estimate}.` : ''} Please prepare payment. Thank you!`,
+  ORDER_OUT_FOR_DELIVERY: (orderNumber, amount) =>
+    `[WenasHW] Order ${orderNumber} is ON THE WAY!\nTotal: P${formatAmount(amount)}\nPlease prepare exact payment (COD). Salamat po!`,
 
-  ORDER_DELIVERED: (orderNumber, storeName) =>
-    `Order ${orderNumber} DELIVERED! Thank you for shopping with ${storeName}. We appreciate your business!`,
+  ORDER_DELIVERED: (orderNumber, storeName, amount) =>
+    `[${storeName}] Order ${orderNumber} DELIVERED!\nTotal paid: P${formatAmount(amount)}\nThank you for choosing ${storeName}! Salamat po!`,
 
   ORDER_CANCELLED: (orderNumber, reason, storePhone) =>
-    `Order ${orderNumber} cancelled${reason ? `: ${reason}` : ''}. Questions? Contact ${storePhone}.`,
+    `[WenasHW] Order ${orderNumber} has been cancelled.${reason ? `\nReason: ${reason}` : ''}\nContact ${storePhone} for assistance.`,
 
   ADMIN_NEW_ORDER: (orderNumber, amount, customerName) =>
-    `NEW ORDER! ${orderNumber} - P${amount.toFixed(2)} from ${customerName}. Check dashboard now.`,
+    `NEW ORDER! ${orderNumber} - P${formatAmount(amount)} from ${customerName}. Check dashboard now.`,
 };
 
 // ============================================================================
@@ -411,25 +462,40 @@ const sendSMS = async (phone, message, orderId = null, options = {}) => {
 
 /**
  * Send order confirmation to customer
+ * @param {string} phone - Customer phone number
+ * @param {string} orderNumber - Order number
+ * @param {number} amount - Total order amount
+ * @param {Array} items - Order items with product details
+ * @param {number|null} orderId - Database order ID for logging
  */
-const sendOrderConfirmation = async (phone, orderNumber, amount, orderId = null) => {
+const sendOrderConfirmation = async (phone, orderNumber, amount, items = [], orderId = null) => {
   const message = SMS_TEMPLATES.ORDER_CONFIRMATION(
     orderNumber,
     amount,
-    config.store.name
+    config.store.name,
+    items
   );
   return sendSMS(phone, message, orderId);
 };
 
 /**
  * Send status update to customer
+ * @param {string} phone - Customer phone number
+ * @param {string} orderNumber - Order number
+ * @param {string} status - New order status
+ * @param {Object} orderData - Order data: { message, items, amount }
+ * @param {number|null} orderId - Database order ID for logging
  */
-const sendStatusUpdate = async (phone, orderNumber, status, customMessage = null, orderId = null) => {
+const sendStatusUpdate = async (phone, orderNumber, status, orderData = {}, orderId = null) => {
+  // Support both old string format (backward compat) and new object format
+  const data = typeof orderData === 'string' ? { message: orderData } : orderData;
+  const { message: customMessage = null, items = [], amount = 0 } = data;
+
   let message;
 
   switch (status) {
     case 'accepted':
-      message = SMS_TEMPLATES.ORDER_ACCEPTED(orderNumber, config.store.name);
+      message = SMS_TEMPLATES.ORDER_ACCEPTED(orderNumber, config.store.name, items, amount);
       break;
     case 'rejected':
       message = SMS_TEMPLATES.ORDER_REJECTED(orderNumber, customMessage, config.store.phone);
@@ -438,11 +504,11 @@ const sendStatusUpdate = async (phone, orderNumber, status, customMessage = null
       message = SMS_TEMPLATES.ORDER_PREPARING(orderNumber, config.store.name);
       break;
     case 'out_for_delivery':
-      message = SMS_TEMPLATES.ORDER_OUT_FOR_DELIVERY(orderNumber, customMessage);
+      message = SMS_TEMPLATES.ORDER_OUT_FOR_DELIVERY(orderNumber, amount);
       break;
     case 'delivered':
     case 'completed':
-      message = SMS_TEMPLATES.ORDER_DELIVERED(orderNumber, config.store.name);
+      message = SMS_TEMPLATES.ORDER_DELIVERED(orderNumber, config.store.name, amount);
       break;
     case 'cancelled':
       message = SMS_TEMPLATES.ORDER_CANCELLED(orderNumber, customMessage, config.store.phone);
@@ -529,6 +595,8 @@ module.exports = {
   validatePhoneNumber,
   formatPhoneNumber,
   formatInternational,
+  formatItemsSummary,
+  formatAmount,
   getTelco,
   isProviderConfigured,
 

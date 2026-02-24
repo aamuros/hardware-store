@@ -239,7 +239,13 @@ const createOrder = async (req, res, next) => {
 
     // Send SMS notification to customer
     try {
-      await smsService.sendOrderConfirmation(order.phone || deliveryInfo.phone, order.orderNumber, order.totalAmount, order.id);
+      await smsService.sendOrderConfirmation(
+        order.phone || deliveryInfo.phone,
+        order.orderNumber,
+        order.totalAmount,
+        order.items,
+        order.id
+      );
     } catch (smsError) {
       console.error('SMS sending failed:', smsError.message);
       // Don't fail the order creation if SMS fails
@@ -610,7 +616,13 @@ const updateOrderStatus = async (req, res, next) => {
 
     // Send SMS notification based on status change
     try {
-      await smsService.sendStatusUpdate(order.phone, order.orderNumber, status, message, order.id);
+      await smsService.sendStatusUpdate(
+        order.phone,
+        order.orderNumber,
+        status,
+        { message, items: updatedOrder.items, amount: order.totalAmount },
+        order.id
+      );
     } catch (smsError) {
       console.error('SMS sending failed:', smsError.message);
     }

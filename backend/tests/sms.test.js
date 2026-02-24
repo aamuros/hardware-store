@@ -200,32 +200,85 @@ describe('SMS Service - Phone Number Validation', () => {
 });
 
 describe('SMS Service - Templates', () => {
-  const { SMS_TEMPLATES } = require('../src/services/smsService');
+  const { SMS_TEMPLATES, formatItemsSummary, formatAmount } = require('../src/services/smsService');
 
-  it('should generate order confirmation message', () => {
-    const msg = SMS_TEMPLATES.ORDER_CONFIRMATION('HW-001', 1500.50, 'Test Store');
-    expect(msg).toContain('HW-001');
-    expect(msg).toContain('1500.50');
-    expect(msg).toContain('Test Store');
+  const mockItems = [
+    { product: { name: 'Portland Cement' }, quantity: 2 },
+    { product: { name: 'Common Nails 2"' }, quantity: 5 },
+    { product: { name: 'GI Wire' }, quantity: 1 },
+  ];
+
+  describe('formatItemsSummary', () => {
+    it('should format items into compact string', () => {
+      const result = formatItemsSummary(mockItems);
+      expect(result).toContain('Portland Cement x2');
+      expect(result).toContain('Common Nails 2" x5');
+    });
+
+    it('should return empty string for no items', () => {
+      expect(formatItemsSummary([])).toBe('');
+      expect(formatItemsSummary(null)).toBe('');
+    });
+
+    it('should truncate long product names', () => {
+      const longItems = [{ product: { name: 'Very Long Product Name Here' }, quantity: 1 }];
+      const result = formatItemsSummary(longItems);
+      expect(result.length).toBeLessThan(30);
+      expect(result).toContain('x1');
+    });
+
+    it('should add +N more when items exceed max length', () => {
+      const manyItems = Array.from({ length: 10 }, (_, i) => ({
+        product: { name: `Product ${i + 1}` },
+        quantity: i + 1,
+      }));
+      const result = formatItemsSummary(manyItems, 30);
+      expect(result).toContain('+');
+      expect(result).toContain('more');
+    });
   });
 
-  it('should generate accepted message', () => {
-    const msg = SMS_TEMPLATES.ORDER_ACCEPTED('HW-001', 'Test Store');
+  describe('formatAmount', () => {
+    it('should format amounts with commas', () => {
+      expect(formatAmount(1500)).toBe('1,500.00');
+      expect(formatAmount(100)).toBe('100.00');
+    });
+  });
+
+  it('should generate order confirmation with items', () => {
+    const msg = SMS_TEMPLATES.ORDER_CONFIRMATION('HW-001', 1500.50, 'Test Store', mockItems);
+    expect(msg).toContain('HW-001');
+    expect(msg).toContain('1,500.50');
+    expect(msg).toContain('Test Store');
+    expect(msg).toContain('Portland Cement x2');
+  });
+
+  it('should generate accepted message with items and amount', () => {
+    const msg = SMS_TEMPLATES.ORDER_ACCEPTED('HW-001', 'Test Store', mockItems, 1500.50);
     expect(msg).toContain('HW-001');
     expect(msg).toContain('ACCEPTED');
+    expect(msg).toContain('1,500.50');
+    expect(msg).toContain('Portland Cement x2');
   });
 
-  it('should generate delivery message', () => {
-    const msg = SMS_TEMPLATES.ORDER_OUT_FOR_DELIVERY('HW-001', '30 mins');
+  it('should generate delivery message with amount', () => {
+    const msg = SMS_TEMPLATES.ORDER_OUT_FOR_DELIVERY('HW-001', 1500.50);
     expect(msg).toContain('HW-001');
     expect(msg).toContain('ON THE WAY');
-    expect(msg).toContain('30 mins');
+    expect(msg).toContain('1,500.50');
+    expect(msg).toContain('COD');
+  });
+
+  it('should generate delivered message with amount', () => {
+    const msg = SMS_TEMPLATES.ORDER_DELIVERED('HW-001', 'Test Store', 1500.50);
+    expect(msg).toContain('DELIVERED');
+    expect(msg).toContain('1,500.50');
   });
 
   it('should generate admin notification', () => {
     const msg = SMS_TEMPLATES.ADMIN_NEW_ORDER('HW-001', 1500.50, 'Juan');
     expect(msg).toContain('HW-001');
-    expect(msg).toContain('1500.50');
+    expect(msg).toContain('1,500.50');
     expect(msg).toContain('Juan');
   });
 });
