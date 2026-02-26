@@ -1,24 +1,26 @@
 # Getting Started
 
-This guide will help you set up the Hardware Store application for local development.
+This guide walks you through setting up the Hardware Store application on your local machine for development and testing.
 
 ## Prerequisites
 
-Before you begin, ensure you have the following installed:
+Make sure you have the following installed before proceeding:
 
-- **Node.js** 20.0.0 or higher
-- **npm** 9.0.0 or higher (comes with Node.js)
-- **Git** for version control
+- **Node.js** — version 20.0.0 or newer
+- **npm** — version 9.0.0 or newer (this comes bundled with Node.js)
+- **Git** — any recent version
 
-### Verify Installation
+You can verify your installations by running:
 
 ```bash
-node --version    # Should be v20.x.x or higher
-npm --version     # Should be 9.x.x or higher
-git --version     # Any recent version
+node --version    # should print v20.x.x or higher
+npm --version     # should print 9.x.x or higher
+git --version     # any version is fine
 ```
 
-## Quick Start
+If you don't have Node.js installed, download it from [nodejs.org](https://nodejs.org/). Pick the LTS (Long Term Support) version.
+
+## Step-by-Step Setup
 
 ### 1. Clone the Repository
 
@@ -30,179 +32,188 @@ cd hardware-store
 ### 2. Set Up the Backend
 
 ```bash
-# Navigate to backend directory
 cd backend
 
-# Install dependencies
+# Install all backend dependencies
 npm install
 
-# Create environment file
+# Create your local environment file from the template
 cp .env.example .env
 
-# Set up the database (creates SQLite database and runs migrations)
+# Initialize the database — this creates the SQLite file and runs all migrations
 npx prisma migrate dev
 
-# Seed the database with sample data
+# Populate the database with an admin account and sample data
 npx prisma db seed
 ```
+
+After running the seed command, you should see output confirming that the admin user was created.
 
 ### 3. Set Up the Frontend
 
 ```bash
-# Navigate to frontend directory (from project root)
-cd frontend
+# Go back to the project root, then into the frontend folder
+cd ../frontend
 
-# Install dependencies
+# Install frontend dependencies
 npm install
 
-# Create environment file
+# Create the frontend environment file
 cp .env.example .env
 ```
 
-### 4. Start Development Servers
+### 4. Start Both Servers
 
-You'll need two terminal windows:
+You need two separate terminal windows — one for the backend and one for the frontend.
 
-**Terminal 1 - Backend:**
+**Terminal 1 — Backend:**
 ```bash
 cd backend
 npm run dev
 ```
-Backend will run at: `http://localhost:3001`
+The API server will start at `http://localhost:3001`.
 
-**Terminal 2 - Frontend:**
+**Terminal 2 — Frontend:**
 ```bash
 cd frontend
 npm run dev
 ```
-Frontend will run at: `http://localhost:5173`
+The frontend dev server will start at `http://localhost:5173`.
 
-### 5. Access the Application
+### 5. Open the Application
 
-- **Customer Portal:** http://localhost:5173
-- **Admin Dashboard:** http://localhost:5173/admin/login
+Once both servers are running:
 
-**Default Admin Credentials:**
+- **Customer storefront:** open `http://localhost:5173` in your browser
+- **Admin dashboard:** go to `http://localhost:5173/admin/login`
+
+Log into the admin panel with:
 - Username: `admin`
 - Password: `admin123`
 
-> [!WARNING]
-> Change the default admin password in production!
+> **Note:** These are default development credentials. In a production deployment, you should change the admin password right away.
 
 ## Environment Configuration
 
-### Backend (.env)
+Both the backend and frontend use `.env` files for configuration. The `.env.example` files in each directory contain every available option with descriptions. Below are the most important variables.
+
+### Backend — `backend/.env`
 
 ```env
-# Server
+# Server settings
 NODE_ENV=development
 PORT=3001
 
-# Database (SQLite for development)
+# Database connection — SQLite is used by default for local development
 DATABASE_URL="file:./dev.db"
 
-# JWT Authentication
+# JWT settings — used to sign authentication tokens
 JWT_SECRET=your-secret-key-change-in-production
 JWT_EXPIRES_IN=7d
 
-# SMS (disabled by default for development)
+# SMS — turned off by default so you can develop without needing an API key
 SMS_ENABLED=false
 SMS_TEST_MODE=true
 
-# Store Information
+# Store details — these appear on the frontend
 STORE_NAME=Juan's Hardware Store
 STORE_PHONE=09171234567
 
-# Frontend URL (for CORS)
+# CORS — must match the URL where your frontend is running
 FRONTEND_URL=http://localhost:5173
 ```
 
-### Frontend (.env)
+### Frontend — `frontend/.env`
 
 ```env
-# Backend API URL
+# Points to the backend API
 VITE_API_URL=http://localhost:5173/api
 
-# Store Information
+# Store name shown in the browser tab and header
 VITE_STORE_NAME=Juan's Hardware Store
 VITE_STORE_PHONE=09171234567
 ```
 
-## Common Commands
+## Useful Commands
 
-### Backend Commands
+Here is a quick reference of the commands you will use most often.
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server with hot reload |
-| `npm start` | Start production server |
-| `npm test` | Run all tests |
-| `npm run lint` | Check code for linting errors |
-| `npm run format` | Format code with Prettier |
-| `npm run db:migrate` | Run database migrations |
-| `npm run db:seed` | Seed database with sample data |
-| `npm run db:reset` | Reset database (drops all data) |
-| `npm run db:studio` | Open Prisma Studio (visual database browser) |
+### Backend
 
-### Frontend Commands
+| Command | What It Does |
+|---------|--------------|
+| `npm run dev` | Starts the Express server with hot reload (via nodemon) |
+| `npm start` | Starts the server without hot reload (for production) |
+| `npm test` | Runs the Jest test suite |
+| `npm run lint` | Checks code for linting errors |
+| `npm run format` | Auto-formats code using Prettier |
+| `npm run db:migrate` | Runs any pending Prisma migrations |
+| `npm run db:seed` | Seeds the database with initial data |
+| `npm run db:reset` | Drops everything, re-runs migrations, and re-seeds |
+| `npm run db:studio` | Opens Prisma Studio (a visual database inspector) at `http://localhost:5555` |
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run preview` | Preview production build locally |
-| `npm run lint` | Check code for linting errors |
-| `npm run format` | Format code with Prettier |
+### Frontend
 
-## Database Management
+| Command | What It Does |
+|---------|--------------|
+| `npm run dev` | Starts the Vite dev server with hot module replacement |
+| `npm run build` | Compiles the React app into optimized static files |
+| `npm run preview` | Serves the production build locally so you can test it |
+| `npm run lint` | Checks code for linting errors |
+| `npm run format` | Auto-formats code using Prettier |
 
-### View Database (Prisma Studio)
+## Working with the Database
+
+### Viewing Data with Prisma Studio
+
+Prisma Studio gives you a browser-based UI to inspect and edit database records directly. It is very handy during development.
 
 ```bash
 cd backend
 npm run db:studio
 ```
 
-Opens a visual browser for your database at `http://localhost:5555`.
+This opens at `http://localhost:5555`. You can browse tables, filter rows, and even edit data on the spot.
 
-### Reset Database
+### Resetting the Database
+
+If your local database gets into a messy state, you can wipe it and start fresh:
 
 ```bash
 cd backend
 npm run db:reset
 ```
 
-This will:
-1. Drop all existing data
-2. Re-run all migrations
-3. Re-seed with sample data
+This drops all tables, re-applies every migration from scratch, and runs the seed script again.
 
-### Create New Migration
+### Creating a New Migration
 
-After modifying `prisma/schema.prisma`:
+Whenever you make changes to the Prisma schema file (`prisma/schema.prisma`), you need to generate a migration:
 
 ```bash
 cd backend
 npx prisma migrate dev --name describe_your_changes
 ```
 
+This creates a new SQL migration file and applies it to your local database.
+
 ## Troubleshooting
 
-### Port Already in Use
+### "EADDRINUSE" — Port Already in Use
 
-If you see "EADDRINUSE" error:
+This means another process is already using port 3001 (or 5173). Find and stop it:
 
 ```bash
-# Find process using the port (e.g., 3001)
+# See what is using port 3001
 lsof -i :3001
 
-# Kill the process
+# Kill the process by its PID
 kill -9 <PID>
 ```
 
 ### Database Errors
 
-Reset the database:
+If migrations fail or the database seems corrupted, delete the SQLite file and recreate it:
 
 ```bash
 cd backend
@@ -211,33 +222,33 @@ npx prisma migrate dev
 npx prisma db seed
 ```
 
-### Node Modules Issues
+### Missing or Corrupted node_modules
 
-Delete and reinstall:
+If you see strange module-not-found errors, try a clean reinstall:
 
 ```bash
-# Backend
+# For the backend
 cd backend
 rm -rf node_modules package-lock.json
 npm install
 
-# Frontend
-cd frontend
+# For the frontend
+cd ../frontend
 rm -rf node_modules package-lock.json
 npm install
 ```
 
-### CORS Errors
+### CORS Errors in the Browser
 
-Ensure `FRONTEND_URL` in backend `.env` matches your frontend URL:
+If the frontend cannot reach the backend and you see CORS errors in the browser console, double-check that the `FRONTEND_URL` variable in `backend/.env` matches exactly where the frontend is running:
 
 ```env
 FRONTEND_URL=http://localhost:5173
 ```
 
-## Next Steps
+## What to Read Next
 
-- [API Documentation](./api/README.md) - Learn about available endpoints
-- [Database Schema](./database/schema.md) - Understand the data models
-- [Testing Guide](./testing/README.md) - Run and write tests
-- [Deployment](./deployment.md) - Deploy to production
+- [API Reference](./api/README.md) — understand how each endpoint works
+- [Database Schema](./database/schema.md) — see how the data is structured
+- [Testing Guide](./testing/README.md) — learn how to run and write tests
+- [Deployment Guide](./deployment.md) — take the app live on Railway

@@ -1,58 +1,61 @@
 # Deployment Guide
 
-This guide walks you through hosting the Hardware Store website using **Railway only** — a single service that runs both the backend API and serves the frontend. Free under the GitHub Student Developer Pack.
+This guide explains how to deploy the Hardware Store application to the internet using **Railway**. The entire stack — backend, frontend, and database — runs on a single Railway service, so you only need one URL.
 
-**What to expect:**
-- Your site will deploy with a **blank slate** — only an admin account exists
-- You'll add all products, categories, and images through the admin dashboard after deployment
-- Total deployment time: **~10-15 minutes**
-- Total cost: **$0** (with GitHub Student Pack)
+The deployment is completely free if you have a GitHub Student Developer Pack.
 
----
-
-## Prerequisites
-
-- Your code is pushed to GitHub (`aamuros/hardware-store`)
-- You have a GitHub account enrolled in [GitHub Education](https://education.github.com/)
+**What to expect after deployment:**
+- The site starts with a blank database — only an admin account is created automatically
+- You add products, categories, and images through the admin dashboard after the site is live
+- The whole process takes roughly 10 to 15 minutes
 
 ---
 
-## Part 1 — Create a Railway Account
+## What You Need Before Starting
+
+- Your project code must be pushed to a GitHub repository
+- You need a GitHub account enrolled in [GitHub Education](https://education.github.com/)
+
+---
+
+## Step 1 — Create a Railway Account
 
 1. Go to [railway.app](https://railway.app)
-2. Click **Login** → **Login with GitHub**
-3. Authorize Railway to access your GitHub account
+2. Click **Login**, then choose **Login with GitHub**
+3. Authorize Railway when prompted
 
-### Activate GitHub Student free credits
+### Activate Your GitHub Student Credits
 
-1. After logging in, click your profile picture → **Account Settings**
-2. Go to the **Plans** tab
-3. Click **GitHub Student** and follow the prompts to verify your student status
-4. You will receive **$5/month** in free credits (more than enough)
+1. After logging in, click your profile picture in the top-right corner, then go to **Account Settings**
+2. Open the **Plans** tab
+3. Click **GitHub Student** and follow the verification steps
+4. Once approved, you get **$5 per month** in free credits — more than enough for this project
 
 ---
 
-## Part 2 — Create a New Railway Project
+## Step 2 — Create a New Project
 
-1. From the Railway dashboard, click **+ New Project**
+1. On the Railway dashboard, click **+ New Project**
 2. Select **Deploy from GitHub repo**
-3. Find and select **aamuros/hardware-store**
-4. ⚠️ **Do NOT set a root directory** — leave it as the **default (root)**. Railway needs access to both `backend/` and `frontend/` folders.
-5. Click **Deploy Now** — Railway will start an initial deployment. It may fail at first; that's fine, you still need to add the database and environment variables.
+3. Find and select your **hardware-store** repository
+4. **Do not set a root directory** — leave it on the default (repository root). Railway needs access to both the `backend/` and `frontend/` folders during the build process.
+5. Click **Deploy Now**
+
+The initial deployment will probably fail because the database and environment variables are not configured yet. That is expected — you will fix it in the next steps.
 
 ---
 
-## Part 3 — Add a PostgreSQL Database
+## Step 3 — Add a PostgreSQL Database
 
-1. Inside your Railway project, click **+ New** (top right)
-2. Select **Database** → **Add PostgreSQL**
-3. Railway will create a PostgreSQL database and automatically add the `DATABASE_URL` environment variable to your service. **Do not touch or change this variable.**
+1. Inside your Railway project, click the **+ New** button (top-right area)
+2. Select **Database**, then choose **Add PostgreSQL**
+3. Railway will spin up a PostgreSQL instance and automatically inject a `DATABASE_URL` variable into your service's environment. You do not need to touch this variable — it is handled for you.
 
 ---
 
-## Part 4 — Add Environment Variables
+## Step 4 — Set Environment Variables
 
-1. Click on your **backend service** (the one connected to GitHub, not the database)
+1. Click on your **main service** (the one linked to your GitHub repo — not the database)
 2. Go to the **Variables** tab
 3. Click **Raw Editor** and paste the following:
 
@@ -67,52 +70,56 @@ STORE_PHONE=09171234567
 STORE_ADDRESS=Your Store Address Here
 ```
 
-> **JWT_SECRET** — Generate a secure 32+ character secret:
-> ```bash
-> openssl rand -base64 32
-> ```
-> Copy the output and replace `<generate-a-secure-secret-here>` with it.
+**How to generate a JWT secret:**
 
-> **STORE_NAME, STORE_PHONE, STORE_ADDRESS** — Update these with your actual store information. These will appear in the frontend footer and contact sections.
+Run this in your terminal to get a random 32-character string:
+```bash
+openssl rand -base64 32
+```
+Copy the output and paste it as the value for `JWT_SECRET`.
 
-> **SMS settings** — Keep `SMS_ENABLED=false` and `SMS_TEST_MODE=true` for now. This prevents accidental SMS costs during testing.
+**Store details:** update `STORE_NAME`, `STORE_PHONE`, and `STORE_ADDRESS` with your actual information. These values are displayed on the customer-facing site.
+
+**SMS settings:** keep `SMS_ENABLED` set to `false` and `SMS_TEST_MODE` set to `true` for now. This prevents accidental charges while you are still testing the deployment.
 
 4. Click **Save**
 
 ---
 
-## Part 5 — Deploy
+## Step 5 — Trigger the Deployment
 
 1. Go to the **Deployments** tab
-2. Click **Deploy** (it may redeploy automatically after saving variables)
-3. Wait for the deployment to finish — this usually takes 3-5 minutes
-4. During deployment, Railway will automatically:
-   - Install all dependencies (backend + frontend)
-   - Build the React frontend
-   - Generate Prisma client for PostgreSQL
-   - Run database migrations (create all tables)
-   - Seed the database with the admin account
-   - Start the server (which serves both the API and the frontend)
-5. Once it shows **Active**, your full site is ready!
+2. Railway may have already started a new deployment after you saved the variables. If not, click **Deploy** manually.
+3. Wait for the build to finish — this typically takes 3 to 5 minutes
+
+During the build, Railway will automatically:
+- Install all npm dependencies for both the backend and frontend
+- Build the React frontend into static files using Vite
+- Generate the Prisma client configured for PostgreSQL
+- Run all database migrations to create the tables
+- Seed the database with the default admin account
+- Start the Express server, which serves both the API and the frontend
+
+Once the deployment status shows **Active**, your site is live.
 
 ---
 
-## Part 6 — Generate a Public URL
+## Step 6 — Get Your Public URL
 
 1. Go to the **Settings** tab of your service
-2. Under the **Networking** section, click **Generate Domain**
-3. Copy the URL — it will look like:
+2. Scroll down to the **Networking** section and click **Generate Domain**
+3. Railway will give you a URL like:
    ```
    https://hardware-store-production-xxxx.up.railway.app
    ```
-4. Open this URL in your browser — the homepage should load!
+4. Open this URL in your browser — the homepage should load
 
 ---
 
-## Part 7 — Verify the Deployment
+## Step 7 — Verify Everything Works
 
-1. Go to the **Deployments** tab and click on the latest deployment
-2. Check the deployment logs — you should see:
+1. Go to the **Deployments** tab and click on the latest deployment to view its logs
+2. You should see output similar to:
    ```
    The following migration(s) have been applied:
    migrations/
@@ -126,132 +133,131 @@ STORE_ADDRESS=Your Store Address Here
    [OK] Database connected successfully
    ```
 3. Visit your Railway URL — the homepage should render
-4. Visit `<your-url>/health` — should return `{"success": true, ...}`
-5. Visit `<your-url>/admin/login` and log in with:
+4. Visit `<your-url>/health` — this should return a JSON response with `"success": true`
+5. Go to `<your-url>/admin/login` and log in with:
    - Username: `admin`
    - Password: `admin123`
 
-> **⚠️ IMPORTANT: Change this password immediately after your first login!**
->
-> The database starts as a **blank slate** — you'll add categories, products, and other data through the admin dashboard after deployment.
+**Important:** change the admin password after your first login. The default credentials are publicly documented.
+
+The database starts empty (aside from the admin account). You will populate it through the admin dashboard in the next section.
 
 ---
 
-## After Deployment Checklist
+## After Deployment — Setting Up Your Store
 
-### Setting Up Your Store
-
-Your store is deployed as a **blank slate**. Follow these steps to populate it:
+Once the site is live, populate it with your store's actual data:
 
 1. **Change the admin password**
-   - Go to `/admin/login` and log in with `admin` / `admin123`
-   - Click your profile → Change Password
-   - Set a secure password
+   - Log in at `/admin/login` with the default credentials
+   - Go to your profile and update the password
 
 2. **Create product categories**
-   - Go to Admin Dashboard → Categories
-   - Add categories like: Steel & Metal, Lumber & Wood, Plumbing, Electrical, etc.
+   - Navigate to Admin Dashboard → Categories
+   - Add your categories (for example: Steel & Metal, Lumber & Wood, Plumbing, Electrical, Paint)
 
 3. **Add products**
    - Go to Admin Dashboard → Products
-   - Click "Add Product"
-   - Fill in product details (name, description, price, category, stock quantity)
+   - Click "Add Product" and fill in the details: name, description, price, category, stock quantity
    - Upload product images
 
-4. **Create additional staff accounts** (optional)
+4. **Create staff accounts** (optional)
    - Go to Admin Dashboard → Staff Management
+   - Add accounts for other people who need to manage orders
 
 5. **Test the customer experience**
-   - Open your site in an incognito window
-   - Browse products, add items to cart, and place a test order
-   - Verify you can see the order in the admin dashboard
+   - Open the site in an incognito/private browsing window
+   - Browse products, add something to the cart, and place a test order
+   - Switch back to the admin dashboard and verify the order appears
 
-6. **Share your live site**
-   - Share your Railway URL with your professor or clients!
+6. **Share the URL**
+   - Send the Railway URL to your instructor, classmates, or clients
 
 ---
 
 ## Troubleshooting
 
-### The site loads but shows no products
-- **This is normal!** The database starts empty (blank slate)
-- Log in to `/admin/login` with `admin` / `admin123`
-- Add categories and products through the admin dashboard
+### The site loads but there are no products
 
-### Admin login fails
-- Check the Railway deployment logs to confirm seeding completed successfully
-- You should see `✅ Admin user created: admin` in the logs
-- If seeding failed, open the Railway **Shell** and manually run:
-  ```bash
-  npx prisma migrate deploy
-  npx prisma db seed
-  ```
+This is expected behavior. The database is intentionally seeded with just an admin account. Log in at `/admin/login` and add categories and products through the dashboard.
 
-### Images are not showing after upload
-- Images are stored on Railway's server. They persist while the service is running.
-- If images disappear after a redeploy, Railway's filesystem resets on each deploy. For a school project this is fine — just re-upload images if needed.
+### Admin login does not work
 
-### Page shows 404 when refreshing
-- This should not happen. The Express server has a catch-all route that serves `index.html` for all non-API requests.
-- If it does happen, check that the frontend built successfully during deployment (look for `vite build` output in the deployment logs).
+Check the deployment logs to confirm that the seed script ran successfully. You should see `✅ Admin user created: admin` in the output. If you do not, open the Railway **Shell** for your service and run:
+
+```bash
+npx prisma migrate deploy
+npx prisma db seed
+```
+
+### Product images disappear after redeployment
+
+Railway resets the filesystem on every deploy. This means uploaded images are lost when a new version is pushed. For a school project, this is manageable — just re-upload the images after each deploy. In a production environment, you would use a cloud storage service like AWS S3 or Cloudinary to persist images.
+
+### Pages return 404 on refresh
+
+This should not happen because the Express server has a catch-all route that serves `index.html` for any non-API path. If you do see this, check the deployment logs to make sure the Vite build completed successfully (look for `vite build` in the output).
 
 ### Railway deployment fails
-- Go to the **Deployments** tab and click the failed deployment to read the error logs
-- The most common cause is a missing environment variable — double-check all variables in Part 4
-- ⚠️ Make sure the **Root Directory** is **NOT set** (it should be blank/root). Railway needs access to both `backend/` and `frontend/` folders.
-- If you see a Prisma/database error, make sure the PostgreSQL plugin is added and `DATABASE_URL` is auto-populated in the Variables tab
 
-### Railway build shows "no start command"
-- Make sure `railway.json` and `nixpacks.toml` are committed and pushed to the **root** of the repo (not inside `backend/`)
-- In Railway Settings → General, confirm **Root Directory** is blank (not `backend`)
+- Open the failed deployment and read the error logs — the error message usually points directly at the problem
+- The most common cause is a missing environment variable. Go back to Step 4 and verify all variables are set.
+- Make sure the **Root Directory** setting is blank (not set to `backend` or anything else). Railway needs access to the entire repository.
+- If you see Prisma or database errors, confirm that the PostgreSQL plugin was added in Step 3 and that `DATABASE_URL` appears automatically in your Variables tab.
 
-### Database migration errors on Railway
-- Open the Railway **Shell** on your service and run:
-  ```bash
-  cd backend && npx prisma migrate deploy
-  ```
-- If the migration state is corrupt, you can reset (⚠️ **WARNING: This deletes all data!**):
-  ```bash
-  cd backend && npx prisma migrate reset --force
-  ```
-- After a reset, the admin account will be recreated automatically
+### "No start command found"
 
-### How do I re-run the seed if I deleted the admin account?
-- The seed is **idempotent** — safe to run multiple times
-- In Railway Shell, run: `cd backend && npx prisma db seed`
-- It will check if admin exists, and create it only if needed
+This means Railway cannot figure out how to run your app. Verify that `railway.json` and `nixpacks.toml` are committed to the root of the repository (not inside `backend/`). Also confirm that the Root Directory setting in Railway is blank.
+
+### Database migration errors
+
+Open the Railway Shell and run the migrations manually:
+```bash
+cd backend && npx prisma migrate deploy
+```
+
+If the migration history is corrupted and you need to start over (**warning: this deletes all data**):
+```bash
+cd backend && npx prisma migrate reset --force
+```
+After a reset, the seed script runs automatically and recreates the admin account.
+
+### Accidentally deleted the admin account
+
+The seed script checks whether the admin user exists before creating it, so running it again is safe:
+```bash
+cd backend && npx prisma db seed
+```
 
 ---
 
 ## Frequently Asked Questions
 
-### Why does my deployed site have no products?
-This is **by design**. The site starts as a blank slate so you can add your own store's products and categories.
+**Why does the deployed site have no products?**
+By design. The site starts empty so you can add your own store's real products and categories.
 
-### Where did all the sample products go?
-They were removed from the repository to keep it clean for deployment.
+**Will my uploaded images survive a redeployment?**
+No. Railway's filesystem resets on each deploy. For a school project this is acceptable — just re-upload images after a deploy. For a real business, you would integrate a cloud storage solution.
 
-### Will my uploaded images persist after redeployment?
-On Railway's free tier, the filesystem resets on each deploy. For a school project this is fine — just re-upload images if needed. For production, you'd use cloud storage (AWS S3, Cloudinary, etc.).
-
-### What if I want to enable SMS notifications?
-1. Sign up for a [Semaphore account](https://semaphore.co/) (Philippines SMS provider)
-2. Add your API key to Railway environment variables: `SEMAPHORE_API_KEY=your_key_here`
-3. Set `SMS_ENABLED=true` and `SMS_TEST_MODE=false`
-4. Add your phone number: `ADMIN_NOTIFICATION_PHONE=09XXXXXXXXX`
+**How do I turn on SMS notifications?**
+1. Create an account on [Semaphore](https://semaphore.co/) (a Philippine SMS provider)
+2. Copy your API key
+3. Add these variables in Railway:
+   - `SEMAPHORE_API_KEY=your_key_here`
+   - `SMS_ENABLED=true`
+   - `SMS_TEST_MODE=false`
+   - `ADMIN_NOTIFICATION_PHONE=09XXXXXXXXX`
 
 ---
 
 ## Summary
 
-| Component | Where It Runs |
-|---|---|
-| Frontend (React) | Served as static files by Express on Railway |
-| Backend API | Express on Railway |
-| Database | PostgreSQL on Railway |
+| Part of the Stack | Where It Runs |
+|-------------------|---------------|
+| React frontend | Served as static files by Express on Railway |
+| Express API | Railway service |
+| PostgreSQL database | Railway (provisioned as an add-on) |
 
-Everything runs on a **single Railway service** with one URL. No need for Vercel or any other hosting provider.
+Everything runs on a single Railway service behind one URL. No need for Vercel or any additional hosting provider.
 
-**Total cost: $0** — Railway is covered by your GitHub Student Pack ($5/month credit).
-
-**Deployment complete!** 🎉 Your hardware store is now live and ready to accept orders.
+**Total cost:** free, covered by the GitHub Student Developer Pack ($5/month credit).

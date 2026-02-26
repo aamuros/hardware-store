@@ -1,39 +1,36 @@
 # API Reference
 
-The Hardware Store API is a RESTful API built with Express.js. This document provides an overview of all available endpoints.
+This document provides a complete reference for the Hardware Store REST API. The backend is built with Express.js and follows standard REST conventions.
 
 ## Base URL
 
-- **Development:** `http://localhost:3001/api`
-- **Production:** `https://your-backend.railway.app/api`
+- **Local development:** `http://localhost:3001/api`
+- **Production:** `https://<your-railway-domain>/api`
+
+All endpoint paths listed below are relative to this base URL.
 
 ## Authentication
 
-The API uses JWT (JSON Web Tokens) for authentication. There are two types of users:
+The API uses JWT (JSON Web Tokens) for authentication. There are two separate authentication systems — one for admin/staff users and one for customers.
 
-| User Type | Auth Endpoint | Description |
-|-----------|---------------|-------------|
-| Admin | `/api/admin/login` | Store staff and administrators |
-| Customer | `/api/customers/login` | Customer accounts |
+| User Type | Login Endpoint | Who Uses It |
+|-----------|----------------|-------------|
+| Admin/Staff | `POST /api/admin/login` | Store employees who manage orders and products |
+| Customer | `POST /api/customers/login` | Customers who have created accounts |
 
-### Using Authentication
-
-Include the JWT token in the `Authorization` header:
+After logging in, both return a JWT token. Include this token in all subsequent requests that require authentication:
 
 ```
 Authorization: Bearer <your-jwt-token>
 ```
 
-### Token Expiration
-
-Tokens expire after 7 days by default. After expiration, users must log in again.
+Tokens are valid for 7 days by default. After that, the user must log in again to get a fresh token.
 
 ## Response Format
 
-All API responses follow this format:
+Every API response uses a consistent JSON structure, regardless of the endpoint.
 
-### Success Response
-
+**Successful response:**
 ```json
 {
   "success": true,
@@ -42,8 +39,7 @@ All API responses follow this format:
 }
 ```
 
-### Error Response
-
+**Error response:**
 ```json
 {
   "success": false,
@@ -54,80 +50,80 @@ All API responses follow this format:
 }
 ```
 
+The `errors` array is included when validation fails. Each entry specifies which field caused the error and a human-readable message.
+
 ## HTTP Status Codes
 
 | Code | Meaning |
 |------|---------|
-| 200 | OK - Request successful |
-| 201 | Created - Resource created |
-| 400 | Bad Request - Invalid input |
-| 401 | Unauthorized - Invalid/missing token |
-| 403 | Forbidden - Insufficient permissions |
-| 404 | Not Found - Resource doesn't exist |
-| 500 | Server Error - Something went wrong |
+| 200 | Request was successful |
+| 201 | A new resource was created |
+| 400 | The request was invalid (bad input, missing fields) |
+| 401 | Authentication failed (missing or expired token) |
+| 403 | You do not have permission to perform this action |
+| 404 | The requested resource does not exist |
+| 429 | Too many requests — rate limit exceeded |
+| 500 | Something went wrong on the server |
 
 ## Rate Limiting
 
-API requests are rate-limited to prevent abuse:
-
-- **Window:** 15 minutes
-- **Max Requests:** 100 per window
-
-When exceeded, you'll receive a `429 Too Many Requests` response.
+To prevent abuse, the API limits requests to **100 per 15-minute window** per IP address. If you exceed this, you will receive a `429 Too Many Requests` response. Wait a few minutes before trying again.
 
 ---
 
-## Endpoints Overview
+## Endpoint Summary
 
-### Public Endpoints (No Auth Required)
+### Public Endpoints (no authentication required)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/products` | List all products |
-| GET | `/products/:id` | Get product details |
-| GET | `/categories` | List all categories |
-| POST | `/orders` | Create a new order |
-| GET | `/orders/:orderNumber` | Track order by number |
+| Method | Path | What It Does |
+|--------|------|-------------|
+| GET | `/products` | Returns a paginated list of available products |
+| GET | `/products/:id` | Returns details for a single product |
+| GET | `/categories` | Returns all product categories |
+| POST | `/orders` | Creates a new order |
+| GET | `/orders/:orderNumber` | Looks up an order by its tracking number |
 
-### Customer Endpoints (Customer Auth Required)
+### Customer Endpoints (customer token required)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/customers/register` | Create account |
-| POST | `/customers/login` | Sign in |
-| GET | `/customers/profile` | Get profile |
-| PUT | `/customers/profile` | Update profile |
-| GET | `/customers/orders` | Order history |
-| GET | `/customers/addresses` | Saved addresses |
-| GET | `/customers/wishlist` | Wishlist items |
+| Method | Path | What It Does |
+|--------|------|-------------|
+| POST | `/customers/register` | Creates a new customer account |
+| POST | `/customers/login` | Authenticates and returns a token |
+| GET | `/customers/profile` | Returns the logged-in customer's profile |
+| PUT | `/customers/profile` | Updates profile information |
+| GET | `/customers/orders` | Returns the customer's order history |
+| GET | `/customers/addresses` | Lists saved delivery addresses |
+| GET | `/customers/wishlist` | Lists wishlist items |
 
-### Admin Endpoints (Admin Auth Required)
+### Admin Endpoints (admin token required)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/admin/login` | Admin sign in |
-| GET | `/admin/orders` | List all orders |
-| PATCH | `/admin/orders/:id/status` | Update order status |
-| GET | `/admin/products` | List products (admin view) |
-| POST | `/admin/products` | Create product |
-| PUT | `/admin/products/:id` | Update product |
-| DELETE | `/admin/products/:id` | Delete product |
-| GET | `/admin/dashboard` | Dashboard stats |
+| Method | Path | What It Does |
+|--------|------|-------------|
+| POST | `/admin/login` | Authenticates an admin/staff user |
+| GET | `/admin/orders` | Lists all orders with filtering |
+| PATCH | `/admin/orders/:id/status` | Updates an order's status |
+| GET | `/admin/products` | Lists products (includes deleted and out-of-stock) |
+| POST | `/admin/products` | Adds a new product |
+| PUT | `/admin/products/:id` | Edits an existing product |
+| DELETE | `/admin/products/:id` | Soft-deletes a product |
+| GET | `/admin/dashboard` | Returns dashboard statistics and summaries |
 
 ---
 
-## Detailed Documentation
+## Detailed Endpoint Documentation
 
-- [Products API](./products.md) - Product listing, details, variants
-- [Orders API](./orders.md) - Order creation, tracking, management
-- [Customers API](./customers.md) - Customer accounts, addresses, wishlist
-- [Admin API](./admin.md) - Admin authentication, product management
+Each set of endpoints has its own dedicated page with full request/response examples:
+
+- [Products API](./products.md) — product listing, details, variants, bulk pricing, admin CRUD
+- [Orders API](./orders.md) — order placement, tracking, status management
+- [Customers API](./customers.md) — registration, login, addresses, wishlist
+- [Admin API](./admin.md) — authentication, dashboard, product/category/user management
 
 ---
 
 ## Quick Examples
 
-### Create an Order
+### Place a New Order
 
 ```bash
 curl -X POST http://localhost:3001/api/orders \
@@ -149,7 +145,7 @@ curl -X POST http://localhost:3001/api/orders \
 curl http://localhost:3001/api/products
 ```
 
-### Admin Login
+### Log In as Admin
 
 ```bash
 curl -X POST http://localhost:3001/api/admin/login \
@@ -166,7 +162,7 @@ curl -X POST http://localhost:3001/api/admin/login \
 
 ### Validation Errors
 
-When input validation fails:
+When required fields are missing or have invalid values:
 
 ```json
 {
@@ -181,6 +177,7 @@ When input validation fails:
 
 ### Authentication Errors
 
+When login credentials are wrong:
 ```json
 {
   "success": false,
@@ -188,6 +185,7 @@ When input validation fails:
 }
 ```
 
+When no token is provided for a protected endpoint:
 ```json
 {
   "success": false,
@@ -197,6 +195,7 @@ When input validation fails:
 
 ### Not Found Errors
 
+When a requested resource does not exist:
 ```json
 {
   "success": false,
@@ -208,19 +207,19 @@ When input validation fails:
 
 ## Pagination
 
-List endpoints support pagination:
+List endpoints return paginated results. Control pagination with query parameters:
 
 ```
 GET /api/products?page=1&limit=20
 ```
 
-Response includes pagination info:
+The response includes pagination metadata:
 
 ```json
 {
   "success": true,
   "data": {
-    "items": [...],
+    "items": [ ... ],
     "pagination": {
       "page": 1,
       "limit": 20,
@@ -233,9 +232,9 @@ Response includes pagination info:
 
 ---
 
-## Filtering & Sorting
+## Filtering and Sorting
 
-### Products
+### Product Filters
 
 ```
 GET /api/products?category=1&available=true&search=hammer
@@ -243,11 +242,11 @@ GET /api/products?category=1&available=true&search=hammer
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| category | number | Filter by category ID |
+| category | number | Only show products in this category |
 | available | boolean | Filter by availability |
-| search | string | Search in name/description |
+| search | string | Search product names and descriptions |
 
-### Orders (Admin)
+### Order Filters (admin only)
 
 ```
 GET /api/admin/orders?status=pending&from=2024-01-01&to=2024-12-31
@@ -256,5 +255,5 @@ GET /api/admin/orders?status=pending&from=2024-01-01&to=2024-12-31
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | status | string | Filter by order status |
-| from | date | Start date (YYYY-MM-DD) |
-| to | date | End date (YYYY-MM-DD) |
+| from | date | Start date (YYYY-MM-DD format) |
+| to | date | End date (YYYY-MM-DD format) |

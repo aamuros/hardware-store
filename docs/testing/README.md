@@ -1,70 +1,83 @@
 # Testing Guide
 
-This guide covers how to run tests and write new tests for the Hardware Store application.
+This document covers how to run the existing test suite and how to add new tests to the project. All tests are located in the `backend/tests/` directory.
 
-## Overview
+## Test Stack
 
-The project uses **Jest** as the testing framework with **Supertest** for API testing.
+The project uses **Jest** as the test runner and **Supertest** for making HTTP requests against the Express app without actually starting the server. This combination lets us write tests that behave like real API calls but run entirely in memory.
+
+## Test Files
 
 ```
 backend/tests/
-├── setup.js                    # Test setup and utilities
-├── app.test.js                 # Basic app tests
-├── admin.test.js               # Admin authentication tests
-├── admin-crud.test.js          # Admin CRUD operations
-├── categories.test.js          # Category API tests
-├── products.test.js            # Product API tests
-├── orders.test.js              # Order API tests
-├── order-status.test.js        # Order status workflow tests
-├── customer-auth.test.js       # Customer authentication tests
-├── customer-addresses.test.js  # Customer addresses tests
-├── customer-wishlist.test.js   # Wishlist tests
-├── error-handling.test.js      # Error handling tests
-└── sms.test.js                 # SMS service tests
+├── setup.js                    # Shared test configuration and helpers
+├── app.test.js                 # Basic server health and configuration checks
+├── admin.test.js               # Admin login and authentication
+├── admin-crud.test.js          # Admin product and category CRUD operations
+├── categories.test.js          # Public category listing endpoints
+├── products.test.js            # Public product listing and detail endpoints
+├── orders.test.js              # Order creation and tracking
+├── order-status.test.js        # Order status transitions and workflow
+├── customer-auth.test.js       # Customer registration and login
+├── customer-addresses.test.js  # Saved delivery addresses
+├── customer-wishlist.test.js   # Wishlist add/remove functionality
+├── error-handling.test.js      # Error responses and edge cases
+└── sms.test.js                 # SMS service logic (validation, formatting, providers)
 ```
 
 ---
 
 ## Running Tests
 
-### Run All Tests
+### Run the Full Suite
 
 ```bash
 cd backend
 npm test
 ```
 
-### Run with Coverage
+This runs every test file and reports pass/fail results.
+
+### Run with Coverage Report
 
 ```bash
 npm test -- --coverage
 ```
 
-### Run Specific Test File
+After running, open the HTML report to see which lines of code are covered:
+```bash
+open coverage/lcov-report/index.html
+```
+
+### Run a Single Test File
+
+If you only want to run one file — for example, just the order tests:
 
 ```bash
 npm test -- --testPathPattern=orders.test.js
 ```
 
-### Run in Watch Mode
+### Run a Single Test by Name
 
-```bash
-npm run test:watch
-```
-
-### Run Single Test
+You can also target a specific `it()` or `test()` block by matching its description string:
 
 ```bash
 npm test -- --testNamePattern="should create an order"
 ```
 
+### Watch Mode
+
+During active development, watch mode re-runs tests automatically whenever you save a file:
+
+```bash
+npm run test:watch
+```
+
 ---
 
-## Test Configuration
+## Jest Configuration
 
-### Jest Configuration
-
-Located in `backend/jest.config.js`:
+The Jest config is in `backend/jest.config.js`:
 
 ```javascript
 module.exports = {
@@ -78,18 +91,18 @@ module.exports = {
 };
 ```
 
-### Test Setup
-
-`tests/setup.js` provides:
-- Test database setup
-- Global test utilities
-- Cleanup after tests
+The `setup.js` file handles:
+- Setting up a clean test database before the suite runs
+- Providing shared helper functions (like logging in and getting tokens)
+- Cleaning up after all tests are done
 
 ---
 
 ## Writing Tests
 
-### Basic Test Structure
+### Basic Structure
+
+A typical test file looks like this:
 
 ```javascript
 const request = require('supertest');
@@ -97,7 +110,7 @@ const app = require('../src/app');
 
 describe('Products API', () => {
   describe('GET /api/products', () => {
-    it('should return all products', async () => {
+    it('should return a list of products', async () => {
       const response = await request(app)
         .get('/api/products')
         .expect(200);
@@ -109,14 +122,17 @@ describe('Products API', () => {
 });
 ```
 
-### Testing with Authentication
+`describe()` blocks group related tests together. `it()` blocks define individual test cases. `request(app)` creates an HTTP request against the Express app.
+
+### Testing Protected Endpoints
+
+Some endpoints require authentication. Log in first, save the token, and include it in the `Authorization` header:
 
 ```javascript
 describe('Admin API', () => {
   let adminToken;
 
   beforeAll(async () => {
-    // Login and get token
     const response = await request(app)
       .post('/api/admin/login')
       .send({
@@ -127,7 +143,7 @@ describe('Admin API', () => {
     adminToken = response.body.data.token;
   });
 
-  it('should create a product', async () => {
+  it('should allow creating a product with a valid token', async () => {
     const response = await request(app)
       .post('/api/admin/products')
       .set('Authorization', `Bearer ${adminToken}`)
@@ -144,17 +160,19 @@ describe('Admin API', () => {
 });
 ```
 
-### Testing Validation Errors
+### Testing Validation
+
+When you want to verify that the API correctly rejects bad input:
 
 ```javascript
-it('should reject invalid phone number', async () => {
+it('should reject an order with an invalid phone number', async () => {
   const response = await request(app)
     .post('/api/orders')
     .send({
       customerName: 'Test',
-      phone: '08171234567', // Invalid prefix
-      address: 'Test',
-      barangay: 'Test',
+      phone: '08171234567',  // invalid prefix
+      address: 'Test Address',
+      barangay: 'Test Barangay',
       items: [{ productId: 1, quantity: 1 }]
     })
     .expect(400);
@@ -166,20 +184,22 @@ it('should reject invalid phone number', async () => {
 });
 ```
 
-### Testing SMS Service
+### Testing the SMS Service Directly
+
+You can also test services in isolation, without going through HTTP endpoints:
 
 ```javascript
 const smsService = require('../src/services/smsService');
 
 describe('SMS Service', () => {
   describe('validatePhoneNumber', () => {
-    it('should validate Globe numbers', () => {
+    it('should identify Globe numbers correctly', () => {
       const result = smsService.validatePhoneNumber('09171234567');
       expect(result.valid).toBe(true);
       expect(result.telco).toBe('GLOBE');
     });
 
-    it('should reject invalid prefixes', () => {
+    it('should reject numbers with invalid prefixes', () => {
       const result = smsService.validatePhoneNumber('08171234567');
       expect(result.valid).toBe(false);
     });
@@ -189,21 +209,19 @@ describe('SMS Service', () => {
 
 ---
 
-## Test Data
+## Working with Test Data
 
-### Using Seed Data
+### Seed Data
 
-Tests use the seeded database. Key test data:
+Tests run against the seeded database. Some key records you can rely on:
 
-| Entity | ID | Name |
-|--------|-----|------|
-| Admin User | 1 | admin |
-| Category | 1 | Tools |
-| Product | 1 | Claw Hammer |
+| What | ID | Identifier |
+|------|-----|-----------|
+| Admin user | 1 | username: `admin` |
 
-### Creating Test Data
+### Creating Isolated Test Data
 
-For isolated tests, create data in `beforeAll`:
+For tests that need specific records, create them in `beforeAll` and clean up in `afterAll`:
 
 ```javascript
 let testProduct;
@@ -229,41 +247,16 @@ afterAll(async () => {
 });
 ```
 
----
-
-## Coverage Report
-
-After running tests with coverage:
-
-```bash
-npm test -- --coverage
-```
-
-View the HTML report:
-
-```bash
-open coverage/lcov-report/index.html
-```
-
-### Coverage Thresholds
-
-Aim for these minimums:
-
-| Metric | Target |
-|--------|--------|
-| Statements | 80% |
-| Branches | 75% |
-| Functions | 80% |
-| Lines | 80% |
+This keeps tests independent — one test's data will not interfere with another.
 
 ---
 
-## Common Testing Patterns
+## Common Patterns
 
-### Testing Pagination
+### Pagination
 
 ```javascript
-it('should paginate results', async () => {
+it('should respect pagination parameters', async () => {
   const response = await request(app)
     .get('/api/products?page=1&limit=5')
     .expect(200);
@@ -276,10 +269,10 @@ it('should paginate results', async () => {
 });
 ```
 
-### Testing 404 Errors
+### 404 Not Found
 
 ```javascript
-it('should return 404 for non-existent product', async () => {
+it('should return 404 for a product that does not exist', async () => {
   const response = await request(app)
     .get('/api/products/99999')
     .expect(404);
@@ -289,55 +282,72 @@ it('should return 404 for non-existent product', async () => {
 });
 ```
 
-### Testing Authorization
+### Authorization
 
 ```javascript
-it('should reject unauthenticated requests', async () => {
+it('should block requests without a token', async () => {
   await request(app)
     .get('/api/admin/orders')
     .expect(401);
 });
 
-it('should reject invalid tokens', async () => {
+it('should reject an invalid token', async () => {
   await request(app)
     .get('/api/admin/orders')
-    .set('Authorization', 'Bearer invalid-token')
+    .set('Authorization', 'Bearer not-a-real-token')
     .expect(401);
 });
 ```
 
 ---
 
-## Debugging Tests
+## Debugging Failed Tests
 
 ### Verbose Output
+
+Add `--verbose` to see each test case name as it runs:
 
 ```bash
 npm test -- --verbose
 ```
 
-### Run Single File with Logging
+### Verbose Output for a Single File
 
 ```bash
 npm test -- --testPathPattern=orders.test.js --verbose
 ```
 
-### Debug with Node Inspector
+### Node Inspector
+
+For stepping through tests line by line in Chrome DevTools:
 
 ```bash
 node --inspect-brk node_modules/.bin/jest --testPathPattern=orders.test.js
 ```
 
-Then open `chrome://inspect` in Chrome.
+Then open `chrome://inspect` in Chrome and click the inspect link.
+
+---
+
+## Coverage Targets
+
+These are the minimum coverage percentages we aim for:
+
+| Metric | Target |
+|--------|--------|
+| Statements | 80% |
+| Branches | 75% |
+| Functions | 80% |
+| Lines | 80% |
 
 ---
 
 ## CI/CD Integration
 
-### GitHub Actions Example
+If you want to run tests automatically on every push or pull request, here is an example GitHub Actions workflow:
 
 ```yaml
-name: Tests
+name: Run Tests
 on: [push, pull_request]
 
 jobs:
@@ -352,21 +362,21 @@ jobs:
       - name: Install dependencies
         run: cd backend && npm ci
       
-      - name: Run tests
+      - name: Run tests with coverage
         run: cd backend && npm test -- --coverage
       
-      - name: Upload coverage
+      - name: Upload coverage report
         uses: codecov/codecov-action@v3
 ```
 
 ---
 
-## Best Practices
+## Tips
 
-1. **Isolate Tests** - Each test should be independent
-2. **Clean Up** - Remove test data in `afterAll`
-3. **Descriptive Names** - Use clear test descriptions
-4. **Test Edge Cases** - Invalid input, empty data, boundaries
-5. **Mock External Services** - SMS, file uploads
-6. **Fast Tests** - Keep individual tests under 1 second
-7. **Consistent Data** - Use factories for test data
+1. **Keep tests independent** — each test should set up what it needs and clean up after itself
+2. **Use descriptive names** — a reader should understand what the test does just from the `it()` description
+3. **Test both happy and unhappy paths** — check that valid input works *and* that invalid input is properly rejected
+4. **Test boundary conditions** — empty arrays, zero quantities, missing fields
+5. **Mock external services** — the SMS service is mocked in tests so no real messages are sent
+6. **Keep individual tests fast** — each should run in under one second
+7. **Use consistent test data** — rely on seed data for common records and create specific data for edge-case tests

@@ -1,3 +1,11 @@
+/**
+ * SMS Service Module
+ * ------------------
+ * This service handles all SMS-related operations for the Hardware Store platform.
+ * It provides formatting, validation, and sending capabilities with support for
+ * multiple SMS providers (Semaphore, Movider, Vonage) and automatic fallback mechanisms.
+ * It also logs all SMS attempts to the database for tracking and analytics.
+ */
 const axios = require('axios');
 const config = require('../config');
 const prisma = require('../utils/prismaClient');
@@ -47,8 +55,11 @@ const formatInternational = (phone) => {
 };
 
 /**
- * Validate Philippine phone number
- * Returns { valid: boolean, error?: string, formatted?: string, telco?: string }
+ * Validate Philippine phone number format and identify the associated network (telco).
+ * This validation prevents API errors from SMS providers and helps identify routing costs.
+ * 
+ * @param {string} phone - The raw phone number input from the user
+ * @returns {Object} { valid: boolean, error?: string, formatted?: string, telco?: string }
  */
 const validatePhoneNumber = (phone) => {
   const formatted = formatPhoneNumber(phone);
@@ -105,8 +116,13 @@ const getTelco = (phone) => {
 // ============================================================================
 
 /**
- * Format order items into a compact summary string for SMS
- * e.g. "Cement x2, Nails x5" — truncated with "+N more" if too long
+ * Format order items into a compact summary string for SMS.
+ * SMS messages have strict character limits (usually 160 chars per segment).
+ * This function ensures the product list is concise to save on SMS costs.
+ * 
+ * @param {Array} items - Array of order items
+ * @param {number} maxLength - Maximum allowed length for the summary (default: 60)
+ * @returns {string} Truncated string, e.g. "Cement x2, Nails x5 +2 more"
  */
 const formatItemsSummary = (items, maxLength = 60) => {
   if (!items || items.length === 0) return '';
@@ -312,7 +328,20 @@ const isProviderConfigured = (providerName) => {
 // ============================================================================
 
 /**
- * Send SMS with automatic provider fallback and retry
+ * Core SMS Sending Function with Automatic Provider Fallback and Retry Logic.
+ * 
+ * This is the central function used by all other SMS operations. It:
+ * 1. Validates the phone number format.
+ * 2. Logs the attempt to the database to keep an audit trail.
+ * 3. Iterates through configured SMS providers (e.g., Semaphore -> Movider) until successful.
+ * 4. Recursively retries if all providers fail, ensuring high reliability for notifications.
+ * 
+ * @param {string} phone - Target phone number
+ * @param {string} message - Content of the SMS
+ * @param {number|null} orderId - Associated database order ID for tracking
+ * @param {Object} options - Additional options (skipValidation, retryCount)
+ * @returns {Object} Result object including success status and message ID
+ * @throws {Error} If all providers fail after maximum retries
  */
 const sendSMS = async (phone, message, orderId = null, options = {}) => {
   const { skipValidation = false, retryCount = 0 } = options;

@@ -1,68 +1,72 @@
 # Orders API
 
-Complete documentation for order-related endpoints.
+This page documents all endpoints related to orders — placing an order, tracking it, and managing orders from the admin dashboard.
 
-## Endpoints Overview
+## Endpoint Summary
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/orders` | No | Create a new order |
-| GET | `/orders/:orderNumber` | No | Track order by number |
-| GET | `/admin/orders` | Admin | List all orders |
-| GET | `/admin/orders/:id` | Admin | Get order details |
-| PATCH | `/admin/orders/:id/status` | Admin | Update order status |
-| GET | `/customers/orders` | Customer | Customer order history |
+| Method | Path | Auth Required | What It Does |
+|--------|------|---------------|-------------|
+| POST | `/orders` | No | Places a new order |
+| GET | `/orders/:orderNumber` | No | Tracks an order by its order number |
+| GET | `/admin/orders` | Admin | Lists all orders with filtering and pagination |
+| GET | `/admin/orders/:id` | Admin | Gets full details of a specific order |
+| PATCH | `/admin/orders/:id/status` | Admin | Changes an order's status |
+| GET | `/customers/orders` | Customer | Gets the logged-in customer's order history |
 
 ---
 
 ## Order Statuses
 
-| Status | Description |
-|--------|-------------|
-| `pending` | Order placed, awaiting review |
-| `accepted` | Order accepted by store |
-| `rejected` | Order rejected by store |
-| `preparing` | Order being prepared |
-| `out_for_delivery` | Driver is on the way |
-| `delivered` | Order delivered to customer |
-| `completed` | Order completed |
-| `cancelled` | Order cancelled |
+Every order moves through a series of statuses. Here is what each one means:
+
+| Status | Meaning |
+|--------|---------|
+| `pending` | Order has been placed and is waiting for the store to review it |
+| `accepted` | Store has accepted the order |
+| `rejected` | Store has declined the order (a reason is provided) |
+| `preparing` | Order is being packed and prepared for delivery |
+| `out_for_delivery` | A driver has picked up the order and is heading to the customer |
+| `delivered` | The order has been handed to the customer |
+| `completed` | Order is fully finished |
+| `cancelled` | Order was cancelled before delivery |
 
 ---
 
-## Create Order
+## Place an Order
 
-Create a new customer order.
+This is the main endpoint customers interact with. It creates a new order, calculates the total, and triggers an SMS confirmation to the customer's phone.
 
 ```
 POST /api/orders
 ```
+
+No authentication is required — even guest users (without an account) can place orders.
 
 ### Request Body
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | customerName | string | Yes | Customer's full name |
-| phone | string | Yes | Philippine phone (09XXXXXXXXX) |
-| address | string | Yes | Delivery address |
-| barangay | string | Yes | Barangay name |
-| landmarks | string | No | Nearby landmarks |
-| notes | string | No | Special instructions |
-| items | array | Yes | Order items (min 1) |
-| items[].productId | number | Yes | Product ID |
-| items[].quantity | number | Yes | Quantity (min 1) |
-| items[].variantId | number | No | Variant ID if applicable |
+| phone | string | Yes | Philippine mobile number (e.g., 09171234567) |
+| address | string | Yes | Street address for delivery |
+| barangay | string | Yes | Barangay (neighborhood/district) |
+| landmarks | string | No | Nearby landmarks to help the driver |
+| notes | string | No | Any special instructions |
+| items | array | Yes | List of products to order (at least one) |
+| items[].productId | number | Yes | ID of the product |
+| items[].quantity | number | Yes | How many units to order (minimum 1) |
+| items[].variantId | number | No | ID of a specific variant, if applicable |
 
-### Phone Number Formats
+### Accepted Phone Number Formats
 
-All these formats are accepted and normalized:
+The API accepts phone numbers in several common formats and normalizes them automatically:
 
-- `09171234567` (standard)
-- `+639171234567` (international)
-- `639171234567` (no plus)
-- `9171234567` (no leading 0)
+- `09171234567` — standard 11-digit format
+- `+639171234567` — international with plus sign
+- `639171234567` — international without plus sign
+- `9171234567` — without leading zero
 
-### Example Request
+### Example
 
 ```bash
 curl -X POST http://localhost:3001/api/orders \
@@ -81,7 +85,7 @@ curl -X POST http://localhost:3001/api/orders \
   }'
 ```
 
-### Example Response
+### Response
 
 ```json
 {
@@ -116,19 +120,20 @@ curl -X POST http://localhost:3001/api/orders \
 }
 ```
 
-### SMS Notifications
+The order number follows the format `HW-YYYYMMDD-XXXX`. Customers can use this number to track their order.
 
-When an order is created, the customer receives an SMS confirmation:
+### SMS Notification
 
+When the order is created, the customer receives a confirmation text:
 ```
 [Hardware Store] Order HW-20241218-0042 received! Total: P1,250.00. We'll notify you when accepted. Salamat po!
 ```
 
 ---
 
-## Track Order
+## Track an Order
 
-Track an order by its order number (no authentication required).
+Allows anyone to look up an order by its order number. No login is required — the customer just needs the number they received via SMS.
 
 ```
 GET /api/orders/:orderNumber
@@ -138,15 +143,15 @@ GET /api/orders/:orderNumber
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| orderNumber | string | Order number (e.g., HW-20241218-0042) |
+| orderNumber | string | The order number, e.g., `HW-20241218-0042` |
 
-### Example Request
+### Example
 
 ```bash
 curl http://localhost:3001/api/orders/HW-20241218-0042
 ```
 
-### Example Response
+### Response
 
 ```json
 {
@@ -165,37 +170,39 @@ curl http://localhost:3001/api/orders/HW-20241218-0042
 }
 ```
 
+The `statusHistory` array shows every status change the order has gone through, in chronological order.
+
 ---
 
-## List Orders (Admin)
+## List All Orders (Admin)
 
-Get all orders with filtering and pagination.
+Returns all orders with support for filtering by status, date range, and search.
 
 ```
 GET /api/admin/orders
 ```
 
-**Authentication:** Admin token required
+Requires an admin authentication token.
 
 ### Query Parameters
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | page | number | 1 | Page number |
-| limit | number | 20 | Items per page |
-| status | string | - | Filter by status |
-| from | date | - | Start date (YYYY-MM-DD) |
-| to | date | - | End date (YYYY-MM-DD) |
-| search | string | - | Search by order number or customer |
+| limit | number | 20 | Results per page |
+| status | string | — | Filter by order status |
+| from | date | — | Only show orders placed on or after this date (YYYY-MM-DD) |
+| to | date | — | Only show orders placed on or before this date (YYYY-MM-DD) |
+| search | string | — | Search by order number or customer name |
 
-### Example Request
+### Example
 
 ```bash
 curl "http://localhost:3001/api/admin/orders?status=pending&limit=10" \
   -H "Authorization: Bearer <token>"
 ```
 
-### Example Response
+### Response
 
 ```json
 {
@@ -227,15 +234,15 @@ curl "http://localhost:3001/api/admin/orders?status=pending&limit=10" \
 
 ## Get Order Details (Admin)
 
-Get full details of a specific order.
+Returns the complete record for a single order, including all items, the full status history, and any SMS messages that were triggered.
 
 ```
 GET /api/admin/orders/:id
 ```
 
-**Authentication:** Admin token required
+Requires an admin authentication token.
 
-### Example Response
+### Response
 
 ```json
 {
@@ -295,33 +302,37 @@ GET /api/admin/orders/:id
 
 ## Update Order Status (Admin)
 
-Update the status of an order. Triggers SMS notification to customer.
+Moves an order to the next stage in the workflow. Each status change triggers an SMS notification to the customer.
 
 ```
 PATCH /api/admin/orders/:id/status
 ```
 
-**Authentication:** Admin token required
+Requires an admin authentication token.
 
 ### Request Body
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| status | string | Yes | New status |
-| message | string | No | Custom SMS message |
-| notes | string | No | Internal notes |
+| status | string | Yes | The new status to set |
+| message | string | No | Custom message to include in the SMS |
+| notes | string | No | Internal notes (not sent to customer) |
 
-### Valid Status Transitions
+### Allowed Status Transitions
 
-| From | Allowed To |
-|------|------------|
+Not every status can transition to every other status. The valid paths are:
+
+| Current Status | Can Change To |
+|---------------|---------------|
 | pending | accepted, rejected |
 | accepted | preparing, cancelled |
 | preparing | out_for_delivery, cancelled |
 | out_for_delivery | delivered |
 | delivered | completed |
 
-### Example Request
+Attempting an invalid transition (for example, going from "delivered" back to "preparing") will return a 400 error.
+
+### Example
 
 ```bash
 curl -X PATCH http://localhost:3001/api/admin/orders/42/status \
@@ -333,7 +344,7 @@ curl -X PATCH http://localhost:3001/api/admin/orders/42/status \
   }'
 ```
 
-### Example Response
+### Response
 
 ```json
 {
@@ -347,7 +358,7 @@ curl -X PATCH http://localhost:3001/api/admin/orders/42/status \
 }
 ```
 
-### SMS Sent
+### SMS Triggered
 
 ```
 [Hardware Store] Your order HW-20241218-0042 is out for delivery! Our driver is on the way. Salamat po!
@@ -357,23 +368,23 @@ curl -X PATCH http://localhost:3001/api/admin/orders/42/status \
 
 ## Customer Order History
 
-Get order history for authenticated customer.
+Returns the order history for the currently logged-in customer.
 
 ```
 GET /api/customers/orders
 ```
 
-**Authentication:** Customer token required
+Requires a customer authentication token.
 
 ### Query Parameters
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | page | number | 1 | Page number |
-| limit | number | 10 | Items per page |
-| status | string | - | Filter by status |
+| limit | number | 10 | Results per page |
+| status | string | — | Filter by order status |
 
-### Example Request
+### Example
 
 ```bash
 curl http://localhost:3001/api/customers/orders \
@@ -384,7 +395,7 @@ curl http://localhost:3001/api/customers/orders \
 
 ## Error Responses
 
-### Validation Error
+### Validation Error (invalid input)
 
 ```json
 {
@@ -397,7 +408,7 @@ curl http://localhost:3001/api/customers/orders \
 }
 ```
 
-### Product Unavailable
+### Product Out of Stock
 
 ```json
 {
@@ -409,7 +420,7 @@ curl http://localhost:3001/api/customers/orders \
 }
 ```
 
-### Invalid Status Transition
+### Invalid Status Change
 
 ```json
 {

@@ -1,168 +1,171 @@
-# Hardware Store Web Application
+# Hardware Store — Online Ordering System
 
-A full-stack web ordering system for local hardware stores in the Philippines, featuring a customer storefront, admin dashboard, and SMS notifications.
+An online ordering and store management platform built for local hardware stores in the Philippines. Customers can browse products, place delivery orders, and receive SMS updates, while store owners manage everything from a dedicated admin dashboard.
 
-![Node.js](https://img.shields.io/badge/Node.js-20%2B-339933?logo=node.js)
-![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)
-![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma)
-![License](https://img.shields.io/badge/License-Proprietary-red)
+This project was developed as a capstone/final submission for our web development course. It demonstrates a working full-stack application using modern tools and frameworks, deployed on cloud infrastructure.
 
-## Features
+## What the System Does
 
-### Customer Portal
-- Browse products by category
-- Search and filter products
-- Shopping cart with variant support
-- Order tracking by order number
-- Customer accounts with saved addresses
-- Wishlist functionality
+**For Customers:**
+- Browse the store's product catalog, organized by category
+- Search for specific items and filter by availability
+- Add products to a shopping cart (with support for product variants like size or color)
+- Place orders for delivery with address and contact details
+- Track orders using an order number
+- Create an account to save addresses, view past orders, and maintain a wishlist
 
-### Admin Dashboard
-- Sales dashboard with analytics
-- Order management with status workflow
-- Product management with variants & bulk pricing
-- Category management
-- Staff user management
-- Reports and insights
+**For Store Admins/Staff:**
+- View a sales dashboard with daily and monthly analytics
+- Accept, reject, or update orders through a step-by-step status workflow
+- Add, edit, and remove products — including variants and bulk pricing tiers
+- Manage product categories
+- Create staff accounts with role-based access
+- Generate and view sales reports
 
-### SMS Notifications
-- Order confirmation
-- Order accepted/rejected
-- Out for delivery alerts
-- Delivery confirmation
-- Admin notifications for new orders
+**Automated SMS Notifications:**
+- Customers get text messages when their order is confirmed, accepted, rejected, out for delivery, and delivered
+- The store admin receives a text whenever a new order comes in
 
-## Tech Stack
+## Technologies Used
 
-| Layer | Technology |
-|-------|------------|
-| **Frontend** | React 18, Vite, Tailwind CSS, React Router v6 |
-| **Backend** | Node.js 20+, Express.js, Prisma ORM |
-| **Database** | SQLite (development), PostgreSQL (production) |
-| **Auth** | JWT (JSON Web Tokens) |
-| **SMS** | Semaphore (primary for Philippines) |
+| Layer | Tools |
+|-------|-------|
+| Frontend | React 18, Vite, Tailwind CSS, React Router v6 |
+| Backend | Node.js 20+, Express.js, Prisma ORM |
+| Database | SQLite (for local development), PostgreSQL (for production) |
+| Authentication | JWT (JSON Web Tokens) |
+| SMS Provider | Semaphore (Philippine SMS gateway) |
+| Deployment | Railway (backend + database), served as a single service |
 
-## Quick Start
+## Getting Started
 
-### Prerequisites
+### What You Need
 
-- Node.js 20+
-- npm 9+
+- **Node.js** version 20 or higher
+- **npm** version 9 or higher (bundled with Node.js)
 
-### Installation
+### Setup Steps
 
 ```bash
-# Clone the repository
+# 1. Clone the repo
 git clone <repository-url>
 cd hardware-store
 
-# Backend setup
+# 2. Install and configure the backend
 cd backend
 npm install
 cp .env.example .env
 npx prisma migrate dev
 npx prisma db seed
 
-# Frontend setup
+# 3. Install and configure the frontend
 cd ../frontend
 npm install
 cp .env.example .env
 ```
 
-### Running Locally
+### Running the App
 
-**Terminal 1 - Backend:**
+Open two terminal windows:
+
+**Terminal 1 — Start the backend server:**
 ```bash
 cd backend
 npm run dev
-# Server runs at http://localhost:3001
+# Runs at http://localhost:3001
 ```
 
-**Terminal 2 - Frontend:**
+**Terminal 2 — Start the frontend dev server:**
 ```bash
 cd frontend
 npm run dev
-# App runs at http://localhost:5173
+# Runs at http://localhost:5173
 ```
 
-### Default Credentials
+### Default Login
 
-- **Admin:** username `admin` / password `admin123`
+- **Admin panel:** go to `http://localhost:5173/admin/login`
+- **Username:** `admin`
+- **Password:** `admin123`
 
-## Project Structure
+## Folder Structure
 
 ```
 hardware-store/
-├── backend/               # Express.js API
+├── backend/                # Express.js REST API server
 │   ├── src/
-│   │   ├── controllers/  # Route handlers
-│   │   ├── middleware/   # Express middleware
-│   │   ├── routes/       # API routes
-│   │   ├── services/     # Business logic
-│   │   └── utils/        # Helpers
-│   ├── prisma/           # Database schema
-│   └── tests/            # API tests
+│   │   ├── controllers/   # Request handlers for each route
+│   │   ├── middleware/    # Auth checks, validation, error handling
+│   │   ├── routes/        # Route definitions (maps URLs to controllers)
+│   │   ├── services/      # Core business logic (SMS sending, etc.)
+│   │   └── utils/         # Shared helper functions
+│   ├── prisma/            # Database schema, migrations, and seed script
+│   └── tests/             # Automated API tests (Jest + Supertest)
 │
-├── frontend/             # React application
+├── frontend/              # React single-page application
 │   └── src/
-│       ├── components/   # UI components
-│       ├── pages/        # Page components
-│       ├── context/      # React Context
-│       ├── hooks/        # Custom hooks
-│       └── services/     # API services
+│       ├── components/    # Reusable UI pieces (Navbar, ProductCard, etc.)
+│       ├── pages/         # Full page views (Home, Cart, Admin Dashboard)
+│       ├── context/       # React Context for global state (auth, cart)
+│       ├── hooks/         # Custom React hooks
+│       ├── services/      # Functions that call the backend API
+│       └── styles/        # Global CSS
 │
-└── docs/                 # Documentation
+├── docs/                  # Project documentation
+└── product-images/        # Reference product images
 ```
 
 ## Documentation
 
-| Document | Description |
-|----------|-------------|
-| [Getting Started](./docs/getting-started.md) | Local development setup |
-| [API Reference](./docs/api/README.md) | Complete API documentation |
-| [Database Schema](./docs/database/schema.md) | Database models |
-| [Deployment](./docs/deployment.md) | Production deployment guide |
-| [Testing](./docs/testing/README.md) | Testing guide |
-| [SMS Integration](./docs/features/sms-integration.md) | SMS configuration |
+For more in-depth information, refer to the docs folder:
 
-## Scripts
+| Document | What It Covers |
+|----------|----------------|
+| [Getting Started](./docs/getting-started.md) | Full local development setup with troubleshooting |
+| [API Reference](./docs/api/README.md) | Every API endpoint, request/response formats |
+| [Database Schema](./docs/database/schema.md) | All database tables and their relationships |
+| [Deployment Guide](./docs/deployment.md) | Step-by-step Railway deployment instructions |
+| [Testing](./docs/testing/README.md) | How to run and write tests |
+| [SMS Integration](./docs/features/sms-integration.md) | SMS provider setup and message templates |
 
-### Backend
+## Available Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm start` | Start production server |
-| `npm test` | Run tests |
-| `npm run db:migrate` | Run database migrations |
-| `npm run db:seed` | Seed database |
-| `npm run db:studio` | Open Prisma Studio |
+### Backend (`cd backend`)
 
-### Frontend
+| Command | What It Does |
+|---------|--------------|
+| `npm run dev` | Starts the server with auto-reload on file changes |
+| `npm start` | Starts the server in production mode |
+| `npm test` | Runs the full automated test suite |
+| `npm run db:migrate` | Applies pending database migrations |
+| `npm run db:seed` | Populates the database with initial data |
+| `npm run db:studio` | Opens Prisma Studio — a visual database browser |
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run preview` | Preview production build |
+### Frontend (`cd frontend`)
 
-## API Overview
+| Command | What It Does |
+|---------|--------------|
+| `npm run dev` | Starts the Vite dev server with hot reload |
+| `npm run build` | Compiles the app into optimized static files |
+| `npm run preview` | Serves the production build locally for testing |
 
-| Endpoint | Description |
-|----------|-------------|
-| `GET /api/products` | List products |
-| `GET /api/categories` | List categories |
-| `POST /api/orders` | Create order |
-| `GET /api/orders/:orderNumber` | Track order |
-| `POST /api/admin/login` | Admin login |
-| `GET /api/admin/orders` | Admin: list orders |
-| `PATCH /api/admin/orders/:id/status` | Admin: update status |
+## Key API Endpoints
 
-See [API Reference](./docs/api/README.md) for complete documentation.
+| Endpoint | Purpose |
+|----------|---------|
+| `GET /api/products` | Fetch the product catalog |
+| `GET /api/categories` | Fetch product categories |
+| `POST /api/orders` | Submit a new customer order |
+| `GET /api/orders/:orderNumber` | Look up an order by its tracking number |
+| `POST /api/admin/login` | Authenticate as an admin user |
+| `GET /api/admin/orders` | Retrieve all orders (admin only) |
+| `PATCH /api/admin/orders/:id/status` | Move an order to the next status (admin only) |
+
+The full API reference with request bodies, query parameters, and example responses is in [docs/api/README.md](./docs/api/README.md).
 
 ## Environment Variables
 
-### Backend
+### Backend (`backend/.env`)
 
 ```env
 DATABASE_URL="file:./dev.db"
@@ -171,50 +174,39 @@ SMS_ENABLED=false
 FRONTEND_URL=http://localhost:5173
 ```
 
-### Frontend
+### Frontend (`frontend/.env`)
 
 ```env
 VITE_API_URL=http://localhost:3001/api
 VITE_STORE_NAME=Hardware Store
 ```
 
-See `.env.example` files for all options.
+Both directories include `.env.example` files with all available options and descriptions.
 
 ## Deployment
 
-Recommended hosting:
+The application is designed to run as a single Railway service that hosts both the API and the built frontend. PostgreSQL is used as the production database (also on Railway). This setup is free under the GitHub Student Developer Pack.
 
-- **Backend:** [Railway](https://railway.app)
-- **Frontend:** [Vercel](https://vercel.com)
-- **Database:** Railway PostgreSQL or [Supabase](https://supabase.com)
+Full deployment instructions are in the [Deployment Guide](./docs/deployment.md).
 
-See [Deployment Guide](./docs/deployment.md) for detailed instructions.
-
-## Testing
+## Running Tests
 
 ```bash
-# Run all tests
-cd backend && npm test
-
-# Run with coverage
-npm test -- --coverage
-
-# Run specific test
-npm test -- --testPathPattern=orders.test.js
+cd backend
+npm test                                         # run all tests
+npm test -- --coverage                           # run with coverage report
+npm test -- --testPathPattern=orders.test.js      # run a specific test file
 ```
+
+The test suite covers API endpoints, authentication flows, input validation, order status transitions, and SMS service logic.
 
 ## Contributing
 
-1. Create a feature branch
-2. Make your changes
-3. Run tests: `npm test`
-4. Run linting: `npm run lint`
-5. Submit a pull request
+1. Create a new branch for your feature or fix
+2. Write your code and make sure `npm test` passes
+3. Run `npm run lint` to check for style issues
+4. Open a pull request with a clear description of the changes
 
 ## License
 
-This project is proprietary and confidential.
-
-## Support
-
-For technical support, please contact the development team.
+This project is proprietary. All rights reserved.

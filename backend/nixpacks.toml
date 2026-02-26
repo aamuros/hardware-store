@@ -1,14 +1,27 @@
 # Nixpacks configuration for Railway deployment
 # https://nixpacks.com/docs/configuration/file
 
+# The setup phase defines what system packages are required.
+# 'nodejs_20' ensures a modern, secure JS runtime environment.
+# 'openssl' is strictly required for the Prisma ORM engine to function on Linux.
 [phases.setup]
 nixPkgs = ["nodejs_20", "openssl"]
 
+# The install phase installs the project's NodeJS dependencies.
+# 'npm ci' (clean install) ensures deterministic installs based on package-lock.json.
 [phases.install]
 cmds = ["npm ci"]
 
+# The build phase prepares the application for production.
+# Crucially, it generates the Prisma Client artifacts. We provide a placeholder URL 
+# so 'prisma generate' doesn't fail if the actual DATABASE_URL isn't injected yet during build.
 [phases.build]
 cmds = ["DATABASE_URL=${DATABASE_URL:-postgresql://placeholder:5432/placeholder} npx prisma generate"]
 
+# The start phase defines the primary command to keep the server running in production.
+# It runs a sequence of scripts: 
+# 1. check-env.sh verifies environment variables
+# 2. deploy-db.sh manages database migrations cleanly 
+# 3. server.js starts the Express App
 [start]
 cmd = "sh scripts/check-env.sh && sh scripts/deploy-db.sh && node src/server.js"

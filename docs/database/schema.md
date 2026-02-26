@@ -1,12 +1,17 @@
 # Database Schema
 
-This document describes the database schema for the Hardware Store application.
+This document describes every table in the database, what each column stores, and how the tables relate to each other. The schema is defined in `backend/prisma/schema.prisma` and managed through Prisma ORM.
 
-## Overview
+## Database Engine
 
-The database uses **SQLite** for development and **PostgreSQL** for production. The schema is managed by [Prisma ORM](https://www.prisma.io/).
+- **Local development:** SQLite — a file-based database that requires zero configuration
+- **Production (Railway):** PostgreSQL — a proper relational database for reliability and concurrent access
+
+Prisma handles the differences between the two engines automatically, so the same schema works in both environments.
 
 ## Entity Relationship Diagram
+
+The diagram below shows how the main tables connect to each other. Each line represents a foreign key relationship.
 
 ```mermaid
 erDiagram
@@ -28,127 +33,118 @@ erDiagram
 
 ---
 
-## Models
+## Tables
 
-### User (Admin)
+### User
 
-Admin users who manage the store through the dashboard.
+Stores admin and staff accounts that log into the dashboard to manage the store.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| id | Int | Primary key |
-| username | String | Unique username |
-| password | String | Hashed password |
-| name | String | Display name |
-| role | String | "admin" or "staff" |
-| isActive | Boolean | Account status |
-| lastLogin | DateTime? | Last login timestamp |
-| createdAt | DateTime | Created timestamp |
-| updatedAt | DateTime | Updated timestamp |
+| id | Int | Auto-incrementing primary key |
+| username | String | Login username — must be unique |
+| password | String | Bcrypt-hashed password |
+| name | String | Display name shown in the dashboard |
+| role | String | Either `"admin"` (full access) or `"staff"` (limited access) |
+| isActive | Boolean | Whether this account can log in |
+| lastLogin | DateTime (nullable) | Timestamp of the most recent login |
+| createdAt | DateTime | When the account was created |
+| updatedAt | DateTime | When the account was last modified |
 
-**Indexes:** `username` (unique)
+Unique index on `username`.
 
 ---
 
 ### Customer
 
-Customer accounts for the storefront.
+Customer accounts created through the storefront registration form.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| id | Int | Primary key |
-| email | String | Unique email address |
-| password | String | Hashed password |
-| name | String | Full name |
-| phone | String? | Phone number |
-| isActive | Boolean | Account status |
-| lastLogin | DateTime? | Last login timestamp |
-| createdAt | DateTime | Created timestamp |
-| updatedAt | DateTime | Updated timestamp |
+| id | Int | Auto-incrementing primary key |
+| email | String | Login email — must be unique |
+| password | String | Bcrypt-hashed password |
+| name | String | Customer's full name |
+| phone | String (nullable) | Philippine mobile number |
+| isActive | Boolean | Whether this account is active |
+| lastLogin | DateTime (nullable) | Timestamp of the most recent login |
+| createdAt | DateTime | Account creation timestamp |
+| updatedAt | DateTime | Last modification timestamp |
 
-**Indexes:** `email` (unique)
+Unique index on `email`.
 
-**Relations:**
-- `orders` → Order[]
-- `savedAddresses` → SavedAddress[]
-- `wishlistItems` → WishlistItem[]
+Each customer can have multiple orders, saved addresses, and wishlist items.
 
 ---
 
 ### Category
 
-Product categories for organization.
+Product categories used to organize the catalog (e.g., "Tools", "Plumbing", "Electrical").
 
 | Column | Type | Description |
 |--------|------|-------------|
-| id | Int | Primary key |
-| name | String | Category name (unique) |
-| description | String? | Category description |
-| icon | String? | Emoji or icon name |
-| isDeleted | Boolean | Soft delete flag |
-| createdAt | DateTime | Created timestamp |
-| updatedAt | DateTime | Updated timestamp |
+| id | Int | Auto-incrementing primary key |
+| name | String | Category name — must be unique |
+| description | String (nullable) | Short description of the category |
+| icon | String (nullable) | An emoji or icon identifier displayed in the UI |
+| isDeleted | Boolean | Soft delete flag — hidden from the storefront but retained in the database |
+| createdAt | DateTime | Creation timestamp |
+| updatedAt | DateTime | Last modification timestamp |
 
-**Indexes:** `name` (unique)
+Unique index on `name`.
 
 ---
 
 ### Product
 
-Products available for sale.
+Every item available for sale in the store.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| id | Int | Primary key |
+| id | Int | Auto-incrementing primary key |
 | name | String | Product name |
-| description | String? | Product description |
-| price | Float | Base price in PHP |
-| unit | String | Unit of measure |
-| sku | String? | Stock keeping unit (unique) |
-| imageUrl | String? | Primary image URL |
-| stockQuantity | Int | Current stock level |
-| lowStockThreshold | Int | Low stock alert level |
-| isAvailable | Boolean | Availability status |
+| description | String (nullable) | Detailed product description |
+| price | Float | Base price in Philippine pesos |
+| unit | String | Unit of measure (e.g., "piece", "kg", "meter", "bag") |
+| sku | String (nullable) | Stock Keeping Unit code — unique identifier for inventory |
+| imageUrl | String (nullable) | Path to the primary product image |
+| stockQuantity | Int | How many units are currently in stock |
+| lowStockThreshold | Int | When stock drops to this level, a low-stock warning is triggered |
+| isAvailable | Boolean | Whether the product is visible and orderable on the storefront |
 | isDeleted | Boolean | Soft delete flag |
-| hasVariants | Boolean | Uses variants |
-| hasBulkPricing | Boolean | Has volume discounts |
-| categoryId | Int | Foreign key to Category |
-| createdAt | DateTime | Created timestamp |
-| updatedAt | DateTime | Updated timestamp |
+| hasVariants | Boolean | Whether this product has variants (sizes, colors, etc.) |
+| hasBulkPricing | Boolean | Whether bulk pricing tiers apply to this product |
+| categoryId | Int | Foreign key linking to the Category table |
+| createdAt | DateTime | Creation timestamp |
+| updatedAt | DateTime | Last modification timestamp |
 
-**Indexes:** `categoryId`, `name`, `isAvailable`, `isDeleted`, `sku` (unique)
+Indexes on `categoryId`, `name`, `isAvailable`, `isDeleted`. Unique index on `sku`.
 
-**Relations:**
-- `category` → Category
-- `variants` → ProductVariant[]
-- `images` → ProductImage[]
-- `bulkPricingTiers` → BulkPricingTier[]
-- `orderItems` → OrderItem[]
-- `wishlistItems` → WishlistItem[]
+Each product belongs to one category and can have multiple variants, images, bulk pricing tiers, order items, and wishlist entries.
 
 ---
 
 ### ProductVariant
 
-Variations of a product (size, color, etc.).
+Represents a specific variation of a product — for example, different sizes or colors of the same item.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| id | Int | Primary key |
-| productId | Int | Foreign key to Product |
-| name | String | Variant name (e.g., "Large - Red") |
-| sku | String? | Variant SKU (unique) |
-| price | Float | Variant price |
-| stockQuantity | Int | Variant stock level |
-| attributes | String? | JSON attributes |
-| isAvailable | Boolean | Availability status |
+| id | Int | Auto-incrementing primary key |
+| productId | Int | Foreign key to the parent Product |
+| name | String | Human-readable variant name (e.g., "Large - Red") |
+| sku | String (nullable) | Variant-specific SKU — unique |
+| price | Float | Price for this particular variant |
+| stockQuantity | Int | Stock level for this variant specifically |
+| attributes | String (nullable) | JSON string with structured attributes |
+| isAvailable | Boolean | Whether this variant can be ordered |
 | isDeleted | Boolean | Soft delete flag |
-| createdAt | DateTime | Created timestamp |
-| updatedAt | DateTime | Updated timestamp |
+| createdAt | DateTime | Creation timestamp |
+| updatedAt | DateTime | Last modification timestamp |
 
-**Indexes:** `productId`, `sku` (unique)
+Indexes on `productId`. Unique index on `sku`.
 
-**Attributes JSON Example:**
+The `attributes` field stores variant properties as JSON, for example:
 ```json
 { "size": "Large", "color": "Red" }
 ```
@@ -157,203 +153,195 @@ Variations of a product (size, color, etc.).
 
 ### ProductImage
 
-Additional images for a product.
+Additional images for a product beyond the primary one. Used for gallery views on the product detail page.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| id | Int | Primary key |
+| id | Int | Auto-incrementing primary key |
 | productId | Int | Foreign key to Product |
-| imageUrl | String | Image URL |
-| altText | String? | Alt text for accessibility |
-| sortOrder | Int | Display order |
-| isPrimary | Boolean | Primary image flag |
-| createdAt | DateTime | Created timestamp |
+| imageUrl | String | Path to the image file |
+| altText | String (nullable) | Descriptive text for accessibility |
+| sortOrder | Int | Controls the display order in the gallery |
+| isPrimary | Boolean | Marks which image is shown as the main thumbnail |
+| createdAt | DateTime | When the image record was created |
 
-**Indexes:** `productId`
+Index on `productId`.
 
 ---
 
 ### BulkPricingTier
 
-Volume discount tiers for products.
+Defines volume discounts for a product. Customers ordering in large quantities automatically get a reduced price.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| id | Int | Primary key |
+| id | Int | Auto-incrementing primary key |
 | productId | Int | Foreign key to Product |
-| minQuantity | Int | Minimum quantity for tier |
-| discountType | String | "percentage" or "fixed" |
-| discountValue | Float | Discount amount |
-| createdAt | DateTime | Created timestamp |
+| minQuantity | Int | Minimum order quantity to qualify for this tier |
+| discountType | String | `"percentage"` (e.g., 10% off) or `"fixed"` (e.g., ₱5 off per unit) |
+| discountValue | Float | The discount amount |
+| createdAt | DateTime | Creation timestamp |
 
-**Indexes:** `productId`
+Index on `productId`.
 
-**Example:**
-| minQuantity | discountType | discountValue |
-|-------------|--------------|---------------|
-| 10 | percentage | 5 |
-| 25 | percentage | 10 |
-| 50 | percentage | 15 |
+For example, a product might have these tiers:
+
+| Minimum Quantity | Discount |
+|------------------|----------|
+| 10 units | 5% off |
+| 25 units | 10% off |
+| 50 units | 15% off |
 
 ---
 
 ### Order
 
-Customer orders.
+Each row represents one customer order. Orders are placed through the storefront and managed by admin staff.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| id | Int | Primary key |
-| orderNumber | String | Unique order number |
-| customerId | Int? | Foreign key to Customer (optional) |
-| customerName | String | Customer full name |
-| phone | String | Customer phone |
-| address | String | Delivery address |
-| barangay | String | Barangay name |
-| landmarks | String? | Nearby landmarks |
-| status | String | Order status |
-| totalAmount | Float | Total order amount |
-| notes | String? | Customer notes |
-| createdAt | DateTime | Created timestamp |
-| updatedAt | DateTime | Updated timestamp |
+| id | Int | Auto-incrementing primary key |
+| orderNumber | String | Human-readable order number in the format `HW-YYYYMMDD-XXXX` |
+| customerId | Int (nullable) | Foreign key to Customer — null for guest checkouts |
+| customerName | String | Customer's name (stored directly for display even if customer account is deleted) |
+| phone | String | Customer's phone number for SMS notifications |
+| address | String | Delivery street address |
+| barangay | String | Barangay (neighborhood/district) for the delivery |
+| landmarks | String (nullable) | Nearby landmarks to help the driver find the address |
+| status | String | Current order status (see status list below) |
+| totalAmount | Float | Total cost of all items in the order |
+| notes | String (nullable) | Special instructions from the customer |
+| createdAt | DateTime | When the order was placed |
+| updatedAt | DateTime | Last status change timestamp |
 
-**Indexes:** `status`, `phone`, `orderNumber` (unique), `createdAt`, `customerId`
+Indexes on `status`, `phone`, `createdAt`, `customerId`. Unique index on `orderNumber`.
 
-**Order Number Format:** `HW-YYYYMMDD-XXXX` (e.g., HW-20241218-0042)
-
-**Statuses:** `pending`, `accepted`, `rejected`, `preparing`, `out_for_delivery`, `delivered`, `completed`, `cancelled`
+**Order statuses:** `pending` → `accepted` → `preparing` → `out_for_delivery` → `delivered` → `completed`. Orders can also be `rejected` or `cancelled` at certain stages.
 
 ---
 
 ### OrderItem
 
-Individual items within an order.
+Individual line items within an order. Each row represents one product (and optionally a specific variant) at a specific quantity.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| id | Int | Primary key |
+| id | Int | Auto-incrementing primary key |
 | orderId | Int | Foreign key to Order |
 | productId | Int | Foreign key to Product |
-| variantId | Int? | Foreign key to ProductVariant |
-| variantName | String? | Variant name at time of order |
-| quantity | Int | Quantity ordered |
-| unitPrice | Float | Price at time of order |
-| subtotal | Float | quantity × unitPrice |
+| variantId | Int (nullable) | Foreign key to ProductVariant (if a variant was selected) |
+| variantName | String (nullable) | Variant name captured at time of order (so it is preserved even if the variant is later changed) |
+| quantity | Int | Number of units ordered |
+| unitPrice | Float | Price per unit at the time of purchase |
+| subtotal | Float | `quantity × unitPrice` |
 
-**Indexes:** `orderId`, `productId`, `variantId`
+Indexes on `orderId`, `productId`, `variantId`.
 
 ---
 
 ### SmsLog
 
-SMS notification history.
+Records every SMS the system attempts to send. Useful for debugging delivery failures and auditing message history.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| id | Int | Primary key |
-| orderId | Int? | Foreign key to Order |
+| id | Int | Auto-incrementing primary key |
+| orderId | Int (nullable) | Foreign key to the Order that triggered this SMS |
 | phone | String | Recipient phone number |
-| message | String | SMS message content |
-| status | String | "pending", "sent", or "failed" |
-| sentAt | DateTime? | When SMS was sent |
-| error | String? | Error message if failed |
-| response | String? | Provider response |
-| createdAt | DateTime | Created timestamp |
+| message | String | Full text of the message |
+| status | String | `"pending"`, `"sent"`, or `"failed"` |
+| sentAt | DateTime (nullable) | When the SMS was successfully delivered |
+| error | String (nullable) | Error details if the send failed |
+| response | String (nullable) | Raw JSON response from the SMS provider |
+| createdAt | DateTime | When the log entry was created |
 
-**Indexes:** `orderId`, `status`
+Indexes on `orderId`, `status`.
 
 ---
 
 ### OrderStatusHistory
 
-Audit trail for order status changes.
+An audit trail that records every status change for an order. This powers the order timeline view in both the customer tracker and admin dashboard.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| id | Int | Primary key |
+| id | Int | Auto-incrementing primary key |
 | orderId | Int | Foreign key to Order |
-| fromStatus | String? | Previous status |
-| toStatus | String | New status |
-| changedById | Int? | Foreign key to User |
-| notes | String? | Change notes |
-| createdAt | DateTime | Created timestamp |
+| fromStatus | String (nullable) | The previous status (null for the initial "pending" entry) |
+| toStatus | String | The new status |
+| changedById | Int (nullable) | Foreign key to User — which admin/staff made this change |
+| notes | String (nullable) | Optional notes recorded with the status change |
+| createdAt | DateTime | When the status change occurred |
 
-**Indexes:** `orderId`, `changedById`, `createdAt`
+Indexes on `orderId`, `changedById`, `createdAt`.
 
 ---
 
 ### SavedAddress
 
-Customer saved delivery addresses.
+Delivery addresses that customers can save to their account for reuse on future orders.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| id | Int | Primary key |
+| id | Int | Auto-incrementing primary key |
 | customerId | Int | Foreign key to Customer |
-| label | String | Address label (Home, Office) |
+| label | String | A friendly label like "Home" or "Office" |
 | address | String | Street address |
 | barangay | String | Barangay name |
-| landmarks | String? | Nearby landmarks |
-| isDefault | Boolean | Default address flag |
-| createdAt | DateTime | Created timestamp |
-| updatedAt | DateTime | Updated timestamp |
+| landmarks | String (nullable) | Nearby landmarks |
+| isDefault | Boolean | Whether this is the customer's default delivery address |
+| createdAt | DateTime | Creation timestamp |
+| updatedAt | DateTime | Last modification timestamp |
 
-**Indexes:** `customerId`
+Index on `customerId`.
 
 ---
 
 ### WishlistItem
 
-Customer wishlist/favorites.
+Tracks which products a customer has saved to their wishlist/favorites list.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| id | Int | Primary key |
+| id | Int | Auto-incrementing primary key |
 | customerId | Int | Foreign key to Customer |
 | productId | Int | Foreign key to Product |
-| addedAt | DateTime | When added to wishlist |
+| addedAt | DateTime | When the item was added to the wishlist |
 
-**Indexes:** `customerId`, `productId`
-
-**Unique Constraint:** `customerId + productId`
+Indexes on `customerId`, `productId`. There is a unique constraint on the combination of `customerId + productId` so a customer cannot add the same product twice.
 
 ---
 
-## Common Commands
+## Common Database Commands
 
-### View Database (Prisma Studio)
-
+**Open Prisma Studio** (visual database browser):
 ```bash
 cd backend
 npm run db:studio
 ```
+Opens at `http://localhost:5555`.
 
-Opens a visual database browser at http://localhost:5555.
-
-### Run Migrations
-
+**Run pending migrations:**
 ```bash
-# Development
-npm run db:migrate
-
-# Production
-npm run db:deploy
+cd backend
+npm run db:migrate        # for development (creates migration files)
+npm run db:deploy         # for production (applies existing migrations only)
 ```
 
-### Reset Database
-
+**Reset the database** (drops everything and re-seeds):
 ```bash
+cd backend
 npm run db:reset
 ```
 
-### Seed Database
-
+**Seed the database:**
 ```bash
+cd backend
 npm run db:seed
 ```
 
-### Generate Prisma Client
-
+**Regenerate the Prisma client** (needed after schema changes):
 ```bash
+cd backend
 npx prisma generate
 ```

@@ -1,32 +1,30 @@
 # Customers API
 
-Complete documentation for customer account endpoints.
+This page documents all endpoints related to customer accounts — registration, login, profile management, saved addresses, wishlist, and order history.
 
-## Endpoints Overview
+## Endpoint Summary
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/customers/register` | No | Create account |
-| POST | `/customers/login` | No | Sign in |
-| GET | `/customers/profile` | Customer | Get profile |
-| PUT | `/customers/profile` | Customer | Update profile |
-| PUT | `/customers/password` | Customer | Change password |
-| GET | `/customers/orders` | Customer | Order history |
-| GET | `/customers/addresses` | Customer | List saved addresses |
-| POST | `/customers/addresses` | Customer | Add address |
-| PUT | `/customers/addresses/:id` | Customer | Update address |
-| DELETE | `/customers/addresses/:id` | Customer | Delete address |
-| GET | `/customers/wishlist` | Customer | Get wishlist |
-| POST | `/customers/wishlist` | Customer | Add to wishlist |
-| DELETE | `/customers/wishlist/:productId` | Customer | Remove from wishlist |
+| Method | Path | Auth Required | What It Does |
+|--------|------|---------------|-------------|
+| POST | `/customers/register` | No | Creates a new customer account |
+| POST | `/customers/login` | No | Logs in and returns a JWT token |
+| GET | `/customers/profile` | Customer | Gets the logged-in customer's profile |
+| PUT | `/customers/profile` | Customer | Updates profile info (name, phone) |
+| PUT | `/customers/password` | Customer | Changes the account password |
+| GET | `/customers/orders` | Customer | Gets the customer's order history |
+| GET | `/customers/addresses` | Customer | Lists all saved addresses |
+| POST | `/customers/addresses` | Customer | Saves a new delivery address |
+| PUT | `/customers/addresses/:id` | Customer | Updates a saved address |
+| DELETE | `/customers/addresses/:id` | Customer | Deletes a saved address |
+| GET | `/customers/wishlist` | Customer | Lists all wishlist items |
+| POST | `/customers/wishlist` | Customer | Adds a product to the wishlist |
+| DELETE | `/customers/wishlist/:productId` | Customer | Removes a product from the wishlist |
 
 ---
 
-## Authentication
+## Registration
 
-### Register
-
-Create a new customer account.
+Creates a new customer account. After registration, the customer is automatically logged in and a JWT token is returned.
 
 ```
 POST /api/customers/register
@@ -36,12 +34,12 @@ POST /api/customers/register
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| email | string | Yes | Valid email address |
-| password | string | Yes | Min 6 characters |
-| name | string | Yes | Full name |
-| phone | string | No | Philippine phone number |
+| email | string | Yes | Must be a valid email address and not already registered |
+| password | string | Yes | Minimum 6 characters |
+| name | string | Yes | Customer's full name |
+| phone | string | No | Philippine mobile number |
 
-### Example Request
+### Example
 
 ```bash
 curl -X POST http://localhost:3001/api/customers/register \
@@ -54,7 +52,7 @@ curl -X POST http://localhost:3001/api/customers/register \
   }'
 ```
 
-### Example Response
+### Response
 
 ```json
 {
@@ -73,9 +71,9 @@ curl -X POST http://localhost:3001/api/customers/register \
 
 ---
 
-### Login
+## Login
 
-Sign in to an existing account.
+Authenticates a customer with their email and password, and returns a JWT token for accessing protected endpoints.
 
 ```
 POST /api/customers/login
@@ -85,10 +83,10 @@ POST /api/customers/login
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| email | string | Yes | Email address |
-| password | string | Yes | Password |
+| email | string | Yes | The registered email address |
+| password | string | Yes | The account password |
 
-### Example Request
+### Example
 
 ```bash
 curl -X POST http://localhost:3001/api/customers/login \
@@ -99,7 +97,7 @@ curl -X POST http://localhost:3001/api/customers/login \
   }'
 ```
 
-### Example Response
+### Response
 
 ```json
 {
@@ -118,19 +116,19 @@ curl -X POST http://localhost:3001/api/customers/login \
 
 ---
 
-## Profile Management
+## Profile
 
 ### Get Profile
 
-Get the authenticated customer's profile.
+Returns the profile of the currently logged-in customer.
 
 ```
 GET /api/customers/profile
 ```
 
-**Authentication:** Customer token required
+Requires a customer authentication token.
 
-### Example Response
+### Response
 
 ```json
 {
@@ -149,22 +147,22 @@ GET /api/customers/profile
 
 ### Update Profile
 
-Update customer profile information.
+Updates the customer's name or phone number. The email cannot be changed through this endpoint.
 
 ```
 PUT /api/customers/profile
 ```
 
-**Authentication:** Customer token required
+Requires a customer authentication token.
 
 ### Request Body
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| name | string | No | Full name |
-| phone | string | No | Phone number |
+| name | string | No | Updated full name |
+| phone | string | No | Updated phone number |
 
-### Example Request
+### Example
 
 ```bash
 curl -X PUT http://localhost:3001/api/customers/profile \
@@ -180,22 +178,22 @@ curl -X PUT http://localhost:3001/api/customers/profile \
 
 ### Change Password
 
-Update customer password.
+Updates the customer's password. The current password must be provided for verification.
 
 ```
 PUT /api/customers/password
 ```
 
-**Authentication:** Customer token required
+Requires a customer authentication token.
 
 ### Request Body
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| currentPassword | string | Yes | Current password |
-| newPassword | string | Yes | New password (min 6 chars) |
+| currentPassword | string | Yes | The current password (for verification) |
+| newPassword | string | Yes | The new password (minimum 6 characters) |
 
-### Example Request
+### Example
 
 ```bash
 curl -X PUT http://localhost:3001/api/customers/password \
@@ -211,17 +209,17 @@ curl -X PUT http://localhost:3001/api/customers/password \
 
 ## Saved Addresses
 
-### List Addresses
+Customers can save delivery addresses to their account so they do not have to re-type them every time they place an order.
 
-Get all saved delivery addresses.
+### List Addresses
 
 ```
 GET /api/customers/addresses
 ```
 
-**Authentication:** Customer token required
+Requires a customer authentication token.
 
-### Example Response
+### Response
 
 ```json
 {
@@ -251,25 +249,25 @@ GET /api/customers/addresses
 
 ### Add Address
 
-Save a new delivery address.
+Saves a new delivery address to the customer's account.
 
 ```
 POST /api/customers/addresses
 ```
 
-**Authentication:** Customer token required
+Requires a customer authentication token.
 
 ### Request Body
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| label | string | Yes | Address label (Home, Office, etc.) |
+| label | string | Yes | A label like "Home", "Office", etc. |
 | address | string | Yes | Street address |
 | barangay | string | Yes | Barangay name |
-| landmarks | string | No | Nearby landmarks |
-| isDefault | boolean | No | Set as default address |
+| landmarks | string | No | Nearby landmarks to help with delivery |
+| isDefault | boolean | No | Whether to set this as the default address |
 
-### Example Request
+### Example
 
 ```bash
 curl -X POST http://localhost:3001/api/customers/addresses \
@@ -288,41 +286,41 @@ curl -X POST http://localhost:3001/api/customers/addresses \
 
 ### Update Address
 
-Update an existing saved address.
+Updates an existing saved address.
 
 ```
 PUT /api/customers/addresses/:id
 ```
 
-**Authentication:** Customer token required
+Requires a customer authentication token. Accepts the same fields as the add endpoint (all optional).
 
 ---
 
 ### Delete Address
 
-Remove a saved address.
+Removes a saved address from the customer's account.
 
 ```
 DELETE /api/customers/addresses/:id
 ```
 
-**Authentication:** Customer token required
+Requires a customer authentication token.
 
 ---
 
 ## Wishlist
 
-### Get Wishlist
+Customers can save products to a wishlist for quick access later.
 
-Get all products in customer's wishlist.
+### View Wishlist
 
 ```
 GET /api/customers/wishlist
 ```
 
-**Authentication:** Customer token required
+Requires a customer authentication token.
 
-### Example Response
+### Response
 
 ```json
 {
@@ -347,21 +345,21 @@ GET /api/customers/wishlist
 
 ### Add to Wishlist
 
-Add a product to wishlist.
+Adds a product to the customer's wishlist. Each product can only be added once — trying to add a duplicate returns an error.
 
 ```
 POST /api/customers/wishlist
 ```
 
-**Authentication:** Customer token required
+Requires a customer authentication token.
 
 ### Request Body
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| productId | number | Yes | Product ID to add |
+| productId | number | Yes | The ID of the product to add |
 
-### Example Request
+### Example
 
 ```bash
 curl -X POST http://localhost:3001/api/customers/wishlist \
@@ -374,15 +372,15 @@ curl -X POST http://localhost:3001/api/customers/wishlist \
 
 ### Remove from Wishlist
 
-Remove a product from wishlist.
+Removes a product from the customer's wishlist.
 
 ```
 DELETE /api/customers/wishlist/:productId
 ```
 
-**Authentication:** Customer token required
+Requires a customer authentication token.
 
-### Example Request
+### Example
 
 ```bash
 curl -X DELETE http://localhost:3001/api/customers/wishlist/5 \
@@ -393,25 +391,23 @@ curl -X DELETE http://localhost:3001/api/customers/wishlist/5 \
 
 ## Order History
 
-### Get Customer Orders
-
-Get order history for the authenticated customer.
+Returns a paginated list of orders placed by the logged-in customer.
 
 ```
 GET /api/customers/orders
 ```
 
-**Authentication:** Customer token required
+Requires a customer authentication token.
 
 ### Query Parameters
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | page | number | 1 | Page number |
-| limit | number | 10 | Items per page |
-| status | string | - | Filter by status |
+| limit | number | 10 | Results per page |
+| status | string | — | Filter by order status |
 
-### Example Response
+### Response
 
 ```json
 {
@@ -441,7 +437,7 @@ GET /api/customers/orders
 
 ## Error Responses
 
-### Email Already Exists
+### Email Already Registered
 
 ```json
 {
@@ -450,7 +446,7 @@ GET /api/customers/orders
 }
 ```
 
-### Invalid Credentials
+### Wrong Email or Password
 
 ```json
 {
@@ -468,7 +464,7 @@ GET /api/customers/orders
 }
 ```
 
-### Already in Wishlist
+### Product Already in Wishlist
 
 ```json
 {

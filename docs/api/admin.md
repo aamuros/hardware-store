@@ -1,54 +1,62 @@
 # Admin API
 
-Complete documentation for admin/staff endpoints.
+This page documents all endpoints used by the admin dashboard — authentication, order management, product and category CRUD, user management, and dashboard statistics.
 
-## Endpoints Overview
+## Endpoint Summary
 
 ### Authentication
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/admin/login` | No | Admin sign in |
+
+| Method | Path | Auth | What It Does |
+|--------|------|------|-------------|
+| POST | `/admin/login` | No | Authenticates an admin or staff user |
 
 ### Dashboard
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/admin/dashboard` | Admin | Dashboard statistics |
 
-### Orders
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/admin/orders` | Admin | List all orders |
-| GET | `/admin/orders/:id` | Admin | Get order details |
-| PATCH | `/admin/orders/:id/status` | Admin | Update order status |
+| Method | Path | Auth | What It Does |
+|--------|------|------|-------------|
+| GET | `/admin/dashboard` | Admin | Returns summary statistics for the dashboard |
 
-### Products
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/admin/products` | Admin | List products (admin view) |
-| POST | `/admin/products` | Admin | Create product |
-| PUT | `/admin/products/:id` | Admin | Update product |
-| DELETE | `/admin/products/:id` | Admin | Delete product |
-| PATCH | `/admin/products/:id/availability` | Admin | Toggle availability |
+### Order Management
 
-### Categories
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/admin/categories` | Admin | List categories |
-| POST | `/admin/categories` | Admin | Create category |
-| PUT | `/admin/categories/:id` | Admin | Update category |
-| DELETE | `/admin/categories/:id` | Admin | Delete category |
+| Method | Path | Auth | What It Does |
+|--------|------|------|-------------|
+| GET | `/admin/orders` | Admin | Lists all orders with filtering |
+| GET | `/admin/orders/:id` | Admin | Gets full details of a specific order |
+| PATCH | `/admin/orders/:id/status` | Admin | Advances an order to the next status |
 
-### Users
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/admin/users` | Admin | List admin users |
-| POST | `/admin/users` | Admin | Create admin user |
+### Product Management
+
+| Method | Path | Auth | What It Does |
+|--------|------|------|-------------|
+| GET | `/admin/products` | Admin | Lists all products (including deleted and out-of-stock) |
+| POST | `/admin/products` | Admin | Creates a new product |
+| PUT | `/admin/products/:id` | Admin | Updates a product |
+| DELETE | `/admin/products/:id` | Admin | Soft-deletes a product |
+| PATCH | `/admin/products/:id/availability` | Admin | Toggles a product's availability on or off |
+
+### Category Management
+
+| Method | Path | Auth | What It Does |
+|--------|------|------|-------------|
+| GET | `/admin/categories` | Admin | Lists all categories |
+| POST | `/admin/categories` | Admin | Creates a new category |
+| PUT | `/admin/categories/:id` | Admin | Renames or updates a category |
+| DELETE | `/admin/categories/:id` | Admin | Deletes a category |
+
+### Staff Management
+
+| Method | Path | Auth | What It Does |
+|--------|------|------|-------------|
+| GET | `/admin/users` | Admin | Lists all admin/staff user accounts |
+| POST | `/admin/users` | Admin | Creates a new admin or staff account |
 
 ---
 
 ## Authentication
 
 ### Admin Login
+
+Authenticates an admin or staff user and returns a JWT token.
 
 ```
 POST /api/admin/login
@@ -58,10 +66,10 @@ POST /api/admin/login
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| username | string | Yes | Admin username |
-| password | string | Yes | Admin password |
+| username | string | Yes | The admin username |
+| password | string | Yes | The admin password |
 
-### Example Request
+### Example
 
 ```bash
 curl -X POST http://localhost:3001/api/admin/login \
@@ -72,7 +80,7 @@ curl -X POST http://localhost:3001/api/admin/login \
   }'
 ```
 
-### Example Response
+### Response
 
 ```json
 {
@@ -90,19 +98,23 @@ curl -X POST http://localhost:3001/api/admin/login \
 }
 ```
 
+The `role` field is either `"admin"` (full access to everything) or `"staff"` (limited to order processing and product management).
+
 ---
 
 ## Dashboard
 
 ### Get Dashboard Statistics
 
+Returns a summary of key metrics — today's orders, revenue figures, stock alerts, recent orders, and top-selling products. This data powers the main dashboard page.
+
 ```
 GET /api/admin/dashboard
 ```
 
-**Authentication:** Admin token required
+Requires an admin authentication token.
 
-### Example Response
+### Response
 
 ```json
 {
@@ -149,59 +161,65 @@ GET /api/admin/dashboard
 
 ## Order Management
 
-### List Orders
+### List All Orders
+
+Returns a paginated list of all orders. Supports filtering by status, date range, and keyword search.
 
 ```
 GET /api/admin/orders
 ```
 
-**Authentication:** Admin token required
+Requires an admin authentication token.
 
 ### Query Parameters
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | page | number | 1 | Page number |
-| limit | number | 20 | Items per page |
-| status | string | - | Filter by status |
-| from | date | - | Start date (YYYY-MM-DD) |
-| to | date | - | End date (YYYY-MM-DD) |
-| search | string | - | Search order number or customer |
+| limit | number | 20 | Results per page |
+| status | string | — | Show only orders with this status |
+| from | date | — | Only orders placed on or after this date (YYYY-MM-DD) |
+| to | date | — | Only orders placed on or before this date (YYYY-MM-DD) |
+| search | string | — | Search by order number or customer name |
 
 ---
 
 ### Get Order Details
 
+Returns the complete record for a specific order, including all line items, the full status history timeline, and any SMS messages that were triggered.
+
 ```
 GET /api/admin/orders/:id
 ```
 
-**Authentication:** Admin token required
-
-Returns full order details including items, status history, and SMS logs.
+Requires an admin authentication token.
 
 ---
 
 ### Update Order Status
 
+Changes an order's status (e.g., from "pending" to "accepted"). This also triggers an SMS notification to the customer.
+
 ```
 PATCH /api/admin/orders/:id/status
 ```
 
-**Authentication:** Admin token required
+Requires an admin authentication token.
 
 ### Request Body
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| status | string | Yes | New status |
-| notes | string | No | Internal notes |
+| status | string | Yes | The new status |
+| notes | string | No | Internal notes about this status change |
 
 ### Valid Statuses
 
 `pending`, `accepted`, `rejected`, `preparing`, `out_for_delivery`, `delivered`, `completed`, `cancelled`
 
-### Example Request
+Note: not all transitions are allowed. For example, you cannot go from "delivered" back to "preparing". See the [Orders API](./orders.md) page for the full transition table.
+
+### Example
 
 ```bash
 curl -X PATCH http://localhost:3001/api/admin/orders/42/status \
@@ -219,93 +237,95 @@ curl -X PATCH http://localhost:3001/api/admin/orders/42/status \
 
 ### List Products (Admin View)
 
+Unlike the public product listing endpoint, the admin version includes soft-deleted products, out-of-stock items, and full stock details.
+
 ```
 GET /api/admin/products
 ```
 
-**Authentication:** Admin token required
-
-Includes deleted products and full stock information.
+Requires an admin authentication token.
 
 ### Query Parameters
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | page | number | 1 | Page number |
-| limit | number | 20 | Items per page |
-| category | number | - | Filter by category |
-| available | boolean | - | Filter by availability |
-| lowStock | boolean | - | Show only low stock items |
-| includeDeleted | boolean | false | Include soft-deleted |
-| search | string | - | Search name/SKU |
+| limit | number | 20 | Results per page |
+| category | number | — | Filter by category ID |
+| available | boolean | — | Filter by availability |
+| lowStock | boolean | — | Show only products with stock below the low-stock threshold |
+| includeDeleted | boolean | false | Include soft-deleted products in the results |
+| search | string | — | Search by product name or SKU |
 
 ---
 
 ### Create Product
 
+Adds a new product to the store.
+
 ```
 POST /api/admin/products
 ```
 
-**Authentication:** Admin token required
+Requires an admin authentication token.
 
 ### Request Body
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | name | string | Yes | Product name |
-| description | string | No | Description |
+| description | string | No | Product description |
 | price | number | Yes | Price in PHP |
-| unit | string | Yes | Unit (piece, kg, meter, etc.) |
-| sku | string | No | SKU (unique) |
-| categoryId | number | Yes | Category ID |
-| stockQuantity | number | No | Initial stock |
-| lowStockThreshold | number | No | Low stock alert level |
-| isAvailable | boolean | No | Default: true |
-| hasVariants | boolean | No | Uses variants |
-| hasBulkPricing | boolean | No | Has volume discounts |
+| unit | string | Yes | Unit of measure (piece, kg, meter, set, etc.) |
+| sku | string | No | Stock Keeping Unit — must be unique if provided |
+| categoryId | number | Yes | Which category this product belongs to |
+| stockQuantity | number | No | Initial quantity in stock (defaults to 0) |
+| lowStockThreshold | number | No | Stock level that triggers a low-stock warning |
+| isAvailable | boolean | No | Whether the product is visible on the storefront (defaults to true) |
+| hasVariants | boolean | No | Whether this product has variants like size or color (defaults to false) |
+| hasBulkPricing | boolean | No | Whether bulk pricing tiers apply (defaults to false) |
 
 ---
 
 ### Update Product
 
+Updates one or more fields on an existing product. Only include the fields you want to change.
+
 ```
 PUT /api/admin/products/:id
 ```
 
-**Authentication:** Admin token required
-
-Accepts same fields as create (all optional).
+Requires an admin authentication token.
 
 ---
 
 ### Delete Product
 
+Performs a soft delete — the product is flagged as deleted and hidden from the storefront, but the database record is kept so that existing orders still reference it correctly.
+
 ```
 DELETE /api/admin/products/:id
 ```
 
-**Authentication:** Admin token required
-
-Performs a soft delete (sets `isDeleted = true`).
+Requires an admin authentication token.
 
 ---
 
 ### Toggle Availability
 
-Quick toggle for product availability.
+A quick way to mark a product as available or unavailable without updating other fields.
 
 ```
 PATCH /api/admin/products/:id/availability
 ```
 
-**Authentication:** Admin token required
+Requires an admin authentication token.
 
 ### Request Body
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| isAvailable | boolean | Yes | New availability status |
+| isAvailable | boolean | Yes | The new availability status |
 
 ---
 
@@ -313,13 +333,15 @@ PATCH /api/admin/products/:id/availability
 
 ### List Categories
 
+Returns all categories, each with a count of how many active products it contains.
+
 ```
 GET /api/admin/categories
 ```
 
-**Authentication:** Admin token required
+Requires an admin authentication token.
 
-### Example Response
+### Response
 
 ```json
 {
@@ -340,79 +362,86 @@ GET /api/admin/categories
 
 ### Create Category
 
+Adds a new product category.
+
 ```
 POST /api/admin/categories
 ```
 
-**Authentication:** Admin token required
+Requires an admin authentication token.
 
 ### Request Body
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| name | string | Yes | Category name (unique) |
-| description | string | No | Description |
-| icon | string | No | Emoji or icon name |
+| name | string | Yes | Category name — must be unique |
+| description | string | No | A short description of the category |
+| icon | string | No | An emoji or icon identifier for the UI |
 
 ---
 
 ### Update Category
 
+Updates a category's name, description, or icon.
+
 ```
 PUT /api/admin/categories/:id
 ```
 
-**Authentication:** Admin token required
+Requires an admin authentication token.
 
 ---
 
 ### Delete Category
 
+Deletes a category. **Important:** a category cannot be deleted if there are products still assigned to it. Reassign or remove those products first.
+
 ```
 DELETE /api/admin/categories/:id
 ```
 
-**Authentication:** Admin token required
-
-> [!WARNING]
-> Cannot delete categories with associated products. Reassign products first.
+Requires an admin authentication token.
 
 ---
 
-## User Management
+## Staff Management
 
 ### List Admin Users
+
+Returns all admin and staff accounts. Only accessible by users with the `admin` role.
 
 ```
 GET /api/admin/users
 ```
 
-**Authentication:** Admin token required (admin role only)
+Requires an admin authentication token (admin role only — staff cannot access this).
 
 ---
 
 ### Create Admin User
 
+Creates a new admin or staff account. Only accessible by users with the `admin` role.
+
 ```
 POST /api/admin/users
 ```
 
-**Authentication:** Admin token required (admin role only)
+Requires an admin authentication token (admin role only).
 
 ### Request Body
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| username | string | Yes | Username (unique) |
-| password | string | Yes | Password (min 6 chars) |
-| name | string | Yes | Display name |
-| role | string | No | Role: "admin" or "staff" |
+| username | string | Yes | Login username — must be unique |
+| password | string | Yes | Password (minimum 6 characters) |
+| name | string | Yes | Display name for the dashboard |
+| role | string | No | Either `"admin"` or `"staff"` (defaults to `"staff"`) |
 
 ---
 
 ## Error Responses
 
-### Unauthorized
+### No Token Provided
 
 ```json
 {
@@ -421,7 +450,7 @@ POST /api/admin/users
 }
 ```
 
-### Invalid Token
+### Invalid or Expired Token
 
 ```json
 {
@@ -430,7 +459,9 @@ POST /api/admin/users
 }
 ```
 
-### Forbidden (Wrong Role)
+### Insufficient Permissions
+
+Returned when a staff user tries to access an admin-only endpoint (like user management):
 
 ```json
 {
@@ -439,7 +470,7 @@ POST /api/admin/users
 }
 ```
 
-### Not Found
+### Resource Not Found
 
 ```json
 {

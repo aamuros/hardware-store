@@ -1,25 +1,25 @@
 # Products API
 
-Complete documentation for product-related endpoints.
+This page documents all endpoints related to products — browsing the catalog, viewing product details, and admin operations for creating, updating, and deleting products.
 
-## Endpoints Overview
+## Endpoint Summary
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/products` | No | List all products |
-| GET | `/products/:id` | No | Get product by ID |
-| GET | `/products/:id/variants` | No | Get product variants |
-| GET | `/products/:id/images` | No | Get product images |
-| GET | `/products/:id/bulk-pricing` | No | Get bulk pricing tiers |
-| POST | `/admin/products` | Admin | Create product |
-| PUT | `/admin/products/:id` | Admin | Update product |
-| DELETE | `/admin/products/:id` | Admin | Delete product (soft) |
+| Method | Path | Auth Required | What It Does |
+|--------|------|---------------|-------------|
+| GET | `/products` | No | Lists products with pagination and filtering |
+| GET | `/products/:id` | No | Gets full details for a single product |
+| GET | `/products/:id/variants` | No | Gets all variants of a product |
+| GET | `/products/:id/images` | No | Gets the image gallery for a product |
+| GET | `/products/:id/bulk-pricing` | No | Gets bulk pricing tiers for a product |
+| POST | `/admin/products` | Admin | Creates a new product |
+| PUT | `/admin/products/:id` | Admin | Updates an existing product |
+| DELETE | `/admin/products/:id` | Admin | Soft-deletes a product |
 
 ---
 
 ## List Products
 
-Retrieve a paginated list of products.
+Returns a paginated, filterable list of products. Only shows products that are available and not deleted (the admin endpoint shows everything).
 
 ```
 GET /api/products
@@ -29,21 +29,21 @@ GET /api/products
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| page | number | 1 | Page number |
-| limit | number | 20 | Items per page (max 100) |
-| category | number | - | Filter by category ID |
-| available | boolean | - | Filter by availability |
-| search | string | - | Search in name/description |
-| sortBy | string | createdAt | Sort field |
-| sortOrder | string | desc | Sort direction (asc/desc) |
+| page | number | 1 | Which page of results to return |
+| limit | number | 20 | How many products per page (maximum 100) |
+| category | number | — | Show only products in this category ID |
+| available | boolean | — | Filter by availability status |
+| search | string | — | Search by product name or description |
+| sortBy | string | createdAt | Field to sort by |
+| sortOrder | string | desc | Sort direction: `asc` or `desc` |
 
-### Example Request
+### Example
 
 ```bash
 curl "http://localhost:3001/api/products?category=1&available=true&limit=10"
 ```
 
-### Example Response
+### Response
 
 ```json
 {
@@ -82,7 +82,7 @@ curl "http://localhost:3001/api/products?category=1&available=true&limit=10"
 
 ## Get Product by ID
 
-Retrieve detailed information about a single product.
+Returns full details for a single product, including its variants, images, and bulk pricing tiers (if any).
 
 ```
 GET /api/products/:id
@@ -92,15 +92,15 @@ GET /api/products/:id
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| id | number | Product ID |
+| id | number | The product's ID |
 
-### Example Request
+### Example
 
 ```bash
 curl http://localhost:3001/api/products/1
 ```
 
-### Example Response
+### Response
 
 ```json
 {
@@ -160,13 +160,13 @@ curl http://localhost:3001/api/products/1
 
 ## Get Product Variants
 
-Get all variants for a product.
+Returns all available variants for a product. Variants represent different versions of the same product — for example, different sizes or colors.
 
 ```
 GET /api/products/:id/variants
 ```
 
-### Example Response
+### Response
 
 ```json
 {
@@ -198,13 +198,13 @@ GET /api/products/:id/variants
 
 ## Get Bulk Pricing
 
-Get volume discount tiers for a product.
+Returns the volume discount tiers configured for a product. Customers ordering larger quantities can qualify for reduced prices.
 
 ```
 GET /api/products/:id/bulk-pricing
 ```
 
-### Example Response
+### Response
 
 ```json
 {
@@ -222,13 +222,13 @@ GET /api/products/:id/bulk-pricing
 
 ## Create Product (Admin)
 
-Create a new product.
+Adds a new product to the catalog.
 
 ```
 POST /api/admin/products
 ```
 
-**Authentication:** Admin token required
+Requires an admin authentication token.
 
 ### Request Body
 
@@ -237,16 +237,16 @@ POST /api/admin/products
 | name | string | Yes | Product name |
 | description | string | No | Product description |
 | price | number | Yes | Price in PHP |
-| unit | string | Yes | Unit of measure (piece, kg, meter) |
-| sku | string | No | Stock keeping unit (unique) |
-| categoryId | number | Yes | Category ID |
-| stockQuantity | number | No | Initial stock (default: 0) |
-| lowStockThreshold | number | No | Low stock alert threshold |
-| isAvailable | boolean | No | Availability (default: true) |
-| hasVariants | boolean | No | Uses variants (default: false) |
-| hasBulkPricing | boolean | No | Has bulk pricing (default: false) |
+| unit | string | Yes | Unit of measure (piece, kg, meter, etc.) |
+| sku | string | No | Stock keeping unit — must be unique if provided |
+| categoryId | number | Yes | ID of the category this product belongs to |
+| stockQuantity | number | No | Initial stock quantity (defaults to 0) |
+| lowStockThreshold | number | No | Stock level that triggers a low-stock warning |
+| isAvailable | boolean | No | Whether the product is visible to customers (defaults to true) |
+| hasVariants | boolean | No | Whether this product uses variants (defaults to false) |
+| hasBulkPricing | boolean | No | Whether bulk pricing tiers apply (defaults to false) |
 
-### Example Request
+### Example
 
 ```bash
 curl -X POST http://localhost:3001/api/admin/products \
@@ -263,7 +263,7 @@ curl -X POST http://localhost:3001/api/admin/products \
   }'
 ```
 
-### Example Response
+### Response
 
 ```json
 {
@@ -282,15 +282,15 @@ curl -X POST http://localhost:3001/api/admin/products \
 
 ## Update Product (Admin)
 
-Update an existing product.
+Updates fields on an existing product. You only need to include the fields you want to change.
 
 ```
 PUT /api/admin/products/:id
 ```
 
-**Authentication:** Admin token required
+Requires an admin authentication token.
 
-### Example Request
+### Example
 
 ```bash
 curl -X PUT http://localhost:3001/api/admin/products/25 \
@@ -306,22 +306,22 @@ curl -X PUT http://localhost:3001/api/admin/products/25 \
 
 ## Delete Product (Admin)
 
-Soft delete a product (sets isDeleted flag).
+Performs a soft delete — the product is marked as deleted but not removed from the database. It will no longer appear on the storefront, but existing order records that reference it are preserved.
 
 ```
 DELETE /api/admin/products/:id
 ```
 
-**Authentication:** Admin token required
+Requires an admin authentication token.
 
-### Example Request
+### Example
 
 ```bash
 curl -X DELETE http://localhost:3001/api/admin/products/25 \
   -H "Authorization: Bearer <token>"
 ```
 
-### Example Response
+### Response
 
 ```json
 {
@@ -333,6 +333,8 @@ curl -X DELETE http://localhost:3001/api/admin/products/25 \
 ---
 
 ## Product Data Model
+
+For reference, here is the TypeScript-style shape of a product object as returned by the API:
 
 ```typescript
 interface Product {
