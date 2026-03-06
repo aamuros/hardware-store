@@ -19,7 +19,7 @@ if (config.nodeEnv === 'production') {
   app.set('trust proxy', 1);
 }
 
-// Security middleware — configured for cross-origin deployment (Vercel ↔ Railway)
+// Security middleware — configured for cross-origin requests during development
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
   crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },

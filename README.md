@@ -2,7 +2,7 @@
 
 An online ordering and store management platform built for local hardware stores in the Philippines. Customers can browse products, place delivery orders, and receive SMS updates, while store owners manage everything from a dedicated admin dashboard.
 
-This project was developed as a capstone/final submission for our web development course. It demonstrates a working full-stack application using modern tools and frameworks, deployed on cloud infrastructure.
+This project was developed as our final project for our Software Engineering course. It demonstrates a working full-stack web application using modern tools and frameworks, deployed on cloud infrastructure.
 
 ## What the System Does
 
@@ -48,7 +48,7 @@ This project was developed as a capstone/final submission for our web developmen
 
 ```bash
 # 1. Clone the repo
-git clone <repository-url>
+git clone https://github.com/aamuros/hardware-store.git
 cd hardware-store
 
 # 2. Install and configure the backend
@@ -88,36 +88,9 @@ npm run dev
 - **Username:** `admin`
 - **Password:** `admin123`
 
-## Folder Structure
-
-```
-hardware-store/
-├── backend/                # Express.js REST API server
-│   ├── src/
-│   │   ├── controllers/   # Request handlers for each route
-│   │   ├── middleware/    # Auth checks, validation, error handling
-│   │   ├── routes/        # Route definitions (maps URLs to controllers)
-│   │   ├── services/      # Core business logic (SMS sending, etc.)
-│   │   └── utils/         # Shared helper functions
-│   ├── prisma/            # Database schema, migrations, and seed script
-│   └── tests/             # Automated API tests (Jest + Supertest)
-│
-├── frontend/              # React single-page application
-│   └── src/
-│       ├── components/    # Reusable UI pieces (Navbar, ProductCard, etc.)
-│       ├── pages/         # Full page views (Home, Cart, Admin Dashboard)
-│       ├── context/       # React Context for global state (auth, cart)
-│       ├── hooks/         # Custom React hooks
-│       ├── services/      # Functions that call the backend API
-│       └── styles/        # Global CSS
-│
-├── docs/                  # Project documentation
-└── product-images/        # Reference product images
-```
-
 ## Documentation
 
-For more in-depth information, refer to the docs folder:
+For more in-depth information, refer to the `docs/` folder:
 
 | Document | What It Covers |
 |----------|----------------|
@@ -127,6 +100,8 @@ For more in-depth information, refer to the docs folder:
 | [Deployment Guide](./docs/deployment.md) | Step-by-step Railway deployment instructions |
 | [Testing](./docs/testing/README.md) | How to run and write tests |
 | [SMS Integration](./docs/features/sms-integration.md) | SMS provider setup and message templates |
+
+The [docs/README.md](./docs/README.md) also includes a system overview, architecture diagram, technology justification, and full directory layout.
 
 ## Available Scripts
 
@@ -163,25 +138,7 @@ For more in-depth information, refer to the docs folder:
 
 The full API reference with request bodies, query parameters, and example responses is in [docs/api/README.md](./docs/api/README.md).
 
-## Environment Variables
-
-### Backend (`backend/.env`)
-
-```env
-DATABASE_URL="file:./dev.db"
-JWT_SECRET=your-secret-key
-SMS_ENABLED=false
-FRONTEND_URL=http://localhost:5173
-```
-
-### Frontend (`frontend/.env`)
-
-```env
-VITE_API_URL=http://localhost:3001/api
-VITE_STORE_NAME=Hardware Store
-```
-
-Both directories include `.env.example` files with all available options and descriptions.
+Both `backend/` and `frontend/` include `.env.example` files with all available configuration options and descriptions. See the [Getting Started](./docs/getting-started.md) guide for details.
 
 ## Deployment
 
@@ -200,13 +157,14 @@ npm test -- --testPathPattern=orders.test.js      # run a specific test file
 
 The test suite covers API endpoints, authentication flows, input validation, order status transitions, and SMS service logic.
 
-## Contributing
+## Team Members
 
-1. Create a new branch for your feature or fix
-2. Write your code and make sure `npm test` passes
-3. Run `npm run lint` to check for style issues
-4. Open a pull request with a clear description of the changes
+| Name | Role |
+|------|------|
+| *(Add your name)* | Project Lead / Full-Stack Developer |
+| *(Add teammate)* | Frontend Developer |
+| *(Add teammate)* | Backend Developer |
 
 ## License
 
-This project is proprietary. All rights reserved.
+This is a school project submitted for academic purposes. All rights reserved.

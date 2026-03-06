@@ -258,6 +258,6 @@ No. Railway's filesystem resets on each deploy. For a school project this is acc
 | Express API | Railway service |
 | PostgreSQL database | Railway (provisioned as an add-on) |
 
-Everything runs on a single Railway service behind one URL. No need for Vercel or any additional hosting provider.
+Everything runs on a single Railway service behind one URL. No additional hosting provider is needed.
 
 **Total cost:** free, covered by the GitHub Student Developer Pack ($5/month credit).

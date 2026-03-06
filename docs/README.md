@@ -1,12 +1,13 @@
 # Project Documentation
 
-This folder contains all the technical documentation for the Hardware Store web application. Whether you need to set up the project locally, understand how the API works, or deploy the site to production, you will find what you need here.
+This folder contains all the technical documentation for the Hardware Store web application, submitted as our final project for Software Engineering. Whether you need to set up the project locally, understand how the API works, or deploy the site to production, you will find what you need here.
 
 ## Guides
 
 | Guide | Description |
 |-------|-------------|
 | [Getting Started](./getting-started.md) | How to set up the project on your machine for local development |
+| [Requirements Analysis](./requirements-analysis.md) | Functional and non-functional requirements of the system |
 | [Deployment](./deployment.md) | How to deploy the application to Railway for production use |
 | [API Reference](./api/README.md) | Full documentation for every REST API endpoint |
 | [Database Schema](./database/schema.md) | Overview of all database tables, columns, and relationships |

@@ -31,8 +31,8 @@
     "ordering-system",
     "api"
   ],
-  "author": "",
-  "license": "ISC",
+  "author": "aamuros",
+  "license": "UNLICENSED",
   "dependencies": {
     "@prisma/client": "^5.7.0",
     "axios": "^1.6.2",

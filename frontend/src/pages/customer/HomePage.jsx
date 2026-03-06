@@ -39,24 +39,33 @@ export default function HomePage() {
 
         const allProducts = productsRes.data.data
         const inStock = allProducts.filter(p => p.hasVariants || (p.stockQuantity ?? 0) > 0)
-        const featured = []
-        const usedCategories = new Set()
 
-        for (const product of inStock) {
+        // Prioritize the most popular hardware items by name
+        const popularNames = [
+          'Eagle Cement Advance',
+          'Republic Cement',
+          'White Sand',
+          'Gravel 3/4',
+          'Coco Lumber',
+          'Good Lumber S4S',
+          'Angle Bar',
+          'Deformed Bar',
+        ]
+
+        const featured = []
+        for (const name of popularNames) {
           if (featured.length >= 8) break
-          const catId = product.categoryId || product.category?.id
-          if (!usedCategories.has(catId)) {
-            featured.push(product)
-            usedCategories.add(catId)
-          }
+          const match = inStock.find(p => p.name === name)
+          if (match) featured.push(match)
         }
 
-        const remaining = inStock
-          .filter(p => !featured.includes(p))
-          .sort((a, b) => (b.stockQuantity ?? 0) - (a.stockQuantity ?? 0))
-        for (const product of remaining) {
-          if (featured.length >= 8) break
-          featured.push(product)
+        // Fill remaining slots with other in-stock products if needed
+        if (featured.length < 8) {
+          const remaining = inStock.filter(p => !featured.includes(p))
+          for (const product of remaining) {
+            if (featured.length >= 8) break
+            featured.push(product)
+          }
         }
 
         setFeaturedProducts(featured.length > 0 ? featured : allProducts.slice(0, 8))

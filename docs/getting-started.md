@@ -25,7 +25,7 @@ If you don't have Node.js installed, download it from [nodejs.org](https://nodej
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/aamuros/hardware-store.git
 cd hardware-store
 ```
 
@@ -127,7 +127,7 @@ FRONTEND_URL=http://localhost:5173
 
 ```env
 # Points to the backend API
-VITE_API_URL=http://localhost:5173/api
+VITE_API_URL=http://localhost:3001/api
 
 # Store name shown in the browser tab and header
 VITE_STORE_NAME=Juan's Hardware Store

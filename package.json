@@ -14,9 +14,14 @@
     "format:frontend": "cd frontend && npm run format",
     "prepare": "husky"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "hardware-store",
+    "ordering-system",
+    "school-project",
+    "full-stack"
+  ],
+  "author": "aamuros",
+  "license": "UNLICENSED",
   "type": "commonjs",
   "lint-staged": {
     "backend/**/*.js": [
