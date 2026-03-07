@@ -249,7 +249,7 @@ describe('SMS Service - Templates', () => {
     const msg = SMS_TEMPLATES.ORDER_CONFIRMATION('HW-001', 1500.50, 'Test Store', mockItems);
     expect(msg).toContain('HW-001');
     expect(msg).toContain('1,500.50');
-    expect(msg).toContain('Test Store');
+    expect(msg).toContain('Order Received');
     expect(msg).toContain('Portland Cement x2');
   });
 
@@ -262,7 +262,7 @@ describe('SMS Service - Templates', () => {
   });
 
   it('should generate delivery message with amount', () => {
-    const msg = SMS_TEMPLATES.ORDER_OUT_FOR_DELIVERY('HW-001', 1500.50);
+    const msg = SMS_TEMPLATES.ORDER_OUT_FOR_DELIVERY('HW-001', 1500.50, 'Test Store');
     expect(msg).toContain('HW-001');
     expect(msg).toContain('ON THE WAY');
     expect(msg).toContain('1,500.50');
@@ -280,5 +280,6 @@ describe('SMS Service - Templates', () => {
     expect(msg).toContain('HW-001');
     expect(msg).toContain('1,500.50');
     expect(msg).toContain('Juan');
+    expect(msg).toContain('New Order');
   });
 });

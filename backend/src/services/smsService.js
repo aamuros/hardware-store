@@ -168,32 +168,32 @@ const SMS_TEMPLATES = {
   ORDER_CONFIRMATION: (orderNumber, amount, storeName, items) => {
     const itemsSummary = formatItemsSummary(items, 50);
     const itemsLine = itemsSummary ? `\nItems: ${itemsSummary}` : '';
-    return `[${storeName}] Order ${orderNumber} received!${itemsLine}\nTotal: P${formatAmount(amount)}. We'll update you soon!`;
+    return `Order Received\n#${orderNumber}\n${itemsLine}\nTotal: P${formatAmount(amount)}\n\nWe'll review your order and update you shortly.`;
   },
 
   ORDER_ACCEPTED: (orderNumber, storeName, items, amount) => {
     const itemsSummary = formatItemsSummary(items, 50);
     const itemsLine = itemsSummary ? `\nItems: ${itemsSummary}` : '';
-    return `[${storeName}] Order ${orderNumber} ACCEPTED!${itemsLine}\nTotal: P${formatAmount(amount)}. Now being prepared!`;
+    return `Order ACCEPTED\n#${orderNumber}\n${itemsLine}\nTotal: P${formatAmount(amount)}\n\nNow being prepared.`;
   },
 
-  ORDER_REJECTED: (orderNumber, reason, storePhone) =>
-    `[WenasHW] Sorry, order ${orderNumber} was not approved.${reason ? `\nReason: ${reason}` : ''}\nContact ${storePhone} for help.`,
+  ORDER_REJECTED: (orderNumber, reason, storePhone, storeName) =>
+    `Order Not Approved\n#${orderNumber}\n${reason ? `\nReason: ${reason}` : ''}\nQuestions? Contact ${storePhone}.`,
 
   ORDER_PREPARING: (orderNumber, storeName) =>
-    `[${storeName}] Order ${orderNumber} is being prepared! We'll notify you when it's out for delivery. Salamat po!`,
+    `Order Preparing\n#${orderNumber}\n\nYour order is being packed. We'll notify you once it's on the way.`,
 
-  ORDER_OUT_FOR_DELIVERY: (orderNumber, amount) =>
-    `[WenasHW] Order ${orderNumber} is ON THE WAY!\nTotal: P${formatAmount(amount)}\nPlease prepare exact payment (COD). Salamat po!`,
+  ORDER_OUT_FOR_DELIVERY: (orderNumber, amount, storeName) =>
+    `ON THE WAY\n#${orderNumber}\n\nTotal: P${formatAmount(amount)}\nPayment: COD — please prepare the exact amount.`,
 
   ORDER_DELIVERED: (orderNumber, storeName, amount) =>
-    `[${storeName}] Order ${orderNumber} DELIVERED!\nTotal paid: P${formatAmount(amount)}\nThank you for choosing ${storeName}! Salamat po!`,
+    `Order DELIVERED\n#${orderNumber}\n\nTotal Paid: P${formatAmount(amount)}\n\nSalamat po! Hope to serve you again.`,
 
-  ORDER_CANCELLED: (orderNumber, reason, storePhone) =>
-    `[WenasHW] Order ${orderNumber} has been cancelled.${reason ? `\nReason: ${reason}` : ''}\nContact ${storePhone} for assistance.`,
+  ORDER_CANCELLED: (orderNumber, reason, storePhone, storeName) =>
+    `Order Cancelled\n#${orderNumber}\n${reason ? `\nReason: ${reason}` : ''}\nNeed help? Contact ${storePhone}.`,
 
   ADMIN_NEW_ORDER: (orderNumber, amount, customerName) =>
-    `NEW ORDER! ${orderNumber} - P${formatAmount(amount)} from ${customerName}. Check dashboard now.`,
+    `New Order\n#${orderNumber}\nAmount: P${formatAmount(amount)}\nFrom: ${customerName}\n\nCheck the dashboard to review.`,
 };
 
 // ============================================================================
@@ -527,20 +527,20 @@ const sendStatusUpdate = async (phone, orderNumber, status, orderData = {}, orde
       message = SMS_TEMPLATES.ORDER_ACCEPTED(orderNumber, config.store.name, items, amount);
       break;
     case 'rejected':
-      message = SMS_TEMPLATES.ORDER_REJECTED(orderNumber, customMessage, config.store.phone);
+      message = SMS_TEMPLATES.ORDER_REJECTED(orderNumber, customMessage, config.store.phone, config.store.name);
       break;
     case 'preparing':
       message = SMS_TEMPLATES.ORDER_PREPARING(orderNumber, config.store.name);
       break;
     case 'out_for_delivery':
-      message = SMS_TEMPLATES.ORDER_OUT_FOR_DELIVERY(orderNumber, amount);
+      message = SMS_TEMPLATES.ORDER_OUT_FOR_DELIVERY(orderNumber, amount, config.store.name);
       break;
     case 'delivered':
     case 'completed':
       message = SMS_TEMPLATES.ORDER_DELIVERED(orderNumber, config.store.name, amount);
       break;
     case 'cancelled':
-      message = SMS_TEMPLATES.ORDER_CANCELLED(orderNumber, customMessage, config.store.phone);
+      message = SMS_TEMPLATES.ORDER_CANCELLED(orderNumber, customMessage, config.store.phone, config.store.name);
       break;
     default:
       message = customMessage || `[${config.store.name}] Order ${orderNumber} status: ${status}`;
