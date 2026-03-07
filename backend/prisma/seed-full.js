@@ -101,36 +101,25 @@ async function main() {
     return;
   }
 
-  // ─── CLEAR ORPHAN DATA (safe — only child tables) ──────────────────
-  // Only clear dependent/child records that would block re-creation.
-  // We do NOT delete products, categories, or users here — the old approach
-  // of deleting everything first caused data loss when the seed crashed
-  // after deletion but before re-creation.
-  console.log('🗑️  Clearing orphan child records on fresh database...');
-  await prisma.orderStatusHistory.deleteMany();
-  await prisma.smsLog.deleteMany();
-  await prisma.orderItem.deleteMany();
-  await prisma.order.deleteMany();
-  await prisma.bulkPricingTier.deleteMany();
-  await prisma.productImage.deleteMany();
-  await prisma.productVariant.deleteMany();
-  await prisma.product.deleteMany();
-  await prisma.category.deleteMany();
-  // Delete only admin/staff users (not customers) so we can re-create them
-  await prisma.user.deleteMany();
-  console.log('✅ Orphan records cleared');
+  // ─── NO DESTRUCTIVE DELETES ────────────────────────────────────────
+  // We use upsert for everything below. This means the seed can be
+  // interrupted at any point (e.g., Railway container restart) and
+  // resumed safely — no data is ever deleted.
+  console.log('ℹ️  Fresh database detected — seeding with upserts (non-destructive)...');
 
   // ─── ADMIN USER ───────────────────────────────────────────────────
   const hashedPassword = await bcrypt.hash('admin123', 10);
-  const admin = await prisma.user.create({
-    data: {
+  const admin = await prisma.user.upsert({
+    where: { username: 'admin' },
+    update: {},  // Don't overwrite if admin already exists
+    create: {
       username: 'admin',
       password: hashedPassword,
       name: 'Store Admin',
       role: 'admin',
     },
   });
-  console.log('✅ Admin user created:', admin.username);
+  console.log('✅ Admin user upserted:', admin.username);
 
   // ─── CATEGORIES ───────────────────────────────────────────────────
   const categoriesData = [
@@ -147,9 +136,13 @@ async function main() {
   ];
 
   for (const cat of categoriesData) {
-    await prisma.category.create({ data: cat });
+    await prisma.category.upsert({
+      where: { name: cat.name },
+      update: { description: cat.description, icon: cat.icon, imageUrl: cat.imageUrl },
+      create: cat,
+    });
   }
-  console.log(`✅ Categories created: ${categoriesData.length}`);
+  console.log(`✅ Categories upserted: ${categoriesData.length}`);
 
   // Get category IDs
   const categoryMap = {};
@@ -209,7 +202,8 @@ async function main() {
     'Nihonweld Welding Rod N6013': '/uploads/nihonweld-welding-rod-n6013.jpg',
   };
 
-  // ─── HELPER: CREATE PRODUCT WITH OPTIONAL VARIANTS ────────────────
+  // ─── HELPER: UPSERT PRODUCT WITH OPTIONAL VARIANTS ────────────────
+  // Uses upsert so products are never deleted — safe against interruption.
   let productCount = 0;
   let variantCount = 0;
 
@@ -222,18 +216,25 @@ async function main() {
       productData.imageUrl = productImages[productData.name];
     }
 
-    const product = await prisma.product.create({
-      data: {
-        ...productData,
-        hasVariants,
-        stockQuantity: hasVariants ? 0 : productData.stockQuantity,
-      },
+    const fullData = {
+      ...productData,
+      hasVariants,
+      stockQuantity: hasVariants ? 0 : productData.stockQuantity,
+    };
+
+    // Upsert by SKU — never deletes existing products
+    const product = await prisma.product.upsert({
+      where: { sku: productData.sku },
+      update: {},  // Don't overwrite existing product data
+      create: fullData,
     });
 
     if (hasVariants) {
       for (const variant of variants) {
-        await prisma.productVariant.create({
-          data: {
+        await prisma.productVariant.upsert({
+          where: { sku: variant.sku },
+          update: {},  // Don't overwrite existing variant data
+          create: {
             productId: product.id,
             name: variant.name,
             sku: variant.sku,
@@ -1068,7 +1069,7 @@ async function main() {
   // ═══════════════════════════════════════════════════════════════════
   // STAFF USERS — additional staff for order processing
   // ═══════════════════════════════════════════════════════════════════
-  console.log('\n🔄 Creating staff users...');
+  console.log('\n🔄 Upserting staff users...');
   const staffPassword = await bcrypt.hash('staff123', 10);
   const staffList = [
     { username: 'juan_staff', name: 'Juan dela Cruz', role: 'staff' },
@@ -1078,9 +1079,13 @@ async function main() {
     { username: 'carlos_mgr', name: 'Carlos Mendoza', role: 'admin' },
   ];
   for (const s of staffList) {
-    await prisma.user.create({ data: { ...s, password: staffPassword } });
+    await prisma.user.upsert({
+      where: { username: s.username },
+      update: {},  // Don't overwrite existing staff
+      create: { ...s, password: staffPassword },
+    });
   }
-  console.log(`✅ Staff users created: ${staffList.length}`);
+  console.log(`✅ Staff users upserted: ${staffList.length}`);
 
   // ═══════════════════════════════════════════════════════════════════
   // CUSTOMERS — 80 realistic customer accounts (happy customer base)
