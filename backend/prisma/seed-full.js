@@ -101,21 +101,24 @@ async function main() {
     return;
   }
 
-  // ─── CLEAR PARTIAL DATA (preserve customers & their data) ─────────
-  console.log('🗑️  Clearing partial existing data (preserving customer accounts)...');
+  // ─── CLEAR ORPHAN DATA (safe — only child tables) ──────────────────
+  // Only clear dependent/child records that would block re-creation.
+  // We do NOT delete products, categories, or users here — the old approach
+  // of deleting everything first caused data loss when the seed crashed
+  // after deletion but before re-creation.
+  console.log('🗑️  Clearing orphan child records on fresh database...');
   await prisma.orderStatusHistory.deleteMany();
   await prisma.smsLog.deleteMany();
   await prisma.orderItem.deleteMany();
   await prisma.order.deleteMany();
-  // NOTE: Customer accounts, saved addresses, wishlist items, and password
-  // resets are NOT deleted so that real user registrations survive re-seeds.
   await prisma.bulkPricingTier.deleteMany();
   await prisma.productImage.deleteMany();
   await prisma.productVariant.deleteMany();
   await prisma.product.deleteMany();
   await prisma.category.deleteMany();
+  // Delete only admin/staff users (not customers) so we can re-create them
   await prisma.user.deleteMany();
-  console.log('✅ Existing data cleared (customer accounts preserved)');
+  console.log('✅ Orphan records cleared');
 
   // ─── ADMIN USER ───────────────────────────────────────────────────
   const hashedPassword = await bcrypt.hash('admin123', 10);

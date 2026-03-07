@@ -54,6 +54,11 @@ echo "=== Database migration complete ==="
 # Step 4: Run idempotent seed in the BACKGROUND so the server starts immediately.
 # The seed inserts thousands of records and can take several minutes on first deploy.
 # Running it synchronously would block the server and cause health-check timeouts.
+# Set SKIP_SEED=true in Railway env vars to disable seeding after initial setup.
 echo ""
-echo "=== Database Seed (background, idempotent) ==="
-(npx prisma db seed && echo "=== Seed complete ===" || echo "WARNING: Seed failed (non-fatal)") &
+if [ "${SKIP_SEED:-false}" = "true" ]; then
+  echo "=== Database Seed SKIPPED (SKIP_SEED=true) ==="
+else
+  echo "=== Database Seed (background, idempotent) ==="
+  (npx prisma db seed 2>&1 && echo "=== Seed complete ===" || echo "WARNING: Seed failed (non-fatal) — check logs above for details") &
+fi

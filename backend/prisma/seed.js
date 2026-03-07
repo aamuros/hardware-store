@@ -121,6 +121,16 @@ async function main() {
     console.log('📸 All seed images already in uploads/');
   }
 
+  // ─── IDEMPOTENCY CHECK ────────────────────────────────────────────
+  // Skip seeding if products already exist, unless SEED_FORCE=true is set.
+  // This prevents accidental data wipes on production databases.
+  const existingProducts = await prisma.product.count();
+  if (existingProducts > 0 && process.env.SEED_FORCE !== 'true') {
+    console.log(`ℹ️  Database already has ${existingProducts} products — skipping destructive seed.`);
+    console.log(`   Set SEED_FORCE=true to force a full re-seed.`);
+    return;
+  }
+
   // ─── CLEAR EXISTING DATA (preserve customers & their data) ────────
   console.log('🗑️  Clearing existing data (preserving customer accounts)...');
   await prisma.orderStatusHistory.deleteMany();
