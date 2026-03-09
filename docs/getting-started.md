@@ -40,7 +40,7 @@ npm install
 # Create your local environment file from the template
 cp .env.example .env
 
-# Initialize the database — this creates the SQLite file and runs all migrations
+# Initialize the database — this runs all Prisma migrations against PostgreSQL
 npx prisma migrate dev
 
 # Populate the database with an admin account and sample data
@@ -104,8 +104,8 @@ Both the backend and frontend use `.env` files for configuration. The `.env.exam
 NODE_ENV=development
 PORT=3001
 
-# Database connection — SQLite is used by default for local development
-DATABASE_URL="file:./dev.db"
+# Database connection — PostgreSQL is used for both local and production
+DATABASE_URL="postgresql://user:password@localhost:5432/hardware_store"
 
 # JWT settings — used to sign authentication tokens
 JWT_SECRET=your-secret-key-change-in-production
@@ -213,12 +213,11 @@ kill -9 <PID>
 
 ### Database Errors
 
-If migrations fail or the database seems corrupted, delete the SQLite file and recreate it:
+If migrations fail or the database seems corrupted, reset it and start fresh:
 
 ```bash
 cd backend
-rm prisma/dev.db
-npx prisma migrate dev
+npx prisma migrate reset --force
 npx prisma db seed
 ```
 

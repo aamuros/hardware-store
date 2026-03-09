@@ -58,7 +58,7 @@ SMS_TEST_MODE=true
 SMS_SENDER_NAME=HARDWARE
 
 # Order in which providers are tried — if the first one fails, the next is used
-SMS_PROVIDERS=semaphore,movider,vonage
+SMS_PROVIDERS=semaphore
 
 # How many times to retry a failed send before giving up
 SMS_MAX_RETRIES=2
@@ -69,9 +69,9 @@ ADMIN_NOTIFICATION_PHONE=09171234567
 
 ### Provider Setup
 
-The system supports three SMS providers. You only need to configure one — Semaphore is the recommended default for Philippine-based stores.
+The system uses Semaphore as the SMS provider. This is the recommended service for Philippine-based stores.
 
-#### Semaphore (recommended)
+#### Semaphore
 
 ```env
 SEMAPHORE_API_KEY=your_api_key
@@ -80,28 +80,6 @@ SEMAPHORE_API_KEY=your_api_key
 - Sign up at [semaphore.co](https://semaphore.co/)
 - Rates are around ₱0.35 per message
 - Covers all Philippine networks
-
-#### Movider (backup)
-
-```env
-MOVIDER_API_KEY=your_api_key
-MOVIDER_API_SECRET=your_api_secret
-```
-
-- Sign up at [movider.co](https://movider.co/)
-- Rates are around ₱0.50 per message
-- Can serve as a fallback if Semaphore is unreachable
-
-#### Vonage (international backup)
-
-```env
-VONAGE_API_KEY=your_api_key
-VONAGE_API_SECRET=your_api_secret
-```
-
-- Sign up at [dashboard.nexmo.com](https://dashboard.nexmo.com/)
-- Rates are around $0.05 per message (about ₱2.80)
-- Useful if you ever need to send SMS outside the Philippines
 
 ---
 

@@ -41,7 +41,7 @@ The project follows a standard client-server architecture. The frontend is a Rea
 │                   (Port 3001)                            │
 ├────────────────────────┬─────────────────────────────────┤
 │       Database         │        SMS Service              │
-│  SQLite / PostgreSQL   │   Semaphore (PH provider)       │
+│      PostgreSQL        │   Semaphore (PH provider)       │
 └────────────────────────┴─────────────────────────────────┘
 ```
 
@@ -54,7 +54,7 @@ The project follows a standard client-server architecture. The frontend is a Rea
 | Routing | React Router v6 | Industry-standard client-side routing for React apps |
 | Backend | Express.js on Node.js 20 | Lightweight and well-documented; large ecosystem of middleware |
 | ORM | Prisma | Type-safe database queries with automatic migrations |
-| Database | SQLite (dev) / PostgreSQL (prod) | SQLite for zero-config local development; PostgreSQL for reliability in production |
+| Database | PostgreSQL | Reliable relational database; managed by Railway in production |
 | Auth | JWT | Stateless authentication that works well with REST APIs |
 | SMS | Semaphore | Affordable Philippine SMS gateway with straightforward API |
 

@@ -558,7 +558,7 @@ const updateStock = async (req, res, next) => {
 // GET /api/admin/inventory/low-stock
 const getLowStockProducts = async (req, res, next) => {
   try {
-    // Use Prisma query API for database portability (works with both SQLite and PostgreSQL)
+    // Use Prisma query API for database operations
     const allAvailableProducts = await prisma.product.findMany({
       where: {
         isDeleted: false,

@@ -32,7 +32,7 @@ This project was developed as our final project for our Software Engineering cou
 |-------|-------|
 | Frontend | React 18, Vite, Tailwind CSS, React Router v6 |
 | Backend | Node.js 20+, Express.js, Prisma ORM |
-| Database | SQLite (for local development), PostgreSQL (for production) |
+| Database | PostgreSQL (managed by Railway in production) |
 | Authentication | JWT (JSON Web Tokens) |
 | SMS Provider | Semaphore (Philippine SMS gateway) |
 | Deployment | Railway (backend + database), served as a single service |
@@ -161,9 +161,10 @@ The test suite covers API endpoints, authentication flows, input validation, ord
 
 | Name | Role |
 |------|------|
-| *(Add your name)* | Project Lead / Full-Stack Developer |
-| *(Add teammate)* | Frontend Developer |
-| *(Add teammate)* | Backend Developer |
+| Adrian Muros | Project Lead / Full-Stack Developer |
+| Marc Niel Bides | Frontend Developer |
+| Darelle Soriano | Backend Developer |
+| Karl Evlan Robasto | Main Tester |
 
 ## License
 

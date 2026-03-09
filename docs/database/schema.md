@@ -4,10 +4,9 @@ This document describes every table in the database, what each column stores, an
 
 ## Database Engine
 
-- **Local development:** SQLite — a file-based database that requires zero configuration
-- **Production (Railway):** PostgreSQL — a proper relational database for reliability and concurrent access
+- **Database:** PostgreSQL — used for both local development and production (managed by Railway in production)
 
-Prisma handles the differences between the two engines automatically, so the same schema works in both environments.
+Prisma handles all database operations, migrations, and queries.
 
 ## Entity Relationship Diagram
 
