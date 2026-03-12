@@ -209,8 +209,8 @@ export default function ProductsPage() {
             <button
               onClick={() => handleCategoryChange('')}
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-all ${!selectedCategory
-                  ? 'bg-primary-900 text-white border-primary-900'
-                  : 'bg-white text-neutral-500 border-neutral-200 hover:border-primary-300 hover:text-primary-800'
+                ? 'bg-primary-900 text-white border-primary-900'
+                : 'bg-white text-neutral-500 border-neutral-200 hover:border-primary-300 hover:text-primary-800'
                 }`}
             >
               All
@@ -220,8 +220,8 @@ export default function ProductsPage() {
                 key={category.id}
                 onClick={() => handleCategoryChange(category.id.toString())}
                 className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-all ${selectedCategory === category.id.toString()
-                    ? 'bg-primary-900 text-white border-primary-900'
-                    : 'bg-white text-neutral-500 border-neutral-200 hover:border-primary-300 hover:text-primary-800'
+                  ? 'bg-primary-900 text-white border-primary-900'
+                  : 'bg-white text-neutral-500 border-neutral-200 hover:border-primary-300 hover:text-primary-800'
                   }`}
               >
                 {category.imageUrl ? (
@@ -243,7 +243,7 @@ export default function ProductsPage() {
       {/* Products Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {initialLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => (
               <div key={i} className="bg-white rounded-2xl border border-neutral-100 overflow-hidden animate-pulse">
                 <div className="aspect-square bg-neutral-100"></div>
@@ -281,7 +281,7 @@ export default function ProductsPage() {
             <div className={`transition-opacity duration-150 ${isSearching ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
               {/* In-Stock Products Grid */}
               {products.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
                   {products.map((product, index) => (
                     <div
                       key={product.id}
@@ -328,8 +328,8 @@ export default function ProductsPage() {
                         key={p}
                         onClick={() => handlePageChange(p)}
                         className={`w-9 h-9 text-sm font-medium rounded-xl transition-all ${p === pagination.page
-                            ? 'bg-primary-900 text-white shadow-sm'
-                            : 'border border-neutral-200 bg-white text-neutral-600 hover:border-primary-300 hover:text-primary-800'
+                          ? 'bg-primary-900 text-white shadow-sm'
+                          : 'border border-neutral-200 bg-white text-neutral-600 hover:border-primary-300 hover:text-primary-800'
                           }`}
                       >
                         {p}
@@ -377,7 +377,7 @@ export default function ProductsPage() {
 
                 {showOutOfStock && (
                   <div className="mt-5 animate-fade-in">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 opacity-60">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5 opacity-60">
                       {outOfStockProducts.map((product, index) => (
                         <div
                           key={product.id}

@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useCart } from '../../context/CartContext'
 import { useCustomerAuth } from '../../context/CustomerAuthContext'
 import { orderApi, customerApi } from '../../services/api'
+import { getVatBreakdown } from '../../utils/vatUtils'
 import toast from 'react-hot-toast'
 import { CloseIcon, CashIcon, PhoneIcon, CartIcon, CheckIcon } from '../../components/icons'
 
@@ -78,7 +79,7 @@ export default function CheckoutPage() {
       const response = await customerApi.getAddresses()
       const addresses = response.data.data
       setSavedAddresses(addresses)
-      
+
       // Auto-select default address if available
       const defaultAddress = addresses.find(addr => addr.isDefault)
       if (defaultAddress) {
@@ -486,6 +487,15 @@ export default function CheckoutPage() {
                 <span>Subtotal ({selectedTotalItems} {selectedTotalItems === 1 ? 'item' : 'items'})</span>
                 <span>{formatPrice(selectedTotalAmount)}</span>
               </div>
+              {(() => {
+                const { vatAmount } = getVatBreakdown(selectedTotalAmount)
+                return (
+                  <div className="flex justify-between text-neutral-600">
+                    <span>VAT (12% included)</span>
+                    <span className="text-sm">{formatPrice(vatAmount)}</span>
+                  </div>
+                )
+              })()}
               <div className="flex justify-between text-neutral-600">
                 <span>Delivery Fee</span>
                 <span className="text-emerald-600">To be confirmed</span>
@@ -494,6 +504,7 @@ export default function CheckoutPage() {
                 <span>Total</span>
                 <span className="text-primary-800">{formatPrice(selectedTotalAmount)}</span>
               </div>
+              <p className="text-[10px] text-neutral-400 text-right">VAT-inclusive pricing</p>
             </div>
 
             <button
@@ -582,6 +593,9 @@ export default function CheckoutPage() {
                       </p>
                       <p className="text-lg font-bold text-primary-800 pt-2 border-t border-neutral-200">
                         Total: {formatPrice(selectedTotalAmount)}
+                      </p>
+                      <p className="text-xs text-neutral-400">
+                        Includes ₱{getVatBreakdown(selectedTotalAmount).vatAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} VAT
                       </p>
                     </div>
                     <p className="mt-3 text-sm text-neutral-500">

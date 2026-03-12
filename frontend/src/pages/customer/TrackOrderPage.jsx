@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { orderApi, customerApi } from '../../services/api'
-import { 
+import { getVatBreakdown } from '../../utils/vatUtils'
+import {
   SearchIcon,
   StatusPendingIcon,
   StatusAcceptedIcon,
@@ -41,7 +42,7 @@ export default function TrackOrderPage() {
 
   const handleTrack = async (e) => {
     if (e) e.preventDefault()
-    
+
     if (!orderNumber.trim()) {
       setError('Please enter an order number')
       return
@@ -215,12 +216,11 @@ export default function TrackOrderPage() {
                 const currentIndex = statusOrder.indexOf(order.status)
                 const isActive = index <= currentIndex && !['rejected', 'cancelled'].includes(order.status)
                 const isCurrent = status === order.status
-                
+
                 return (
                   <div key={status} className="flex items-center gap-4">
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
-                      isActive ? 'bg-primary-800 text-white' : 'bg-neutral-200 text-neutral-400'
-                    } ${isCurrent ? 'ring-4 ring-primary-100' : ''}`}>
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${isActive ? 'bg-primary-800 text-white' : 'bg-neutral-200 text-neutral-400'
+                      } ${isCurrent ? 'ring-4 ring-primary-100' : ''}`}>
                       {isActive ? <StatusIcon className="w-4 h-4" /> : (index + 1)}
                     </div>
                     <div className={isActive ? 'text-primary-900' : 'text-neutral-400'}>
@@ -248,9 +248,16 @@ export default function TrackOrderPage() {
                 </div>
               ))}
             </div>
-            <div className="mt-4 pt-4 border-t border-neutral-200 flex justify-between">
-              <span className="font-bold text-primary-900">Total</span>
-              <span className="text-xl font-bold text-primary-800">{formatPrice(order.totalAmount)}</span>
+            <div className="mt-4 pt-4 border-t border-neutral-200 space-y-2">
+              <div className="flex justify-between text-sm text-neutral-500">
+                <span>VAT (12% included)</span>
+                <span>{formatPrice(getVatBreakdown(order.totalAmount).vatAmount)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-bold text-primary-900">Total</span>
+                <span className="text-xl font-bold text-primary-800">{formatPrice(order.totalAmount)}</span>
+              </div>
+              <p className="text-[10px] text-neutral-400 text-right">VAT-inclusive pricing</p>
             </div>
           </div>
         </div>

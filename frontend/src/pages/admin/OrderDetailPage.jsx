@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { adminApi, getImageUrl } from '../../services/api'
+import { getVatBreakdown } from '../../utils/vatUtils'
 import {
   ArrowLeftIcon,
   PhoneIcon,
@@ -272,8 +273,23 @@ export default function OrderDetailPage() {
                 </div>
               ))}
             </div>
-            <div className="px-6 py-4 bg-neutral-50 border-t border-neutral-200 rounded-b-2xl">
-              <div className="flex justify-between items-center text-lg font-bold">
+            <div className="px-6 py-4 bg-neutral-50 border-t border-neutral-200 rounded-b-2xl space-y-1.5">
+              {(() => {
+                const { subtotalBeforeVat, vatAmount } = getVatBreakdown(order.totalAmount)
+                return (
+                  <>
+                    <div className="flex justify-between items-center text-sm text-neutral-500">
+                      <span>Subtotal (excl. VAT)</span>
+                      <span>₱{subtotalBeforeVat.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm text-neutral-500">
+                      <span>VAT (12%)</span>
+                      <span>₱{vatAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  </>
+                )
+              })()}
+              <div className="flex justify-between items-center text-lg font-bold pt-1.5 border-t border-neutral-200">
                 <span>Total</span>
                 <span>₱{order.totalAmount.toLocaleString()}</span>
               </div>

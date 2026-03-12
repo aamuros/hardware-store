@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { TrashIcon, MinusIcon, PlusIcon, CartIcon, BoxIcon, CashIcon, CheckIcon } from '../../components/icons'
 import { getImageUrl } from '../../services/api'
 import { useCart } from '../../context/CartContext'
+import { getVatBreakdown } from '../../utils/vatUtils'
 import toast from 'react-hot-toast'
 
 // Clean custom checkbox — replaces all native browser checkboxes in the cart
@@ -15,19 +16,18 @@ function CartCheckbox({ checked, indeterminate = false, onChange, label, size = 
       aria-checked={indeterminate ? 'mixed' : checked}
       aria-label={label}
       onClick={onChange}
-      className={`${dim} border-2 flex items-center justify-center flex-shrink-0 transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40 focus-visible:ring-offset-1 ${
-        checked || indeterminate
+      className={`${dim} border-2 flex items-center justify-center flex-shrink-0 transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40 focus-visible:ring-offset-1 ${checked || indeterminate
           ? 'bg-primary-800 border-primary-800'
           : 'bg-white border-neutral-300 hover:border-primary-500'
-      }`}
+        }`}
     >
       {indeterminate && !checked ? (
         <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 10 10" fill="none">
-          <path d="M2 5h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+          <path d="M2 5h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
         </svg>
       ) : checked ? (
         <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 10 10" fill="none">
-          <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       ) : null}
     </button>
@@ -227,11 +227,10 @@ function QuantityInput({ item, updateQuantity, onRequestRemove }) {
       <button
         onClick={handleIncrement}
         disabled={item.quantity >= maxStock}
-        className={`w-9 h-9 flex items-center justify-center transition-colors ${
-          item.quantity >= maxStock
+        className={`w-9 h-9 flex items-center justify-center transition-colors ${item.quantity >= maxStock
             ? 'opacity-30 cursor-not-allowed text-neutral-400'
             : 'text-neutral-500 hover:text-primary-800 hover:bg-neutral-100'
-        }`}
+          }`}
         aria-label={`Increase quantity of ${item.name}`}
       >
         <PlusIcon className="h-3.5 w-3.5" />
@@ -355,20 +354,18 @@ export default function CartPage() {
             return (
               <div
                 key={itemKey}
-                className={`relative bg-white rounded-2xl border transition-all duration-150 cursor-pointer overflow-hidden ${
-                  selected
+                className={`relative bg-white rounded-2xl border transition-all duration-150 cursor-pointer overflow-hidden ${selected
                     ? 'border-primary-200 shadow-sm'
                     : 'border-neutral-200 hover:border-neutral-300 opacity-70 hover:opacity-100'
-                }`}
+                  }`}
                 onClick={(e) => {
                   if (e.target.closest('button, a, input')) return
                   toggleSelectItem(item.id, item.variantId)
                 }}
               >
                 {/* Left selection accent bar */}
-                <div className={`absolute left-0 top-0 bottom-0 w-[3px] rounded-l-2xl transition-all duration-150 ${
-                  selected ? 'bg-primary-800' : 'bg-transparent'
-                }`} />
+                <div className={`absolute left-0 top-0 bottom-0 w-[3px] rounded-l-2xl transition-all duration-150 ${selected ? 'bg-primary-800' : 'bg-transparent'
+                  }`} />
 
                 <div className="flex gap-3 sm:gap-4 p-4 pl-5">
                   {/* Selection Checkbox */}
@@ -444,9 +441,8 @@ export default function CartPage() {
 
                   {/* Subtotal */}
                   <div className="text-right flex-shrink-0">
-                    <p className={`font-bold text-sm ${
-                      selected ? 'text-primary-900' : 'text-neutral-600'
-                    }`}>
+                    <p className={`font-bold text-sm ${selected ? 'text-primary-900' : 'text-neutral-600'
+                      }`}>
                       {formatPrice(item.price * item.quantity)}
                     </p>
                   </div>
@@ -478,6 +474,16 @@ export default function CartPage() {
                 </div>
               )}
 
+              {selectedTotalAmount > 0 && (() => {
+                const { subtotalBeforeVat, vatAmount } = getVatBreakdown(selectedTotalAmount)
+                return (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-neutral-500">VAT (12% included)</span>
+                    <span className="text-xs text-neutral-500">{formatPrice(vatAmount)}</span>
+                  </div>
+                )
+              })()}
+
               <div className="flex justify-between items-center">
                 <span className="text-sm text-neutral-500">Delivery</span>
                 <span className="text-xs text-emerald-600 font-medium">Calculated at checkout</span>
@@ -487,6 +493,9 @@ export default function CartPage() {
                 <span className="font-semibold text-primary-900">Total</span>
                 <span className="font-bold text-lg text-primary-900">{formatPrice(selectedTotalAmount)}</span>
               </div>
+              {selectedTotalAmount > 0 && (
+                <p className="text-[10px] text-neutral-400 text-right">VAT-inclusive pricing</p>
+              )}
             </div>
 
             {selectedKeys.size === 0 ? (
