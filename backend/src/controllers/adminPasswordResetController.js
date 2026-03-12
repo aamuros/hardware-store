@@ -193,4 +193,54 @@ const resetPassword = async (req, res, next) => {
   }
 };
 
-module.exports = { forgotPassword, verifyResetToken, resetPassword };
+/**
+ * POST /api/admin/direct-reset-password
+ * Reset an admin/staff password directly without a token flow.
+ * Requires: username + newPassword. No email, no token.
+ * Used for the simplified password reset during presentations/local demos.
+ */
+const directResetPassword = async (req, res, next) => {
+  try {
+    const { username, newPassword } = req.body;
+
+    if (!username || !username.trim()) {
+      return res.status(400).json({ success: false, message: 'Username is required' });
+    }
+
+    if (!newPassword) {
+      return res.status(400).json({ success: false, message: 'New password is required' });
+    }
+
+    const passwordValidation = validatePasswordStrength(newPassword);
+    if (!passwordValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password does not meet requirements',
+        errors: passwordValidation.errors,
+      });
+    }
+
+    const user = await prisma.user.findUnique({ where: { username: username.trim() } });
+
+    // Always return the same message to prevent username enumeration
+    if (!user || !user.isActive) {
+      return res.json({
+        success: true,
+        message: 'If an account exists with that username, the password has been updated.',
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword },
+    });
+
+    res.json({ success: true, message: 'Password updated successfully. You can now log in.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { forgotPassword, verifyResetToken, resetPassword, directResetPassword };
+

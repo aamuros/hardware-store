@@ -179,6 +179,7 @@ export const adminApi = {
   forgotPassword: (data) => api.post('/admin/forgot-password', data),
   verifyResetToken: (data) => api.post('/admin/verify-reset-token', data),
   resetPassword: (data) => api.post('/admin/reset-password', data),
+  directResetPassword: (data) => api.post('/admin/direct-reset-password', data),
 }
 
 // Customer API (account features)

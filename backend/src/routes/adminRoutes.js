@@ -15,6 +15,7 @@ router.post('/login', adminController.login);
 router.post('/forgot-password', adminPasswordResetController.forgotPassword);
 router.post('/verify-reset-token', adminPasswordResetController.verifyResetToken);
 router.post('/reset-password', adminPasswordResetController.resetPassword);
+router.post('/direct-reset-password', adminPasswordResetController.directResetPassword);
 
 // Protected routes - require authentication
 router.use(authenticate);
