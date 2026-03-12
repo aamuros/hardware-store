@@ -40,7 +40,7 @@ app.options('*', cors(config.cors));
 // General rate limiting (more lenient in development)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: config.nodeEnv === 'development' ? 1000 : 100, // higher limit in dev
+  max: config.nodeEnv === 'development' ? 1000 : 500, // 500 in prod to avoid false restarts
   message: {
     success: false,
     message: 'Too many requests, please try again later.',
@@ -75,7 +75,8 @@ if (config.nodeEnv === 'production') {
   app.use(express.static(frontendDistPath));
 }
 
-// Health check endpoint
+// Health check endpoint — MUST be before rate limiter registration on /api
+// so Railway's healthcheck never gets rate-limited and triggers a restart
 app.get('/health', (req, res) => {
   res.status(200).json({
     success: true,
