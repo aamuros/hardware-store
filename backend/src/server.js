@@ -31,6 +31,8 @@ const validateEnvironment = () => {
   if (config.nodeEnv === 'production') {
     if (!process.env.DATABASE_URL) {
       errors.push('DATABASE_URL is required in production');
+    } else if (process.env.DATABASE_URL.startsWith('file:')) {
+      errors.push('DATABASE_URL cannot use SQLite file: URLs in production. Use managed PostgreSQL.');
     }
     if (config.frontendUrl === 'http://localhost:5173') {
       console.warn('[!] Warning: FRONTEND_URL is set to localhost in production — set it to your real domain');
@@ -78,15 +80,27 @@ const gracefulShutdown = async (signal) => {
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM')); // e.g., Docker stop, Railway terminate
 process.on('SIGINT', () => gracefulShutdown('SIGINT')); // e.g., Ctrl+C in terminal
 
-// Catch-all for uncaught operational exceptions to prevent silent crashes
+// Catch-all for uncaught operational exceptions
+// IMPORTANT: We log but do NOT exit — exiting causes Railway restarts and data loss.
+// Only truly fatal system errors (e.g. EADDRINUSE, out-of-memory) should exit.
 process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
-  process.exit(1);
+  console.error('[!] Uncaught Exception (server kept alive):', error.message);
+  console.error(error.stack);
+  // Only exit for fatal system-level errors that cannot be recovered from
+  const fatalCodes = ['EADDRINUSE', 'EACCES'];
+  if (error.code && fatalCodes.includes(error.code)) {
+    console.error('[X] Fatal system error — shutting down.');
+    process.exit(1);
+  }
+  // For all other errors: log and continue. The request that caused this error
+  // has already been dropped, but the server remains healthy for all other requests.
 });
 
-// Catch-all for unhandled asynchronous promise rejections
+// Catch-all for unhandled promise rejections
+// Log but do NOT exit — these are almost always recoverable async errors.
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  const msg = reason instanceof Error ? reason.message : String(reason);
+  console.error('[!] Unhandled Promise Rejection (server kept alive):', msg);
 });
 
 /**

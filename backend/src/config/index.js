@@ -28,8 +28,8 @@ const config = {
     // Provider priority order (will fallback to next on failure)
     providers: (process.env.SMS_PROVIDERS || 'semaphore').split(',').map(p => p.trim()),
 
-    // Retry configuration
-    maxRetries: parseInt(process.env.SMS_MAX_RETRIES) || 2,
+    // Retry configuration (1 retry is enough; keeps failure windows short during live demos)
+    maxRetries: parseInt(process.env.SMS_MAX_RETRIES) || 1,
 
     // Semaphore (Primary - Best for Philippines)
     // Sign up: https://semaphore.co/

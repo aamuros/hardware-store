@@ -476,7 +476,7 @@ const sendSMS = async (phone, message, orderId = null, options = {}) => {
 
   // Retry if not exceeded max retries
   if (retryCount < maxRetries) {
-    const delay = 2000 * (retryCount + 1); // Exponential backoff
+    const delay = 500 * (retryCount + 1); // Reduced: 500ms, then 1000ms (was 2s/4s)
     console.log(`🔄 Retrying SMS in ${delay / 1000}s (attempt ${retryCount + 1}/${maxRetries})...`);
     await new Promise(resolve => setTimeout(resolve, delay));
     return sendSMS(phone, message, orderId, { skipValidation: true, retryCount: retryCount + 1 });
