@@ -144,6 +144,8 @@ Both `backend/` and `frontend/` include `.env.example` files with all available 
 
 The application is designed to run as a single Railway service that hosts both the API and the built frontend. PostgreSQL is used as the production database (also on Railway). This setup is free under the GitHub Student Developer Pack.
 
+In production, startup runs migrations only and does not seed by default. For a brand-new database, set `RUN_DB_SEED_ON_STARTUP=true` for one deploy, then disable it again.
+
 Full deployment instructions are in the [Deployment Guide](./docs/deployment.md).
 
 ## Running Tests

@@ -23,6 +23,21 @@ if [ -z "$DATABASE_URL" ]; then
   MISSING=1
 fi
 
+# In production, block SQLite file URLs because Railway/container filesystems
+# are ephemeral and will appear to "reset" data after restarts.
+if [ "$NODE_ENV" = "production" ]; then
+  case "$DATABASE_URL" in
+    file:*)
+      echo "${RED}ERROR: DATABASE_URL points to SQLite (file:...) in production.${NC}"
+      echo ""
+      echo "Use a managed PostgreSQL URL instead (Railway variable reference):"
+      echo "  DATABASE_URL = \${{Postgres.DATABASE_URL}}"
+      echo ""
+      MISSING=1
+      ;;
+  esac
+fi
+
 if [ -z "$JWT_SECRET" ]; then
   echo "${YELLOW}WARNING: JWT_SECRET is not set. The server will refuse to start.${NC}"
   echo "  Add JWT_SECRET to your Railway service variables (min 32 characters)."

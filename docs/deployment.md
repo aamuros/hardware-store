@@ -97,10 +97,23 @@ During the build, Railway will automatically:
 - Build the React frontend into static files using Vite
 - Generate the Prisma client configured for PostgreSQL
 - Run all database migrations to create the tables
-- Seed the database with the default admin account
 - Start the Express server, which serves both the API and the frontend
 
 Once the deployment status shows **Active**, your site is live.
+
+### One-Time Initial Seed (Required on brand-new databases)
+
+The service now skips seeding on every restart to avoid long boot times and accidental data resets.
+
+For a fresh deployment, run the seed once:
+
+1. In Railway service variables, set:
+   - `RUN_DB_SEED_ON_STARTUP=true`
+2. Trigger a redeploy.
+3. Confirm logs show `Database seed complete`.
+4. Set `RUN_DB_SEED_ON_STARTUP=false` (or remove it) and redeploy again.
+
+This keeps startup fast and prevents repeated seed work on future restarts.
 
 ---
 
@@ -183,7 +196,7 @@ This is expected behavior. The database is intentionally seeded with just an adm
 
 ### Admin login does not work
 
-Check the deployment logs to confirm that the seed script ran successfully. You should see `✅ Admin user created: admin` in the output. If you do not, open the Railway **Shell** for your service and run:
+Check the deployment logs to confirm that the seed script ran successfully. You should see an admin upsert message in the output. If you do not, open the Railway **Shell** for your service and run:
 
 ```bash
 npx prisma migrate deploy
